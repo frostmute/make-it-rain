@@ -1,0 +1,11 @@
+{
+    "id": "make-it-rain",
+    "name": "Make It Rain",
+    "version": "1.0.0",
+    "minAppVersion": "1.0.0",
+    "description": "Pull your specified Raindrop.io bookmarks into Obsidian notes with flexible filtering and location options.",
+    "author": "frostmute",
+    "authorUrl": "https://www.github.io/frostmute",
+    "fundingUrl": "https://www.paypal.me/deepspaceghost",
+    "isDesktopOnly": false
+  }
