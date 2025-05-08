@@ -514,8 +514,8 @@ class RaindropToObsidianSettingTab extends obsidian_1.PluginSettingTab {
             text: 'Need help configuring or using the plugin? Check the README.'
         });
         footer.createEl('a', {
-            text: 'Plugin GitHub Repository (Example)',
-            href: 'https://github.com/your-username/your-repo-name',
+            text: 'Plugin GitHub Repository',
+            href: 'https://github.com/frostmute/make-it-rain',
             attr: { target: '_blank', rel: 'noopener noreferrer' }
         });
     }
