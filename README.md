@@ -6,6 +6,14 @@
 
 This plugin for [Obsidian](https://obsidian.md) allows you to fetch bookmarks from your [Raindrop.io](https://raindrop.io) account and create notes in your vault based on a customizable template. Bring your web clippings, articles, and references directly into your knowledge base!
 
+<p align="center">
+  <img src="https://media-hosting.imagekit.io/853ddddf673144e2/make-it-rain.png?Expires=1841358260&Key-Pair-Id=K2ZIVPTIP2VGHC&Signature=XVGTj3Pdo~IxT8aNCLvkbHYu7-DdN4tjxt7ExRXq2IIUDwBjMnOxbpGpaknLEkYwCeACXBcJG85dHCQpUO4efd80PDBzlmArPVFkoUt8qTfwAV58eDjOPORlVn-kD9ZNAnDpE1p1UaXHlvNgU6jMQD2JL8BOJIIG0pcJOs-~w9UlOKHXMdlTvCscj4pDcANDKmpo6Iu-tzLE93YGIr6BOoB-ydm8X4koJ983wHueEIQc2T~cFBzky-ucMqlk9kpCAM8tvj0kEPtNT6o1Yqyje8pCFmRdXlDcVDTgBUdMZL6BKSmF1zOj~eenxKjot~9FZ3Mqkfeeu-j4xp-UN8Ie6g__" />
+</p>
+
+<p align="center">
+  <img src="https://media-hosting.imagekit.io/77030d8132614182/Screenshot_20250508_055051.png?Expires=1841358311&Key-Pair-Id=K2ZIVPTIP2VGHC&Signature=jP~5eQ0twVTjkw2wj1VY9zTh5LxdFLVxg5cFmkVD5lQEBWMZHzkhck6YmGOoh2HNEAjD1yjOomN2-qaUorzeU-Neq1ocSVnqC8ik2I8hd5FFBx0z-xq4FW6nAmlnZe3dYlg8Zm2lsYlFHH8eAkRi0zeiGb7EnPhdcqjgMKZFHpTz5GQ4E5R5bmm6sRp0FPH5UIZOsdn3eLGMLx~vfDS2UcPOTuE75V7ExNs7u3V6YCo9hULhg99hlDdfUDoICCoAjZdzEQ~jApWCywSqDZwPIzcj2Hlz9qO~Zba1yfuBQkW0eYN5svo7X3TDocp-kSKMo-pUad8CTy-ER41giCTiuw__" />
+</p>
+
 ## Features
 
 * **Fetch on Demand:** Import Raindrops using a command palette action.
