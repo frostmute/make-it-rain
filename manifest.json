@@ -1,7 +1,7 @@
 {
 	"id": "make-it-rain",
 	"name": "Make It Rain",
-	"version": "1.3.0",
+	"version": "1.4.0",
 	"minAppVersion": "1.8.10",
 	"description": "Pull your Raindrop.io bookmarks into Obsidian notes with flexible filtering and location options.",
 	"author": "frostmute",
