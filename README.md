@@ -1,8 +1,7 @@
 # Make It Rain
 
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/frostmute/make-it-rain)](https://github.com/frostmute/make-it-rain/releases/latest)
-[![GitHub all releases](https://img.shields.io/github/downloads/frostmute/make-it-rain/total)](https://github.com/frostmute/make-it-rain/releases)
-[![License](https://img.shields.io/badge/license-WTFPL-blue.svg)](http://www.wtfpl.net/)
+![License](https://img.shields.io/github/license/frostmute/make-it-rain)
 
 Import your Raindrop.io bookmarks into your Obsidian vault with ease.
 
@@ -10,7 +9,6 @@ Import your Raindrop.io bookmarks into your Obsidian vault with ease.
 
 - [What's New](#whats-new)
 - [Features](#features)
-- [Demo](#demo)
 - [Installation](#installation)
 - [Configuration](#configuration)
 - [Usage](#usage)
