@@ -1,4 +1,6 @@
-import { App, Notice, Plugin, PluginSettingTab, Setting, Modal, TextComponent, ButtonComponent, ToggleComponent, PluginManifest, TFile } from 'obsidian';
+import { App, Notice, Plugin, PluginSettingTab, Setting, Modal, TextComponent, ButtonComponent, ToggleComponent, PluginManifest, TFile, TAbstractFile } from 'obsidian';
+import { request, RequestUrlParam } from 'obsidian';
+
 
 // Raindrop.io API Types
 interface RaindropItem {
@@ -137,53 +139,89 @@ class RateLimiter {
 
 // Fetch wrapper with built-in retry logic and rate limiting
 // This ensures reliable API communication even with temporary failures
-async function fetchWithRetry(url: string, options: RequestInit, rateLimiter: RateLimiter, maxRetries: number = 3): Promise<Response> {
+async function fetchWithRetry(
+    appOrUrl: App | string, 
+    urlOrOptions: string | RequestInit, 
+    optionsOrRateLimiter?: RequestInit | RateLimiter,
+    rateLimiterOrMaxRetries?: RateLimiter | number,
+    maxRetries: number = 3
+): Promise<any> {
+    let url: string;
+    let options: RequestInit;
+    let rateLimiter: RateLimiter;
+
+    // Handle both call patterns:
+    // 1. (app: App, url: string, options: RequestInit, rateLimiter: RateLimiter, maxRetries?: number)
+    // 2. (url: string, options: RequestInit, rateLimiter: RateLimiter, maxRetries?: number)
+    if (typeof appOrUrl === 'string') {
+        // Second pattern (url, options, rateLimiter, maxRetries?)
+        url = appOrUrl;
+        options = urlOrOptions as RequestInit;
+        rateLimiter = optionsOrRateLimiter as RateLimiter;
+        if (typeof rateLimiterOrMaxRetries === 'number') {
+            maxRetries = rateLimiterOrMaxRetries;
+        }
+    } else {
+        // First pattern (app, url, options, rateLimiter, maxRetries?)
+        url = urlOrOptions as string;
+        options = optionsOrRateLimiter as RequestInit;
+        rateLimiter = rateLimiterOrMaxRetries as RateLimiter;
+    }
+
+    // Type checking
+    if (typeof url !== 'string') {
+        throw new Error('URL must be a string');
+    }
+    if (!options || typeof options !== 'object') {
+        throw new Error('Options must be an object');
+    }
+    if (!rateLimiter || typeof rateLimiter.checkLimit !== 'function') {
+        throw new Error('Rate limiter must be provided with checkLimit method');
+    }
+    
+    return fetchWithRetryInternal(url, options, rateLimiter, maxRetries);
+}
+
+async function fetchWithRetryInternal(url: string, options: RequestInit, rateLimiter: RateLimiter, maxRetries: number = 3): Promise<any> {
     for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
             // Check rate limit before each attempt
             await rateLimiter.checkLimit();
-            const response = await fetch(url, options);
             
-            if (response.ok) {
-                return response;
+            // Use Obsidian's request function which handles CORS
+            const response = await request({
+                url,
+                method: options.method as 'GET' | 'POST' | 'PUT' | 'DELETE',
+                headers: options.headers as Record<string, string>,
+                body: options.body as string | undefined
+            });
+            
+            // Parse the response if it's a string (JSON)
+            if (typeof response === 'string') {
+                return JSON.parse(response);
+            }
+            return response;
+            
+        } catch (error: any) {
+            console.error(`Error in fetchWithRetry (attempt ${attempt + 1}/${maxRetries}):`, error);
+            
+            // If we've reached max retries, rethrow the error
+            if (attempt >= maxRetries - 1) {
+                throw error;
             }
             
-            // Handle rate limiting responses from the API
-            if (response.status === 429) {
-                const retryAfter = parseInt(response.headers.get('Retry-After') || '60');
-                await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
-                continue;
-            }
-            
-            // Client errors (400-level) usually indicate a problem with the request
-            // These should fail fast as retrying won't help
-            if (response.status >= 400 && response.status < 500) {
-                throw new Error(`API Error: ${response.status} - ${await response.text()}`);
-            }
-            
-            // Server errors (500-level) might be temporary, so we retry
-            if (attempt < maxRetries - 1) {
-                // Exponential backoff: wait longer between each retry
-                await new Promise(resolve => 
-                    setTimeout(resolve, Math.pow(2, attempt) * 1000)
-                );
-                continue;
-            }
-            
-            throw new Error(`Failed after ${maxRetries} attempts: ${response.status}`);
-        } catch (error) {
-            // Network errors or other unexpected issues
-            if (attempt === maxRetries - 1) throw error;
-            await new Promise(resolve => 
-                setTimeout(resolve, Math.pow(2, attempt) * 1000)
-            );
+            // Wait before retrying with exponential backoff
+            const delay = Math.pow(2, attempt) * 1000;
+            console.log(`Retrying in ${delay}ms...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
         }
     }
-    throw new Error('Unexpected error in fetchWithRetry');
+    
+    throw new Error(`Failed after ${maxRetries} attempts`);
 }
 
 // Collection info fetching with error handling and rate limiting
-async function fetchCollectionInfo(collectionId: string, apiToken: string, rateLimiter: RateLimiter): Promise<RaindropCollection | null> {
+async function fetchCollectionInfo(app: App, collectionId: string, apiToken: string, rateLimiter: RateLimiter): Promise<RaindropCollection | null> {
     const fetchOptions: RequestInit = {
         headers: {
             'Authorization': `Bearer ${apiToken}`,
@@ -193,11 +231,7 @@ async function fetchCollectionInfo(collectionId: string, apiToken: string, rateL
 
     try {
         // Fetch collection details - this helps with folder organization
-        const response = await fetchWithRetry(
-            `https://api.raindrop.io/rest/v1/collection/${collectionId}`,
-            fetchOptions,
-            rateLimiter
-        );
+        const response = await fetchWithRetry(app, `https://api.raindrop.io/rest/v1/collection/${collectionId}`, fetchOptions, rateLimiter);
         const data = await response.json();
         
         if (data.result && data.item) {
@@ -345,6 +379,13 @@ export default class RaindropToObsidian extends Plugin {
         let allData: RaindropItem[] = [];
         const perPage = 50; // Max items per page allowed by Raindrop.io API
 
+        // Add error handling for API token
+        if (!this.settings.raindropApiToken) {
+            loadingNotice.hide();
+            new Notice('Please configure your Raindrop.io API token in the plugin settings.', 10000);
+            return;
+        }
+
         // --- Resolve Collection Names/IDs and Fetch Hierarchy ---
         let resolvedCollectionIds: number[] = [];
         const collectionNameToIdMap = new Map<string, number>();
@@ -443,9 +484,49 @@ export default class RaindropToObsidian extends Plugin {
 
         } else {
             // If options.collections is empty, fetch from all collections (collectionId 0)
-            // In this case, we don't need to pre-fetch all collections for hierarchy,
-            // but we should still fetch raindrops from ID 0.
-            // collectionsData, resolvedCollectionIds, collectionIdToNameMap will be empty/undefined
+            // We still need to fetch collection hierarchy to organize notes properly
+            loadingNotice.setMessage('Fetching all collections...');
+
+            // Fetch root collections
+            const rootCollectionsResponse = await fetchWithRetry(
+                `${baseApiUrl}/collections`,
+                fetchOptions,
+                this.rateLimiter
+            );
+            const rootCollectionsData = await rootCollectionsResponse.json() as CollectionResponse;
+
+            // Fetch nested collections
+            const nestedCollectionsResponse = await fetchWithRetry(
+                `${baseApiUrl}/collections/childrens`,
+                fetchOptions,
+                this.rateLimiter
+            );
+            const nestedCollectionsData = await nestedCollectionsResponse.json() as CollectionResponse;
+
+            // Combine root and nested collections
+            let allCollections: RaindropCollection[] = [];
+            if (rootCollectionsData?.result && rootCollectionsData?.items) {
+                allCollections = allCollections.concat(rootCollectionsData.items);
+            }
+            if (nestedCollectionsData?.result && nestedCollectionsData?.items) {
+                allCollections = allCollections.concat(nestedCollectionsData.items);
+            }
+
+            if (allCollections.length === 0) {
+                console.error('API Error fetching collections: No collections returned from both endpoints.');
+                loadingNotice.hide();
+                new Notice('Error fetching user collections. Please check your API token and connection.', 10000);
+                return; // Stop the fetch process
+            }
+
+            // Build the hierarchy and name/ID maps from all collections
+            allCollections.forEach(col => {
+                collectionNameToIdMap.set(col.title.toLowerCase(), col._id);
+                collectionIdToNameMap.set(col._id, col.title);
+                collectionHierarchy.set(col._id, { title: col.title, parentId: col.parent?.$id });
+            });
+
+            collectionsData = { result: true, items: allCollections };
         }
         // --- End Resolve Collection Names/IDs and Fetch Hierarchy ---
 
@@ -1439,10 +1520,20 @@ class RaindropToObsidianSettingTab extends PluginSettingTab {
 
     try {
       // Use a simple endpoint to test the token, e.g., fetching user info
-      const response = await fetch(`${baseApiUrl}/user`, fetchOptions);
-      const data = await response.json();
+      const response = await request({
+        url: `${baseApiUrl}/user`,
+        method: 'GET',
+        headers: fetchOptions.headers as Record<string, string>
+      });
 
-      if (response.ok && data.result) {
+      let data;
+      if (typeof response === 'string') {
+        data = JSON.parse(response);
+      } else {
+        data = response;
+      }
+
+      if (data.result) {
         new Notice('API Token is valid!', 5000);
       } else {
         // Handle specific API error messages if available
