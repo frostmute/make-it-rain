@@ -1,6 +1,6 @@
 {
   "name": "make-it-rain",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Pull your Raindrop.io bookmarks into Obsidian notes with flexible filtering and location options",
   "main": "main.js",
   "scripts": {
