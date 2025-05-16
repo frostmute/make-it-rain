@@ -96,6 +96,8 @@ I will be continually developing this plugin to further streamline user expierie
 
 ## Configuration
 
+![Settings Dialog](https://github.com/frostmute/make-it-rain/blob/main/makeitrain-settings-v150.png)
+
 Before the first use, configure the plugin via Obsidian's settings panel (`Settings` -> `Community Plugins` -> `Make It Rain` -> `Options` (cog icon)).
 
 1. **Raindrop.io API Token (Required):**
@@ -125,6 +127,8 @@ Before the first use, configure the plugin via Obsidian's settings panel (`Setti
     - Customize the frontmatter field name used for the banner image (default is `banner`). Useful if you use plugins that expect a different field name.
 
 ## Usage
+
+![Import Modal](https://github.com/frostmute/make-it-rain/blob/main/makeitrain-modal-v150.png)
 
 1. Open the Obsidian **Command Palette** (`Ctrl+P` or `Cmd+P`).
 2. Search for and select the command: **"Fetch Raindrops"**.
