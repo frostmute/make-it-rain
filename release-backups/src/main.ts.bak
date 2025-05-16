@@ -66,41 +66,6 @@ interface CollectionResponse {
     items: RaindropCollection[];
 }
 
-// Helper function to get the full path segments from the root collection down to the given ID
-const getFullPathSegments = (collectionId: number, hierarchy: Map<number, { title: string, parentId?: number }>, idToNameMap: Map<number, string>): string[] => {
-    const segments: string[] = [];
-    let currentId: number | undefined = collectionId;
-    const pathIds: number[] = [];
-
-    // Traverse upwards from the current ID to collect all ancestor IDs
-    while (currentId !== undefined && currentId !== 0 && currentId !== -1 && currentId !== -99) {
-         pathIds.push(currentId);
-         const collection = hierarchy.get(currentId);
-         if (!collection || collection.parentId === undefined) {
-              break; // Stop if collection not found or no parent defined
-         }
-         currentId = collection.parentId;
-    }
-
-    // Reverse the collected IDs and find their names to build the path from root down
-    pathIds.reverse();
-
-    for (const id of pathIds) {
-         const name = idToNameMap.get(id);
-         if (name) {
-              // Sanitize the name before adding to segments
-              const sanitizedName = name.replace(/[\/\\:*?"<>|#%&{}\$\!\'@`+=]/g, '').trim();
-              if(sanitizedName) segments.push(sanitizedName);
-         } else {
-             // If name not found, add a placeholder or skip?
-             // For now, let's add a placeholder to indicate the missing segment
-             segments.push(`Unknown_Collection_${id}`);
-         }
-    }
-
-    return segments;
-};
-
 const DEFAULT_SETTINGS: RaindropToObsidianSettings = {
     raindropApiToken: '',
     defaultVaultLocation: '',
@@ -1008,18 +973,15 @@ export default class RaindropToObsidian extends Plugin {
                     const collectionId = raindrop.collection.$id;
                     const collectionTitle = collectionIdToNameMap.get(collectionId) || 'Unknown';
                      // Build the collection path relative to the Raindrop root for full frontmatter path
-                    const fullCollectionPathForFrontmatter = getFullPathSegments(collectionId, collectionHierarchy, collectionIdToNameMap).join('/');
+                    const fullCollectionPathForFrontmatter = getFullPathSegments(collectionId).join('/');
 
                     fileContent += `collection:\n`;
                     fileContent += `  id: ${collectionId}\n`;
                     fileContent += `  title: "${collectionTitle.replace(/"/g, '\\"')}"\n`;
                     fileContent += `  path: "${fullCollectionPathForFrontmatter.replace(/"/g, '\\"')}"\n`;
 
-                    if (collectionHierarchy.has(collectionId)) {
-                         const collectionInfo = collectionHierarchy.get(collectionId);
-                         if(collectionInfo?.parentId !== undefined) {
-                             fileContent += `  parent_id: ${collectionInfo.parentId}\n`;
-                         }
+                    if (collectionHierarchy.has(collectionId) && collectionHierarchy.get(collectionId)?.parent?.$id) {
+                         fileContent += `  parent_id: ${collectionHierarchy.get(collectionId)?.parent?.$id}\n`;
                     }
                 }
 

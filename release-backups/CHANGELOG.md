@@ -7,27 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-
-- Added "Filter by Type" dropdown to fetch modal (Links, Articles, Images, Videos, Documents, Audio).
-- Added "Fetch only new items" toggle to fetch modal.
-- Added "Update existing notes" toggle to fetch modal with logic to compare Raindrop ID and `last_update`.
-- Added "Show Ribbon Icon" toggle in settings.
-- Added "Banner Frontmatter Field Name" setting to customize banner field.
-- Added "Verify Token" button to API Token setting.
-- Implemented logic to add Raindrop ID, collection ID, title, and full path to note frontmatter.
-
-### Changed
-
-- Improved handling of nested collection structures and created corresponding folder paths based on Raindrop.io hierarchy.
-- Updated loading notices for better user feedback during fetch and processing.
-- Made banner image frontmatter field name configurable.
-- Disabled "Fetch only new" when "Update existing" is enabled.
-
-### Fixed
-
-- Improved handling of multi-line excerpts in frontmatter.
-
 ## [1.4.0] - 2025-05-16
 
 ## [1.3.0] - 2025-05-16
