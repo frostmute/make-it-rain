@@ -10,7 +10,6 @@ Import your Raindrop.io bookmarks into your Obsidian vault with ease.
 
 - [What's New](#whats-new)
 - [Features](#features)
-- [Demo](#demo)
 - [Installation](#installation)
 - [Configuration](#configuration)
 - [Usage](#usage)
