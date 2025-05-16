@@ -789,7 +789,7 @@ class RaindropFetchModal extends Modal {
           .addOption('all', 'Match ALL tags (AND)')
           .addOption('any', 'Match ANY tag (OR)')
           .setValue(this.tagMatchType)
-          .onChange((value: 'all' | 'any') => {
+          .onChange(value => {
             this.tagMatchType = value;
           });
       });
