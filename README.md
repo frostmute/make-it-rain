@@ -19,12 +19,20 @@ Import your Raindrop.io bookmarks into your Obsidian vault with ease.
 
 ## What's New
 
-### Latest Features
+### Latest Features (v1.5.0)
 
-- **Enhanced Tag Search**: Now supports both AND and OR logic for tag filtering
-- **Improved Reliability**: Better error handling and rate limiting
-- **Detailed Logging**: Better visibility into the import process
-- **Collection Organization**: Automatic folder creation based on Raindrop collections
+- **Advanced Filtering:** Added option to filter raindrops by type (Links, Articles, Images, Videos, Documents, Audio) in the fetch modal.
+- **Flexible Import Handling:** Introduced options to either fetch only new items or update existing notes based on Raindrop ID and last update timestamp.
+- **Customizable UI:** Added a setting to toggle the visibility of the plugin's ribbon icon.
+- **Configurable Frontmatter:** Allows customizing the frontmatter field name used for the banner image.
+- **API Token Verification:** Added a button in settings to verify the Raindrop.io API token.
+
+### Changes & Improvements (v1.5.0)
+
+- Improved handling of nested collection structures and created corresponding folder paths within your vault.
+- Enhanced user feedback during fetch and processing with updated loading notices.
+- Included Raindrop ID, collection ID, title, and full path in the note frontmatter for better data integration and update logic.
+- Improved handling of multi-line excerpts in frontmatter.
 
 For a complete list of changes, see the [CHANGELOG.md](CHANGELOG.md).
 
@@ -40,25 +48,26 @@ I will be continually developing this plugin to further streamline user expierie
 
 - **On-Demand Fetching:** Import Raindrops using a Command Palette action.
 - **Flexible Filtering:** Control which bookmarks to fetch per session via an interactive modal:
-  - Filter by specific Raindrop.io Collection IDs (comma-separated).
+  - Filter by specific Raindrop.io Collection IDs or Names (comma-separated). Leave blank to fetch from all collections (unless tags below are specified).
   - Filter by specific Raindrop.io Tags with two matching modes:
     - AND logic: Find items with ALL specified tags
     - OR logic: Find items with ANY of the specified tags
-  - Optionally include items from subcollections when filtering by Collection ID.
+  - Optionally include items from subcollections when filtering by Collection ID or Name.
+  - **New:** Filter by the type of raindrop (Link, Article, Image, Video, Document, Audio).
 - **Reliable API Handling:**
   - Smart rate limiting (120 requests/minute)
   - Automatic retry on temporary failures
   - Detailed logging for troubleshooting
 - **Comprehensive Note Generation:** Created notes include:
-  - **YAML Frontmatter:** `title`, `description` (from Raindrop excerpt), `source` (original URL), `tags` (combining Raindrop tags and any appended tags), and `banner` (using the Raindrop cover image URL, compatible with plugins like Banner).
-  - **Note Body:** Cover image (if available), H1 Title, H2 section for your Raindrop Note/Annotation, the Raindrop Excerpt, and a list of Highlights (including any notes on highlights).
+  - **YAML Frontmatter:** Includes Raindrop `id`, `title`, `description` (from Raindrop excerpt), `source` (original URL), `type`, `created`, `last_update`, collection details (`id`, `title`, `path`, `parent_id` if applicable), `tags` (combining Raindrop tags and any appended tags), and a customizable banner field (using the Raindrop cover image URL).
+  - **Note Body:** Cover image (if available), H1 Title, H2 section for your Raindrop Note/Annotation, the Raindrop Excerpt (if not multiline and included in frontmatter), and a list of Highlights (including any notes on highlights).
 - **Configurable Filenames:**
   - Choose between using the Raindrop title (processed via template) or the Raindrop ID for filenames.
   - Customize the filename format with placeholders: `{{title}}`, `{{id}}`, `{{collectionTitle}}`, `{{date}}`.
 - **Tag Management:** Automatically append custom tags to the frontmatter of every imported note.
-- **Safe Import:** Prevents overwriting by checking if a note with the target filename already exists in the specified destination.
+- **Safe Import:** Prevents overwriting by checking if a note with the target filename already exists. **New:** Added options to either skip existing files or update them based on Raindrop ID and `last_update` timestamp.
 - **Handles Pagination:** Reliably fetches all matching bookmarks from Raindrop.io, respecting API rate limits.
-- **Persistent Settings:** Configure and save your API key, default note save location, and filename template preferences.
+- **Persistent Settings:** Configure and save your API key, default note save location, filename template, **ribbon icon visibility, and banner frontmatter field name**.
 
 ## Installation
 
@@ -96,7 +105,7 @@ Before the first use, configure the plugin via Obsidian's settings panel (`Setti
         2. Click "+ Create new app".
         3. Give it a name (e.g., "MakeItRain").
         4. Click the newly created app, then click "Create test token".
-    - Copy this token and paste it into the plugin's API Token settings field.
+    - Copy this token and paste it into the plugin's API Token settings field. A **"Verify Token" button** is available to test your connection.
 2. **Default Vault Location for Notes:**
     - Specify the default folder path within your vault where imported notes should be saved (e.g., `Imports/Raindrops`).
     - If left blank, notes will be saved in the root of your vault.
@@ -110,26 +119,29 @@ Before the first use, configure the plugin via Obsidian's settings panel (`Setti
         - `{{collectionTitle}}`: The title of the collection the bookmark belongs to (if any).
         - `{{date}}`: The creation date of the bookmark (format: `YYYY-MM-DD`).
     - Default value: `{{title}}`
+4. **Show Ribbon Icon:**
+    - Toggle to show or hide the Make It Rain ribbon icon in the Obsidian sidebar.
+5. **Banner Frontmatter Field Name:**
+    - Customize the frontmatter field name used for the banner image (default is `banner`). Useful if you use plugins that expect a different field name.
 
 ## Usage
 
 1. Open the Obsidian **Command Palette** (`Ctrl+P` or `Cmd+P`).
 2. Search for and select the command: **"Fetch Raindrops"**.
 3. An **options modal** will appear, allowing you to configure the current fetch operation:
-    - **Vault Folder (Optional):** Override the default save location for this specific fetch.
-    - **Collections IDs:** Enter comma-separated Raindrop.io Collection *IDs* to fetch from specific collections (e.g., `12345,67890`). The ID can be found in the URL when viewing a collection on Raindrop.io (e.g., `.../collection/123456/...`). Leave blank to fetch from all collections (unless filtered by tags).
-    - **Filter by Tags:** Enter comma-separated Raindrop.io tag names. Choose your tag matching mode:
-        - **Match ALL tags (AND)**: Find bookmarks that have all the specified tags
-        - **Match ANY tag (OR)**: Find bookmarks that have at least one of the specified tags
-        - Leave blank if not filtering by tags (unless filtered by collections)
-    - **Tag Match Type:** Choose how multiple tags should be matched:
-        - **AND**: Items must have all specified tags (default)
-        - **OR**: Items can have any of the specified tags
-    - **Include Subcollections:** If filtering by Collection IDs, toggle this on to also fetch from any collections nested within the specified ones.
-    - **Append Tags to Note Frontmatter:** Enter comma-separated tags (e.g., `#imported/raindrop, #topic/web`) to add to the `tags` list in the YAML frontmatter of *every* note created during this fetch.
-    - **Use Raindrop Title for File Name:** Toggle on (default) to use the File Name Template. If off, the Raindrop bookmark ID will be used as the filename.
+    - **Fetch Criteria:**
+        - **Vault Folder (Optional):** Override the default save location for this specific fetch.
+        - **Collections:** Enter comma-separated Raindrop.io Collection *IDs or Names* to fetch from specific collections.
+        - **Filter by Tags:** Enter comma-separated Raindrop.io tag names. Choose your tag matching mode (AND/OR).
+        - **Include Subcollections:** If filtering by Collections, toggle this on to also fetch from any collections nested within the specified ones.
+        - **Filter by Type:** Select the type of raindrops to fetch (All Types, Links, Articles, Images, Videos, Documents, Audio).
+    - **Note Options:**
+        - **Append Tags to Note Frontmatter:** Enter comma-separated tags to add to the `tags` list in the YAML frontmatter.
+        - **Use Raindrop Title for File Name:** Toggle on (default) to use the File Name Template. If off, the Raindrop bookmark ID will be used as the filename.
+        - **Fetch only new items:** If enabled, existing notes will be skipped.
+        - **Update existing notes:** If enabled, existing notes will be updated if the source raindrop has changed (based on `last_update`). This option disables "Fetch only new items".
 4. Click the **"Fetch Raindrops"** button in the modal.
-5. The plugin will display notices for progress ("Fetching...", "Processing...", final summary). For detailed logs or errors, check the Obsidian Developer Console (`Ctrl+Shift+I` or `Cmd+Option+I`, then navigate to the `Console` tab).
+5. The plugin will display notices for progress and a final summary. Check the Obsidian Developer Console for detailed logs.
 
 ## Created Note Structure
 
@@ -137,14 +149,23 @@ Each successfully imported Raindrop bookmark generates a new Markdown note with 
 
 ```markdown
 ---
+id: <Raindrop ID>
 title: "<Raindrop Title>"
-description: "<Raindrop Excerpt (summary from the webpage)>"
+description: "<Raindrop Excerpt (summary from the webpage)>" # Multiline excerpts are added as a YAML block
 source: <Raindrop URL (link)>
+type: <Raindrop Type, e.g., link, article>
+created: <Raindrop Creation Date>
+last_update: <Raindrop Last Update Date>
+collection:
+  id: <Raindrop Collection ID>
+  title: "<Raindrop Collection Title>"
+  path: "<Full Raindrop Collection Path relative to Raindrop root>" # e.g., "My Collections/Category/Subcategory"
+  parent_id: <Raindrop Parent Collection ID (if not top level)>
 tags:
   - <raindrop_tag_1_sanitized>
   - <raindrop_tag_2_sanitized>
   - <appended_tag_1_sanitized> # If you added tags via the modal
-banner: <Raindrop Cover Image URL (if available)>
+<banner_field_name>: <Raindrop Cover Image URL (if available)> # Configurable in settings (default: banner)
 ---
 
 ![<Sanitized Title or 'Cover Image'>](<Raindrop Cover Image URL (if available)>)
@@ -153,7 +174,7 @@ banner: <Raindrop Cover Image URL (if available)>
 
 ## <Raindrop Note (your personal annotation, if any)>
 
-<Raindrop Excerpt (summary from the webpage)>
+<Raindrop Excerpt (summary from the webpage)> # Included here if not multiline (multiline goes in frontmatter description)
 
 ### Highlights
 - Highlight text 1 (newlines are replaced with spaces)
