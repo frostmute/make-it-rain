@@ -3,6 +3,8 @@
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/frostmute/make-it-rain)](https://github.com/frostmute/make-it-rain/releases/latest)
 ![License](https://img.shields.io/github/license/frostmute/make-it-rain)
 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Z8Z7RYUWN)
+
 Import your Raindrop.io bookmarks into your Obsidian vault with ease.
 
 ## Table of Contents
