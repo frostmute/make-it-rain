@@ -40,9 +40,9 @@ For a complete list of changes, see the [CHANGELOG.md](CHANGELOG.md).
 
 ![Plugin Header Image](https://i.ibb.co/HTx7TnbN/makeitrain.png)
 
-## Raindrop.io Importer for Obsidian
+## Raindrop.io Import\Sync for Obsidian
 
-This plugin for [Obsidian](https://obsidian.md) enables you to fetch bookmarks from your [Raindrop.io](https://raindrop.io) account and create notes in your vault using a customizable template. Seamlessly integrate your web clippings, articles, and references into your Obsidian knowledge base!
+A LIGHTWEIGHT and BLAZING FAST plugin that enables you to fetch bookmarks, highlights, notes, and other content types from your [Raindrop.io](https://raindrop.io) collections into your [Obsidian](https://obsidian.md/) vault with maximum flexibility. Seamlessly integrate your web clippings, articles, and references into your Obsidian knowledge base!
 
 I will be continually developing this plugin to further streamline user expierience and extend functionality. Please do not hesitate to leave feedback, submit feature requests, or ask for assisstance with anything; I intend to adress every inquiry to the best of my abilities... I am new to public development and have never shared anything I've made with anyone else, so if I'm overlooking something, or have made an error in etiquette, please let me know. I value and appreciate all forms of feedback and it helps immensely in my learning process.
 
