@@ -21,6 +21,8 @@ Import your Raindrop.io bookmarks into your Obsidian vault with ease.
 
 ## What's New
 
+### [MAJOR RELEASE 2.0.0-beta - Pre-Release Available](https://github.com/frostmute/make-it-rain/releases/tag/v2.0.0-beta)
+
 ### Fixed (v1.5.1)
 
 - Fixed collection hierarchy to properly maintain nested folder structure when no filter options are selected.
@@ -28,21 +30,6 @@ Import your Raindrop.io bookmarks into your Obsidian vault with ease.
 - Added small delays between consecutive API calls to reduce rate limit issues.
 - Added user-visible notices during rate limit waiting periods.
 - Fixed JSON parsing issues with API responses.
-
-### Latest Features (v1.5.0)
-
-- **Advanced Filtering:** Added option to filter raindrops by type (Links, Articles, Images, Videos, Documents, Audio) in the fetch modal.
-- **Flexible Import Handling:** Introduced options to either fetch only new items or update existing notes based on Raindrop ID and last update timestamp.
-- **Customizable UI:** Added a setting to toggle the visibility of the plugin's ribbon icon.
-- **Configurable Frontmatter:** Allows customizing the frontmatter field name used for the banner image.
-- **API Token Verification:** Added a button in settings to verify the Raindrop.io API token.
-
-### Changes & Improvements (v1.5.0)
-
-- Improved handling of nested collection structures and created corresponding folder paths within your vault.
-- Enhanced user feedback during fetch and processing with updated loading notices.
-- Included Raindrop ID, collection ID, title, and full path in the note frontmatter for better data integration and update logic.
-- Improved handling of multi-line excerpts in frontmatter.
 
 For a complete list of changes, see the [CHANGELOG.md](CHANGELOG.md).
 
