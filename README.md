@@ -80,14 +80,14 @@ I will be continually developing this plugin to further streamline user expierie
 6. Go to `Settings` -> `Community Plugins`, find "Make It Rain", and enable it.
 7. Configure the required API Token in the plugin settings (see Configuration section).
 
-### TODO: Need to Fix Beta Release\BRAT Setup 
-<strike> ### Using BRAT
+### Using BRAT
 
 1. Install the [BRAT (Beta Reviewer's Auto-update Tester)](https://github.com/TfTHacker/obsidian42-brat) plugin from the Community Plugins browser in Obsidian.
 2. Enable BRAT in Obsidian's settings.
 3. In BRAT's settings, click "Add Beta plugin" and enter this GitHub repository URL: `https://github.com/frostmute/make-it-rain`
-4. Enable the "Make It Rain" plugin under `Settings` -> `Community Plugins`.
-5. Configure the required API Token in the plugin settings. </strike>
+4. Choose an available pre-release version
+5. Enable the "Make It Rain" plugin under `Settings` -> `Community Plugins`.
+6. Configure the required API Token in the plugin settings.
 
 ### Community Plugins Store
 
