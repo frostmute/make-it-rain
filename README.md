@@ -21,6 +21,14 @@ Import your Raindrop.io bookmarks into your Obsidian vault with ease.
 
 ## What's New
 
+### Fixed (v1.5.1)
+
+- Fixed collection hierarchy to properly maintain nested folder structure when no filter options are selected.
+- Improved rate limiting logic with more conservative limits and longer delays between retries.
+- Added small delays between consecutive API calls to reduce rate limit issues.
+- Added user-visible notices during rate limit waiting periods.
+- Fixed JSON parsing issues with API responses.
+
 ### Latest Features (v1.5.0)
 
 - **Advanced Filtering:** Added option to filter raindrops by type (Links, Articles, Images, Videos, Documents, Audio) in the fetch modal.
