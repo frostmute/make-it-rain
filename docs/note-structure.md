@@ -1,6 +1,6 @@
 # Note Structure
 
-This guide explains the standard structure of notes created by the Make It Rain plugin.
+This guide explains the standard structure of notes created by the Make It Rain plugin and how they relate to the template system.
 
 ## Default Note Structure
 
@@ -76,7 +76,7 @@ The body of the note typically includes:
 
 ## Customizing Note Structure with Templates
 
-When you enable the [template system](template-system.md), you can fully customize how your notes are structured.
+When you enable the [template system](template-system.md), you can fully customize how your notes are structured. The template system allows you to:
 
 - Rearrange elements in your notes
 - Add or remove sections
