@@ -115,7 +115,7 @@ const DEFAULT_SETTINGS: RaindropToObsidianSettings = {
 class RateLimiter {
     private requestCount: number = 0;
     private resetTime: number = Date.now() + 60000; // 1 minute window
-    private readonly maxRequests: number = 120; // Raindrop.io limit: 120 requests per minute
+    private readonly maxRequests: number = 60; // More conservative limit (Raindrop.io docs say 120/min, but we're being cautious)
 
     async checkLimit(): Promise<void> {
         const now = Date.now();
@@ -133,7 +133,20 @@ class RateLimiter {
             this.resetTime = Date.now() + 60000;
         }
         
+        // Add a small delay between requests to avoid hitting rate limits
+        // This helps spread out requests more evenly
+        if (this.requestCount > 0) {
+            // Add a 300ms delay between requests
+            await new Promise(resolve => setTimeout(resolve, 300));
+        }
+        
         this.requestCount++;
+    }
+    
+    // Method to reset the counter when we hit a rate limit
+    resetCounter(): void {
+        this.requestCount = 0;
+        this.resetTime = Date.now() + 60000; // Reset the window
     }
 }
 
@@ -210,8 +223,24 @@ async function fetchWithRetryInternal(url: string, options: RequestInit, rateLim
                 throw error;
             }
             
-            // Wait before retrying with exponential backoff
-            const delay = Math.pow(2, attempt) * 1000;
+            // Special handling for rate limit errors (429)
+            let delay = Math.pow(2, attempt) * 1000; // Default exponential backoff
+            
+            if (error.message && error.message.includes('status 429')) {
+                // For rate limit errors, use a much longer delay with progressive backoff
+                console.log('Rate limit exceeded (429). Adding extra delay...');
+                
+                // More aggressive backoff for rate limit errors
+                // First retry: 10s, Second retry: 30s
+                delay = Math.max(delay, (attempt + 1) * 10000);
+                
+                // Reset the rate limiter's counter to avoid immediate retry
+                rateLimiter.resetCounter();
+                
+                // Add a user-visible notice about the rate limiting
+                new Notice(`Raindrop API rate limit reached. Waiting ${delay/1000} seconds before retrying...`, 5000);
+            }
+            
             console.log(`Retrying in ${delay}ms...`);
             await new Promise(resolve => setTimeout(resolve, delay));
         }
@@ -232,7 +261,7 @@ async function fetchCollectionInfo(app: App, collectionId: string, apiToken: str
     try {
         // Fetch collection details - this helps with folder organization
         const response = await fetchWithRetry(app, `https://api.raindrop.io/rest/v1/collection/${collectionId}`, fetchOptions, rateLimiter);
-        const data = await response.json();
+        const data = response;
         
         if (data.result && data.item) {
             return data.item;
@@ -406,7 +435,7 @@ export default class RaindropToObsidian extends Plugin {
                 fetchOptions,
                 this.rateLimiter
             );
-            const rootCollectionsData = await rootCollectionsResponse.json() as CollectionResponse;
+            const rootCollectionsData = rootCollectionsResponse as CollectionResponse;
 
             // Fetch nested collections
             const nestedCollectionsResponse = await fetchWithRetry(
@@ -414,7 +443,7 @@ export default class RaindropToObsidian extends Plugin {
                 fetchOptions,
                 this.rateLimiter
             );
-            const nestedCollectionsData = await nestedCollectionsResponse.json() as CollectionResponse;
+            const nestedCollectionsData = nestedCollectionsResponse as CollectionResponse;
 
             // Combine root and nested collections
             let allCollections: RaindropCollection[] = [];
@@ -493,7 +522,7 @@ export default class RaindropToObsidian extends Plugin {
                 fetchOptions,
                 this.rateLimiter
             );
-            const rootCollectionsData = await rootCollectionsResponse.json() as CollectionResponse;
+            const rootCollectionsData = rootCollectionsResponse as CollectionResponse;
 
             // Fetch nested collections
             const nestedCollectionsResponse = await fetchWithRetry(
@@ -501,7 +530,7 @@ export default class RaindropToObsidian extends Plugin {
                 fetchOptions,
                 this.rateLimiter
             );
-            const nestedCollectionsData = await nestedCollectionsResponse.json() as CollectionResponse;
+            const nestedCollectionsData = nestedCollectionsResponse as CollectionResponse;
 
             // Combine root and nested collections
             let allCollections: RaindropCollection[] = [];
@@ -580,7 +609,7 @@ export default class RaindropToObsidian extends Plugin {
                     loadingNotice.setMessage(`Fetching from collection: ${collectionNameForNotice}, page ${page + 1}...`);
 
                     const response = await fetchWithRetry(currentApiUrl, fetchOptions, this.rateLimiter);
-                    const data = await response.json() as RaindropResponse;
+                    const data = response as RaindropResponse;
 
                     if (!data.result) {
                         console.error(`API Error for collection ${collectionId}:`, data);
@@ -632,7 +661,7 @@ export default class RaindropToObsidian extends Plugin {
                         loadingNotice.setMessage(`Fetching items with tag: ${tag}, page ${page + 1}...`);
 
                         const response = await fetchWithRetry(currentApiUrl, fetchOptions, this.rateLimiter);
-                        const data = await response.json() as RaindropResponse;
+                        const data = response as RaindropResponse;
 
                         if (!data.result) {
                             console.error(`API Error for tag ${tag}:`, data);
@@ -691,7 +720,7 @@ export default class RaindropToObsidian extends Plugin {
                      loadingNotice.setMessage(`Fetching items with tags: ${searchParameterString}, page ${page + 1}...`);
 
                     const response = await fetchWithRetry(currentApiUrl, fetchOptions, this.rateLimiter);
-                    const data = await response.json() as RaindropResponse;
+                    const data = response as RaindropResponse;
 
                     if (!data.result) {
                         console.error('API Error for tag search:', data);
@@ -729,7 +758,7 @@ export default class RaindropToObsidian extends Plugin {
                 loadingNotice.setMessage(`Fetching all items, page ${page + 1}...`);
 
                 const response = await fetchWithRetry(currentApiUrl, fetchOptions, this.rateLimiter);
-                const data = await response.json() as RaindropResponse;
+                const data = response as RaindropResponse;
 
                 if (!data.result) {
                     console.error('API Error for all items fetch:', data);
@@ -796,6 +825,10 @@ export default class RaindropToObsidian extends Plugin {
     // Helper function to get ancestor IDs from a given collection ID up to the root
     const getAncestorIds = (collectionId: number): number[] => {
         const ancestors: number[] = [];
+        
+        // First add the starting collection ID itself
+        ancestors.push(collectionId);
+        
         let currentId: number | undefined = collectionId;
 
         // Traverse upwards until a system collection or unknown parent is reached
@@ -810,7 +843,7 @@ export default class RaindropToObsidian extends Plugin {
             // Move up to the parent
             currentId = collection.parentId;
         }
-        return ancestors; // Returns ancestors from immediate parent upwards
+        return ancestors; // Returns the current collection ID and all ancestors up to the root
     };
 
     // Convert resolvedCollectionIds to a set of SANITIZED names for easier lookup (only needed if filtering by name)
@@ -873,59 +906,76 @@ export default class RaindropToObsidian extends Plugin {
         const currentCollectionId = parseInt(collectionId, 10); // collectionId from Object.entries is a string
 
         // Only attempt complex path building if we have hierarchy data and it's not a system/uncategorized collection
-        if (!isNaN(currentCollectionId) && currentCollectionId > 0 && collectionHierarchy.size > 0 && resolvedCollectionIds.length > 0) {
+        // Note: We should still build hierarchy even when no specific collections are selected
+        if (!isNaN(currentCollectionId) && currentCollectionId > 0 && collectionHierarchy.size > 0) {
 
              // Find the deepest user-specified ancestor in the current collection's ancestry
-             const ancestorIds = getAncestorIds(currentCollectionId); // Ancestors from immediate parent upwards
+             // Note: getAncestorIds now includes the current collection ID as the first element
+             const ancestorIds = getAncestorIds(currentCollectionId);
              let deepestSpecifiedAncestorId: number | undefined = undefined;
-
-             // Check ancestors from closest to furthest
-             for (const ancestorId of ancestorIds) {
-                  if (resolvedCollectionIds.includes(ancestorId)) {
-                      deepestSpecifiedAncestorId = ancestorId; // Found the deepest ancestor that is specified
-                      break; // Stop at the deepest specified ancestor
-                  }
+             
+             // If no specific collections are selected (resolvedCollectionIds is empty),
+             // we need to build the full path from the root
+             if (resolvedCollectionIds.length === 0) {
+                 // For no filters, we don't set a deepestSpecifiedAncestorId
+                 // This will make the traversal go all the way to the root
+                 deepestSpecifiedAncestorId = undefined;
              }
-
              // If the current collection itself is a user-specified collection, prioritize it
-             if (resolvedCollectionIds.includes(currentCollectionId)) {
-                  deepestSpecifiedAncestorId = currentCollectionId;
-             }
-
-            if (deepestSpecifiedAncestorId !== undefined) {
-                 // Reconstruct the path segments from the deepest specified ancestor downwards to the current collection
-                 const pathSegments: string[] = [];
-                 let currentTraverseId: number | undefined = currentCollectionId;
-                 const tempSegments: string[] = [];
-
-                 // Traverse upwards from the current collection until the deepest specified ancestor is reached
-                 while (currentTraverseId !== undefined && currentTraverseId !== 0 && currentTraverseId !== -1 && currentTraverseId !== -99 && currentTraverseId !== deepestSpecifiedAncestorId) {
-                      const collection = collectionHierarchy.get(currentTraverseId);
-                      if (!collection) break; // Should not happen
-                      tempSegments.unshift(this.sanitizeFileName(collection.title));
-                      currentTraverseId = collection.parentId;
-                 }
-
-                 // Add the deepest specified ancestor's title as the starting segment if it was reached
-                 if (currentTraverseId === deepestSpecifiedAncestorId) {
-                      const ancestorCollection = collectionHierarchy.get(deepestSpecifiedAncestorId);
-                      if (ancestorCollection) {
-                          tempSegments.unshift(this.sanitizeFileName(ancestorCollection.title));
-                      }
-                 }
-
-                 relativeFolderPathSegments = tempSegments;
-
-                 // Update notice title to show path relative to specified ancestor
-                 collectionTitleForNotice = relativeFolderPathSegments.join('/');
-
+             else if (resolvedCollectionIds.includes(currentCollectionId)) {
+                 deepestSpecifiedAncestorId = currentCollectionId;
              } else {
-                 // If no user-specified ancestor is found (and current is not specified),
-                 // place it under an 'Uncategorized' folder within the target folder.
-                 console.warn(`Collection path did not contain a user-specified ancestor or was not the specified collection itself. Placing in Uncategorized: Collection ID ${currentCollectionId}`);
-                 relativeFolderPathSegments = ['Uncategorized'];
-                 collectionTitleForNotice = 'Uncategorized';
+                 // Check ancestors from closest to furthest
+                 for (const ancestorId of ancestorIds) {
+                     if (resolvedCollectionIds.includes(ancestorId)) {
+                         deepestSpecifiedAncestorId = ancestorId; // Found the deepest ancestor that is specified
+                         break; // Stop at the deepest specified ancestor
+                     }
+                 }
              }
+
+            // Build a path for this collection
+            // For collections with a specified ancestor or when no filters are selected
+            if (deepestSpecifiedAncestorId !== undefined || resolvedCollectionIds.length === 0) {
+                  // Reconstruct the path segments from the current collection up to the root
+                  const pathSegments: string[] = [];
+                  let currentTraverseId: number | undefined = currentCollectionId;
+                  const tempSegments: string[] = [];
+
+                  // Build the full path from the current collection up to the root
+                  // When no filters are selected, we'll build the complete hierarchy
+                  while (currentTraverseId !== undefined && currentTraverseId !== 0 && currentTraverseId !== -1 && currentTraverseId !== -99) {
+                       const collection = collectionHierarchy.get(currentTraverseId);
+                       if (!collection) break; // Should not happen
+                       
+                       // Add the current collection's title to the path segments
+                       const sanitizedTitle = this.sanitizeFileName(collection.title);
+                       if (sanitizedTitle) {
+                           tempSegments.unshift(sanitizedTitle);
+                       }
+                       
+                       // When filters are selected, stop at the specified ancestor
+                       // When no filters are selected, this condition is never true (deepestSpecifiedAncestorId is undefined)
+                       if (resolvedCollectionIds.length > 0 && currentTraverseId === deepestSpecifiedAncestorId) {
+                           break;
+                       }
+                       
+                       // Move to parent to continue building the path upwards
+                       currentTraverseId = collection.parentId;
+                  }
+
+                  relativeFolderPathSegments = tempSegments;
+
+                  // Update notice title to show path
+                  collectionTitleForNotice = relativeFolderPathSegments.join('/');
+
+              } else {
+                  // If no user-specified ancestor is found (and current is not specified),
+                  // place it under an 'Uncategorized' folder within the target folder.
+                  console.warn(`Collection path did not contain a user-specified ancestor or was not the specified collection itself. Placing in Uncategorized: Collection ID ${currentCollectionId}`);
+                  relativeFolderPathSegments = ['Uncategorized'];
+                  collectionTitleForNotice = 'Uncategorized';
+              }
 
         } else if (currentCollectionId === -1 || currentCollectionId === 0) {
              // Handle Unsorted and All Collections (should typically go to targetFolderPath directly)

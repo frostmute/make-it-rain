@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed collection hierarchy to properly maintain nested folder structure when no filter options are selected.
+- Improved rate limiting logic with more conservative limits and longer delays between retries.
+- Added small delays between consecutive API calls to reduce rate limit issues.
+- Added user-visible notices during rate limit waiting periods.
+- Fixed JSON parsing issues with API responses.
+
 ## [1.5.0] - 2025-05-16
 
 ### Added
