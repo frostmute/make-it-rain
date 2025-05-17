@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.1] - 2025-05-17
+
 ### Fixed
 
 - Fixed collection hierarchy to properly maintain nested folder structure when no filter options are selected.
