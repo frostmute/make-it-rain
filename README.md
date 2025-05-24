@@ -118,7 +118,7 @@ I will be continually developing this plugin to further streamline user expierie
 
 ## Configuration
 
-![Settings Dialog](https://github.com/frostmute/make-it-rain/blob/main/makeitrain-settings-v150.png)
+![Settings Dialog](https://github.com/frostmute/make-it-rain/blob/main/assets/makeitrain-settings-v150.png)
 
 Before the first use, configure the plugin via Obsidian's settings panel (`Settings` -> `Community Plugins` -> `Make It Rain` -> `Options` (cog icon)).
 
@@ -150,7 +150,7 @@ Before the first use, configure the plugin via Obsidian's settings panel (`Setti
 
 ## Usage
 
-![Import Modal](https://github.com/frostmute/make-it-rain/blob/main/makeitrain-modal-v150.png)
+![Import Modal](https://github.com/frostmute/make-it-rain/blob/main/assets/makeitrain-modal-v150.png)
 
 1. Open the Obsidian **Command Palette** (`Ctrl+P` or `Cmd+P`).
 2. Search for and select the command: **"Fetch Raindrops"**.
@@ -171,7 +171,7 @@ Before the first use, configure the plugin via Obsidian's settings panel (`Setti
 
 ## Created Note Structure
 
-![Imported Note Example](https://github.com/frostmute/make-it-rain/blob/main/makeitrain-note-output.png)
+![Imported Note Example](https://github.com/frostmute/make-it-rain/blob/main/assets/makeitrain-note-output.png)
 
 Each successfully imported Raindrop bookmark generates a new Markdown note with the following structure. Placeholders like `<Raindrop Title>` indicate where Raindrop.io data will be inserted.
 

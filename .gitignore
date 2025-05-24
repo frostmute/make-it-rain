@@ -23,6 +23,13 @@ lib-cov
 *.backup
 src/main.ts.backup
 
+# Build artifacts
+main.js
+
+# System files
+.DS_Store
+**/.DS_Store
+
 # Coverage directory used by tools like istanbul
 coverage
 *.lcov
