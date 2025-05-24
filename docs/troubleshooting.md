@@ -2,6 +2,16 @@
 
 This guide helps you diagnose and resolve common issues with the Make It Rain plugin.
 
+## Table of Contents
+
+- [API Connection Issues](#api-connection-issues)
+- [Note Generation Issues](#note-generation-issues)
+- [Collection and Folder Issues](#collection-and-folder-issues)
+- [Template System Issues](#template-system-issues)
+- [Performance Issues](#performance-issues)
+- [Plugin Update Issues](#plugin-update-issues)
+- [Getting More Help](#getting-more-help)
+
 ## API Connection Issues
 
 ### Invalid API Token

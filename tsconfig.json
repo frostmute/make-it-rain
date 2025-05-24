@@ -3,17 +3,23 @@
       "baseUrl": ".", // Helps resolve non-relative imports if needed
       "inlineSourceMap": true, // Embed sourcemaps in JS files for debugging
       "inlineSources": true, // Include TS source in sourcemaps
-      "module": "CommonJS", // Use ES Modules for modern tooling like esbuild
+      "module": "ESNext", // Use ES Modules for modern tooling like esbuild
       "target": "ES6", // Target modern JavaScript environments (like Obsidian's Electron)
       "allowJs": true, // Allow JavaScript files to be compiled
       "noImplicitAny": true, // Require explicit 'any' type annotations
       "moduleResolution": "node", // Use Node.js style module resolution
-      "importHelpers": false, // Use tslib helpers to reduce code duplication
+      "importHelpers": true, // Use tslib helpers to reduce code duplication
       "isolatedModules": true, // Treat each file as a separate module (required by some tools)
       "strictNullChecks": true, // Enable strict null checks
-      "strict": true, // Enable all strict type-checking options
-      "useUnknownInCatchVariables": true, // Catch clause variables are 'unknown' by default
-      "lib": ["DOM", "ES6", "ES2020", "ESNext"] // Include necessary library definitions
+      "lib": [
+        "DOM",
+        "ES5",
+        "ES6",
+        "ES7"
+      ], // Include necessary library definitions
+      "types": [
+        "node"
+      ]
     },
-    "include": ["src/**/*.ts"] // Specifies which files TypeScript should compile (all .ts files in src)
+    "include": ["src/**/*"] // Specifies which files TypeScript should compile (all .ts files in src)
   } 

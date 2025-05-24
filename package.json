@@ -1,33 +1,35 @@
 {
   "name": "make-it-rain",
-  "version": "1.6.1",
-  "description": "Pull your Raindrop.io bookmarks into Obsidian notes with flexible filtering and location options",
+  "version": "1.0.0",
+  "description": "Raindrop.io Integration for Obsidian",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-    "copy-to-vault": "node copy-to-vault.mjs",
-    "version": "node version-bump.mjs && git add manifest.json versions.json && npm run build",
-    "build-and-copy": "npm run build && npm run copy-to-vault"
+    "version": "node version-bump.mjs && git add manifest.json versions.json",
+    "lint:md": "markdownlint '**/*.md' --fix"
   },
   "keywords": [
     "obsidian",
-    "obsidian-plugin",
-    "raindrop"
+    "raindrop",
+    "bookmarks"
   ],
-  "author": "frostmute",
+  "author": "",
   "license": "MIT",
-  "dependencies": {
-    "node-fetch": "^3.3.2"
-  },
   "devDependencies": {
-    "@types/node": "^16.11.6",
-    "@typescript-eslint/eslint-plugin": "^5.2.0",
-    "@typescript-eslint/parser": "^5.2.0",
-    "builtin-modules": "^3.2.0",
-    "esbuild": "0.17.3",
-    "obsidian": "^1.8.7",
-    "tslib": "^2.8.1",
-    "typescript": "^5.8.3"
+    "@types/node": "^20.11.24",
+    "@typescript-eslint/eslint-plugin": "^7.1.0",
+    "@typescript-eslint/parser": "^7.1.0",
+    "builtin-modules": "^3.3.0",
+    "esbuild": "^0.25.4",
+    "markdownlint": "^0.38.0",
+    "markdownlint-cli": "^0.45.0",
+    "obsidian": "latest",
+    "tslib": "^2.6.2",
+    "typescript": "5.3.3"
+  },
+  "dependencies": {
+    "@types/handlebars": "^4.0.40",
+    "handlebars": "^4.7.8"
   }
 }

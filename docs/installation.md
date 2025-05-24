@@ -1,5 +1,13 @@
 # Installation Guide
 
+## Table of Contents
+
+- [Requirements](#requirements)
+- [Installing the Plugin](#installing-the-plugin)
+- [Getting a Raindrop.io API Token](#getting-a-raindropio-api-token)
+- [Next Steps](#next-steps)
+- [Troubleshooting Installation Issues](#troubleshooting-installation-issues)
+
 ## Requirements
 
 - [Obsidian](https://obsidian.md/) v1.8.10 or higher
@@ -50,5 +58,3 @@ If you encounter issues during installation:
 - See the [Troubleshooting](troubleshooting.md) page for more solutions
 
 ---
-
-If you need further assistance of a technical nature, please [open an issue](https://github.com/frostmute/make-it-rain/issues) on GitHub or make a post in the Make It Rain [Discussions](https://github.com/frostmute/make-it-rain/discussions) if you have general questions or requests.
