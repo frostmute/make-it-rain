@@ -1,49 +1,107 @@
 import { App, Notice, Plugin, PluginSettingTab, Setting, Modal, TextComponent, ButtonComponent, ToggleComponent, PluginManifest, TFile, TAbstractFile } from 'obsidian';
 import { request, RequestUrlParam } from 'obsidian';
 
+// Import utility functions from consolidated index
+import { 
+    // File utilities
+    sanitizeFileName,
+    doesPathExist,
+    isPathAFolder,
+    createFolder,
+    createFolderStructure,
+    
+    // API utilities
+    RateLimiter,
+    createRateLimiter,
+    createAuthenticatedRequestOptions,
+    buildCollectionApiUrl,
+    parseApiResponse,
+    handleRequestError,
+    fetchWithRetry,
+    extractCollectionData
+} from './utils';
 
-// Raindrop.io API Types
+
+// Constants for type unions - following Raindrop.io API types
+const RaindropTypes = {
+    LINK: 'link',
+    ARTICLE: 'article',
+    IMAGE: 'image',
+    VIDEO: 'video',
+    DOCUMENT: 'document',
+    AUDIO: 'audio'
+} as const;
+
+type RaindropType = typeof RaindropTypes[keyof typeof RaindropTypes];
+
+const TagMatchTypes = {
+    ALL: 'all',
+    ANY: 'any'
+} as const;
+
+type TagMatchType = typeof TagMatchTypes[keyof typeof TagMatchTypes];
+
+// System collection IDs from Raindrop.io API docs
+const SystemCollections = {
+    UNSORTED: -1,
+    TRASH: -99
+} as const;
+
+type SystemCollectionId = typeof SystemCollections[keyof typeof SystemCollections];
+
+// Raindrop.io API Types - following official documentation structure
 interface RaindropItem {
-    _id: number;
-    title: string;
-    excerpt?: string;
-    note?: string;
-    link: string;
-    cover?: string;
-    created: string;
-    lastUpdate: string;
-    tags?: string[];
-    collection?: {
-        $id: number;
-        title: string;
+    readonly _id: number;
+    readonly title: string;
+    readonly excerpt?: string;
+    readonly note?: string;
+    readonly link: string;
+    readonly cover?: string;
+    // Timestamps in ISO 8601 format as per API docs
+    readonly created: string; // YYYY-MM-DDTHH:MM:SSZ
+    readonly lastUpdate: string; // YYYY-MM-DDTHH:MM:SSZ
+    readonly tags?: readonly string[];
+    readonly collection?: {
+        readonly $id: number;
+        readonly title: string;
     };
-    highlights?: Array<{
-        text: string;
-        note?: string;
-        color?: string;
-        created: string;
+    readonly highlights?: ReadonlyArray<{
+        readonly text: string;
+        readonly note?: string;
+        readonly color?: string;
+        readonly created: string;
     }>;
-    type: 'link' | 'article' | 'image' | 'video' | 'document' | 'audio';
+    readonly type: RaindropType;
+    // Additional fields that might be returned but not documented
+    readonly [key: string]: any;
 }
 
 interface RaindropResponse {
-    result: boolean;
-    items: RaindropItem[];
-    count?: number;
-    collectionId?: number;
+    readonly result: boolean;
+    readonly items: readonly RaindropItem[];
+    readonly count?: number;
+    readonly collectionId?: number;
 }
 
+// Add a constant for filter types, extending the RaindropTypes with 'all' option
+const FilterTypes = {
+    ...RaindropTypes,
+    ALL: 'all'
+} as const;
+
+type FilterType = typeof FilterTypes[keyof typeof FilterTypes];
+
 interface ModalFetchOptions {
-    vaultPath?: string;
-    collections: string;
-    apiFilterTags: string;
-    includeSubcollections: boolean;
-    appendTagsToNotes: string;
-    useRaindropTitleForFileName: boolean;
-    tagMatchType: 'all' | 'any';
-    filterType?: 'link' | 'article' | 'image' | 'video' | 'document' | 'audio' | 'all';
-    fetchOnlyNew?: boolean;
-    updateExisting: boolean;
+    readonly vaultPath?: string;
+    readonly collections: string;
+    readonly apiFilterTags: string;
+    readonly includeSubcollections: boolean;
+    readonly appendTagsToNotes: string;
+    readonly useRaindropTitleForFileName: boolean;
+    readonly tagMatchType: TagMatchType;
+    readonly filterType?: FilterType;
+    readonly fetchOnlyNew?: boolean;
+    readonly updateExisting: boolean;
 }
 
 interface RaindropToObsidianSettings {
@@ -56,16 +114,31 @@ interface RaindropToObsidianSettings {
 
 // Add new interface for Collection info
 interface RaindropCollection {
-    _id: number;
-    title: string;
-    parent?: {
-        $id: number;
+    readonly _id: number;
+    readonly title: string;
+    readonly parent?: {
+        readonly $id: number;
     };
+    readonly access?: {
+        readonly level: number;
+        readonly draggable: boolean;
+    };
+    readonly color?: string; // HEX color
+    readonly count?: number; // Count of raindrops
+    readonly cover?: readonly string[];
+    readonly created?: string; // YYYY-MM-DDTHH:MM:SSZ
+    readonly expanded?: boolean; // Whether sub-collections are expanded
+    readonly lastUpdate?: string; // YYYY-MM-DDTHH:MM:SSZ
+    readonly public?: boolean; // Whether publicly accessible
+    readonly sort?: number; // Order (descending)
+    readonly view?: 'list' | 'simple' | 'grid' | 'masonry';
+    // Additional fields that might be returned but not documented
+    readonly [key: string]: any;
 }
 
 interface CollectionResponse {
-    result: boolean;
-    items: RaindropCollection[];
+    readonly result: boolean;
+    readonly items: readonly RaindropCollection[];
 }
 
 // Helper function to get the full path segments from the root collection down to the given ID
@@ -75,7 +148,7 @@ const getFullPathSegments = (collectionId: number, hierarchy: Map<number, { titl
     const pathIds: number[] = [];
 
     // Traverse upwards from the current ID to collect all ancestor IDs
-    while (currentId !== undefined && currentId !== 0 && currentId !== -1 && currentId !== -99) {
+    while (currentId !== undefined && currentId !== 0 && currentId !== SystemCollections.UNSORTED && currentId !== SystemCollections.TRASH) {
          pathIds.push(currentId);
          const collection = hierarchy.get(currentId);
          if (!collection || collection.parentId === undefined) {
@@ -111,204 +184,95 @@ const DEFAULT_SETTINGS: RaindropToObsidianSettings = {
     bannerFieldName: 'banner',
 };
 
-// Rate limiting and retry utilities
-class RateLimiter {
-    private requestCount: number = 0;
-    private resetTime: number = Date.now() + 60000; // 1 minute window
-    private readonly maxRequests: number = 60; // More conservative limit (Raindrop.io docs say 120/min, but we're being cautious)
+// Rate limiting and retry utilities are now imported from './utils/apiUtils'
 
-    async checkLimit(): Promise<void> {
-        const now = Date.now();
-        // Reset counter if we're in a new time window
-        if (now >= this.resetTime) {
-            this.requestCount = 0;
-            this.resetTime = now + 60000;
-        }
-        
-        // If we've hit the limit, wait until the next window
-        if (this.requestCount >= this.maxRequests) {
-            const waitTime = this.resetTime - now;
-            await new Promise(resolve => setTimeout(resolve, waitTime));
-            this.requestCount = 0;
-            this.resetTime = Date.now() + 60000;
-        }
-        
-        // Add a small delay between requests to avoid hitting rate limits
-        // This helps spread out requests more evenly
-        if (this.requestCount > 0) {
-            // Add a 300ms delay between requests
-            await new Promise(resolve => setTimeout(resolve, 300));
-        }
-        
-        this.requestCount++;
-    }
-    
-    // Method to reset the counter when we hit a rate limit
-    resetCounter(): void {
-        this.requestCount = 0;
-        this.resetTime = Date.now() + 60000; // Reset the window
-    }
+/**
+ * Configuration options for API requests with retry capability
+ */
+interface FetchWithRetryOptions {
+    url: string;
+    requestOptions: RequestInit;
+    rateLimiter: RateLimiter;
+    maxRetries?: number;
+    delayBetweenRetries?: number;
 }
 
-// Fetch wrapper with built-in retry logic and rate limiting
-// This ensures reliable API communication even with temporary failures
-async function fetchWithRetry(
-    appOrUrl: App | string, 
-    urlOrOptions: string | RequestInit, 
-    optionsOrRateLimiter?: RequestInit | RateLimiter,
-    rateLimiterOrMaxRetries?: RateLimiter | number,
-    maxRetries: number = 3
-): Promise<any> {
-    let url: string;
-    let options: RequestInit;
-    let rateLimiter: RateLimiter;
+/**
+// All API utility functions moved to apiUtils.ts and imported via index.ts
+}
 
-    // Handle both call patterns:
-    // 1. (app: App, url: string, options: RequestInit, rateLimiter: RateLimiter, maxRetries?: number)
-    // 2. (url: string, options: RequestInit, rateLimiter: RateLimiter, maxRetries?: number)
-    if (typeof appOrUrl === 'string') {
-        // Second pattern (url, options, rateLimiter, maxRetries?)
-        url = appOrUrl;
-        options = urlOrOptions as RequestInit;
-        rateLimiter = optionsOrRateLimiter as RateLimiter;
-        if (typeof rateLimiterOrMaxRetries === 'number') {
-            maxRetries = rateLimiterOrMaxRetries;
-        }
-    } else {
-        // First pattern (app, url, options, rateLimiter, maxRetries?)
-        url = urlOrOptions as string;
-        options = optionsOrRateLimiter as RequestInit;
-        rateLimiter = rateLimiterOrMaxRetries as RateLimiter;
-    }
-
-    // Type checking
-    if (typeof url !== 'string') {
+/**
+ * Validates the parameters for the fetch operation
+ */
+function validateFetchParameters(url: string, options: RequestInit): void {
+    const isUrlValid = typeof url === 'string';
+    if (!isUrlValid) {
         throw new Error('URL must be a string');
     }
-    if (!options || typeof options !== 'object') {
-        throw new Error('Options must be an object');
-    }
-    if (!rateLimiter || typeof rateLimiter.checkLimit !== 'function') {
-        throw new Error('Rate limiter must be provided with checkLimit method');
-    }
     
-    return fetchWithRetryInternal(url, options, rateLimiter, maxRetries);
+    const areOptionsValid = options && typeof options === 'object';
+    if (!areOptionsValid) {
+        throw new Error('Request options must be an object');
+    }
 }
 
-async function fetchWithRetryInternal(url: string, options: RequestInit, rateLimiter: RateLimiter, maxRetries: number = 3): Promise<any> {
-    for (let attempt = 0; attempt < maxRetries; attempt++) {
-        try {
-            // Check rate limit before each attempt
-            await rateLimiter.checkLimit();
-            
-            // Use Obsidian's request function which handles CORS
-            const response = await request({
-                url,
-                method: options.method as 'GET' | 'POST' | 'PUT' | 'DELETE',
-                headers: options.headers as Record<string, string>,
-                body: options.body as string | undefined
-            });
-            
-            // Parse the response if it's a string (JSON)
-            if (typeof response === 'string') {
-                return JSON.parse(response);
-            }
-            return response;
-            
-        } catch (error: any) {
-            console.error(`Error in fetchWithRetry (attempt ${attempt + 1}/${maxRetries}):`, error);
-            
-            // If we've reached max retries, rethrow the error
-            if (attempt >= maxRetries - 1) {
-                throw error;
-            }
-            
-            // Special handling for rate limit errors (429)
-            let delay = Math.pow(2, attempt) * 1000; // Default exponential backoff
-            
-            if (error.message && error.message.includes('status 429')) {
-                // For rate limit errors, use a much longer delay with progressive backoff
-                console.log('Rate limit exceeded (429). Adding extra delay...');
-                
-                // More aggressive backoff for rate limit errors
-                // First retry: 10s, Second retry: 30s
-                delay = Math.max(delay, (attempt + 1) * 10000);
-                
-                // Reset the rate limiter's counter to avoid immediate retry
-                rateLimiter.resetCounter();
-                
-                // Add a user-visible notice about the rate limiting
-                new Notice(`Raindrop API rate limit reached. Waiting ${delay/1000} seconds before retrying...`, 5000);
-            }
-            
-            console.log(`Retrying in ${delay}ms...`);
-            await new Promise(resolve => setTimeout(resolve, delay));
-        }
-    }
-    
-    throw new Error(`Failed after ${maxRetries} attempts`);
-}
+/**
+ * Collection API interaction - functional approach
+ */
 
-// Collection info fetching with error handling and rate limiting
+// Function moved to apiUtils.ts and imported via index.ts
+
+// Function moved to apiUtils.ts and imported via index.ts
+
+// Function moved to apiUtils.ts and imported via index.ts
+
+/**
+ * Fetches collection information with error handling and rate limiting
+ * Uses functional composition by breaking the process into smaller, focused operations
+ * @param app - The Obsidian app instance
+ * @param collectionId - The ID of the collection to fetch
+ * @param apiToken - The API token for authentication
+ * @param rateLimiter - Rate limiter to prevent API throttling
+ * @returns Promise resolving to collection data or null if unavailable
+ */
+/**
+ * Fetches collection information from Raindrop.io API
+ * Utilizes utility functions from apiUtils module for better modularity
+ * @param app - Obsidian app instance
+ * @param collectionId - Raindrop collection ID
+ * @param apiToken - Raindrop API token
+ * @param rateLimiter - Rate limiter instance
+ * @returns Collection information or null if not found
+ */
 async function fetchCollectionInfo(app: App, collectionId: string, apiToken: string, rateLimiter: RateLimiter): Promise<RaindropCollection | null> {
-    const fetchOptions: RequestInit = {
-        headers: {
-            'Authorization': `Bearer ${apiToken}`,
-            'Content-Type': 'application/json'
-        }
-    };
+    const requestOptions = createAuthenticatedRequestOptions(apiToken);
+    const apiUrl = buildCollectionApiUrl(collectionId);
 
     try {
-        // Fetch collection details - this helps with folder organization
-        const response = await fetchWithRetry(app, `https://api.raindrop.io/rest/v1/collection/${collectionId}`, fetchOptions, rateLimiter);
-        const data = response;
-        
-        if (data.result && data.item) {
-            return data.item;
-        }
-        console.error('Failed to fetch collection info:', data);
-        return null;
+        const apiResponse = await fetchWithRetry(app, apiUrl, requestOptions, rateLimiter);
+        // Use the imported extractCollectionData function from utils
+        return extractCollectionData(apiResponse) as RaindropCollection;
     } catch (error) {
         // Non-fatal error - we can continue without collection info
         // The items will be placed in the base folder instead
-        console.error(`Error fetching collection info for ${collectionId}:`, error);
+        const errorMessage = error instanceof Error ? error.message : 'unknown error';
+        console.error(`Error fetching collection ${collectionId}: ${errorMessage}`);
         return null;
     }
 }
 
-// Folder creation with proper error handling (creates full path)
-async function createFolderStructure(app: App, fullPath: string): Promise<void> {
-    if (!fullPath) return; // Don't try to create empty path
-
-    try {
-        // Check if the folder exists, create if not
-        const folderExists = await app.vault.adapter.exists(fullPath);
-        if (!folderExists) {
-            console.log(`Creating folder: ${fullPath}`);
-            await app.vault.createFolder(fullPath);
-        } else {
-            // Verify it's actually a folder if it exists
-             const existingFile = app.vault.getAbstractFileByPath(fullPath);
-            if (existingFile && !existingFile.hasOwnProperty('children')) {
-                throw new Error(`Path exists but is not a folder: ${fullPath}`);
-            }
-        }
-    } catch (error) {
-         let errorMsg = 'folder creation failed';
-         if (error instanceof Error) errorMsg = error.message;
-         throw new Error(`Failed to create/verify folder: ${fullPath}. Error: ${errorMsg}.`);
-    }
-}
+// Function moved inside the RaindropToObsidian class
 
 export default class RaindropToObsidian extends Plugin {
   settings: RaindropToObsidianSettings;
-  private rateLimiter: RateLimiter;
+  private rateLimiter: RateLimiter; // Using the functional interface type
   private ribbonIconEl: HTMLElement | undefined; // Property to store the ribbon icon element
+  private isRibbonShown: boolean = false; // Descriptive variable names with auxiliary verbs
 
   constructor(app: App, manifest: PluginManifest) {
     super(app, manifest);
     this.settings = { ...DEFAULT_SETTINGS };
-    this.rateLimiter = new RateLimiter();
+    this.rateLimiter = createRateLimiter(); // Using factory function instead of constructor
   }
 
   async onload() {
@@ -332,65 +296,85 @@ export default class RaindropToObsidian extends Plugin {
   onunload() {
     // Remove ribbon icon when plugin is unloaded
     this.ribbonIconEl?.remove();
-
     console.log('Make It Rain plugin unloaded.');
   }
 
-  async loadSettings() {
+  async loadSettings(): Promise<void> {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+  }
+
+  /**
+   * Generates a file name based on the provided raindrop data and settings
+   * @param raindrop - The raindrop data to use for file name generation
+   * @param useRaindropTitleForFileName - Whether to use the raindrop title for the file name
+   * @returns The generated file name
+   */
+  generateFileName(raindrop: any, useRaindropTitleForFileName: boolean): string {
+    // Use the template from settings if title is enabled, otherwise use ID
+    const fileNameTemplate = useRaindropTitleForFileName ? this.settings.fileNameTemplate : '{{id}}';
+    let fileName = fileNameTemplate;
+    
+    const replacePlaceholder = (placeholder: string, value: string) => {
+      const safeValue = sanitizeFileName(value);
+      const regex = new RegExp(`{{${placeholder}}}`, 'gi');
+      fileName = fileName.replace(regex, safeValue);
+    };
+
+    try {
+      replacePlaceholder('title', raindrop.title || 'Untitled');
+      replacePlaceholder('id', (raindrop._id || 'unknown_id').toString()); // Use _id consistently
+      replacePlaceholder('collectionTitle', raindrop.collection?.title || 'No Collection');
+
+      const createdDate = raindrop.created ? new Date(raindrop.created) : null;
+      let formattedDate = 'no_date';
+      if (createdDate && !isNaN(createdDate.getTime())) {
+        formattedDate = createdDate.toISOString().split('T')[0];
+      }
+      replacePlaceholder('date', formattedDate);
+
+    } catch (error) {
+      let errorMsg = 'template processing error';
+      if (error instanceof Error) errorMsg = error.message;
+      console.error("Error processing file name template:", errorMsg, error);
+      new Notice("Error generating file name. Check console or template.");
+      return "Error_Filename_" + Date.now();
+    }
+
+    let finalFileName = sanitizeFileName(fileName);
+    if (!finalFileName.trim()) {
+      return "Unnamed_Raindrop_" + (raindrop._id || Date.now()); // Use _id consistently
+    }
+    return finalFileName;
   }
 
   async saveSettings() {
     await this.saveData(this.settings);
   }
-
+  
   sanitizeFileName(name: string): string {
-    const invalidChars = /[\/\\:*?"<>|#%&{}$!@'`+=]/g;
-    const replacement = '';
-    let sanitizedName = name.replace(invalidChars, replacement).trim();
-    if (!sanitizedName) sanitizedName = "Unnamed_Raindrop";
-    return sanitizedName.substring(0, 200);
+    // Use the functional utility instead of duplicating the logic
+    return sanitizeFileName(name);
   }
+  
+  /**
+   * Update the ribbon icon based on settings
+   */
+  updateRibbonIcon(): void {
+    // Remove existing icon if it exists
+    this.ribbonIconEl?.remove();
+    this.ribbonIconEl = undefined; // Clear the reference
 
-  generateFileName(raindrop: any, useRaindropTitleForFileName: boolean): string {
-    const { fileNameTemplate } = this.settings;
-
-    if (!useRaindropTitleForFileName) {
-      return this.sanitizeFileName((raindrop.id || 'unknown_id').toString());
-    }
-
-    let fileName = fileNameTemplate;
-    const replacePlaceholder = (placeholder: string, value: string) => {
-        const safeValue = this.sanitizeFileName(value);
-        const regex = new RegExp(`{{${placeholder}}}`, 'gi');
-        fileName = fileName.replace(regex, safeValue);
-    };
-
-    try {
-        replacePlaceholder('title', raindrop.title || 'Untitled');
-        replacePlaceholder('id', (raindrop._id || 'unknown_id').toString()); // Use _id consistently
-        replacePlaceholder('collectionTitle', raindrop.collection?.title || 'No Collection');
-
-        const createdDate = raindrop.created ? new Date(raindrop.created) : null;
-        let formattedDate = 'no_date';
-        if (createdDate && !isNaN(createdDate.getTime())) {
-          formattedDate = createdDate.toISOString().split('T')[0];
+    // Add icon if setting is enabled
+    if (this.settings.showRibbonIcon) {
+      this.ribbonIconEl = this.addRibbonIcon(
+        'cloud-download', // Obsidian icon ID for cloud download
+        'Fetch Raindrops', // Tooltip text
+        () => {
+          // Callback function when the icon is clicked
+          new RaindropFetchModal(this.app, this).open();
         }
-        replacePlaceholder('date', formattedDate);
-
-    } catch (error) {
-        let errorMsg = 'template processing error';
-        if (error instanceof Error) errorMsg = error.message;
-        console.error("Error processing file name template:", errorMsg, error);
-        new Notice("Error generating file name. Check console or template.");
-        return "Error_Filename_" + Date.now();
+      );
     }
-
-    let finalFileName = this.sanitizeFileName(fileName);
-    if (!finalFileName.trim()) {
-        return "Unnamed_Raindrop_" + (raindrop._id || Date.now()); // Use _id consistently
-    }
-    return finalFileName;
   }
 
   async fetchRaindrops(options: ModalFetchOptions) {
@@ -567,7 +551,7 @@ export default class RaindropToObsidian extends Plugin {
         // Even if collections field is empty, if tags are present, we fetch via tags endpoint (collectionId 0)
         if (resolvedCollectionIds.length > 0) {
             fetchMode = 'collections';
-        } else if (searchParameterString || (options.tagMatchType === 'any' && options.apiFilterTags.length > 0)) {
+        } else if (searchParameterString || (options.tagMatchType === TagMatchTypes.ANY && options.apiFilterTags.length > 0)) {
              fetchMode = 'tags';
         }
 
@@ -634,7 +618,7 @@ export default class RaindropToObsidian extends Plugin {
             }
         } else if (fetchMode === 'tags') {
             // Fetch based on tags (uses collectionId 0 endpoint)
-            if (options.tagMatchType === 'any' && options.apiFilterTags.length > 0) {
+            if (options.tagMatchType === TagMatchTypes.ANY && options.apiFilterTags.length > 0) {
                 // Implementation of OR logic for tags (fetch each tag separately)
                 const uniqueItems = new Map<number, RaindropItem>();
 
@@ -660,7 +644,7 @@ export default class RaindropToObsidian extends Plugin {
                         console.log(`Requesting items with tag: ${tag}`, currentApiUrl);
                         loadingNotice.setMessage(`Fetching items with tag: ${tag}, page ${page + 1}...`);
 
-                        const response = await fetchWithRetry(currentApiUrl, fetchOptions, this.rateLimiter);
+                        const response = await fetchWithRetry(this.app, currentApiUrl, fetchOptions, this.rateLimiter);
                         const data = response as RaindropResponse;
 
                         if (!data.result) {
@@ -781,7 +765,7 @@ export default class RaindropToObsidian extends Plugin {
         }
 
         if (allData.length === 0) {
-            if (resolvedCollectionIds.length > 0 || searchParameterString || (options.tagMatchType === 'any' && options.apiFilterTags.length > 0)) {
+            if (resolvedCollectionIds.length > 0 || searchParameterString || (options.tagMatchType === TagMatchTypes.ANY && options.apiFilterTags.length > 0)) {
                 loadingNotice.hide(); // Dismiss loading notice
                 new Notice('No raindrops found matching your criteria.', 5000);
             } else {
@@ -832,7 +816,7 @@ export default class RaindropToObsidian extends Plugin {
         let currentId: number | undefined = collectionId;
 
         // Traverse upwards until a system collection or unknown parent is reached
-        while (currentId !== undefined && currentId !== 0 && currentId !== -1 && currentId !== -99) {
+        while (currentId !== undefined && currentId !== 0 && currentId !== SystemCollections.UNSORTED && currentId !== SystemCollections.TRASH) {
             const collection = collectionHierarchy.get(currentId);
             if (!collection || collection.parentId === undefined) {
                 // Stop if collection not found in hierarchy map or no parent defined
@@ -1259,24 +1243,7 @@ export default class RaindropToObsidian extends Plugin {
     console.log(`Raindrop processing complete. Created: ${createdCount}, Updated: ${updatedCount}, Skipped: ${skippedCount}, Errors: ${errorCount}`);
   }
 
-  // Method to add or remove the ribbon icon
-  updateRibbonIcon(): void {
-    // Remove existing icon if it exists
-    this.ribbonIconEl?.remove();
-    this.ribbonIconEl = undefined; // Clear the reference
-
-    // Add icon if setting is enabled
-    if (this.settings.showRibbonIcon) {
-      this.ribbonIconEl = this.addRibbonIcon(
-        'cloud-download', // Obsidian icon ID for cloud download
-        'Fetch Raindrops', // Tooltip text
-        () => {
-          // Callback function when the icon is clicked
-          new RaindropFetchModal(this.app, this).open();
-        }
-      );
-    }
-  }
+  // The updateRibbonIcon method is already defined at line ~360
 }
 
 class RaindropFetchModal extends Modal {
@@ -1287,8 +1254,8 @@ class RaindropFetchModal extends Modal {
   includeSubcollections: boolean = false;
   appendTagsToNotes: string = '';
   useRaindropTitleForFileName: boolean = true;
-  tagMatchType: 'all' | 'any' = 'all';
-  filterType: 'link' | 'article' | 'image' | 'video' | 'document' | 'audio' | 'all' = 'all';
+  tagMatchType: TagMatchType = TagMatchTypes.ALL;
+  filterType: FilterType = FilterTypes.ALL;
   fetchOnlyNew: boolean = false;
   updateExisting: boolean = false;
 
