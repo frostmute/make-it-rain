@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.0] - 2025-05-24
+
+## [1.6.0] - 2025-05-24
+
+### Added
+
+- Added comprehensive documentation to all utility modules
+- Added improved code-level documentation throughout the codebase
+- Added usage examples in code documentation
+
+### Changed
+
+- Refactored codebase to use functional programming patterns
+- Separated utility functions into dedicated modules (fileUtils.ts and apiUtils.ts)
+- Enhanced fetchWithRetry to support both old and new parameter patterns for backward compatibility
+- Improved error handling and recovery mechanisms
+- Updated README with clearer documentation and roadmap
+
+### Fixed
+
+- Fixed TypeScript compilation errors and warnings
+- Resolved duplicate function implementations
+- Fixed import conflicts between modules
+
 ## [1.5.1] - 2025-05-17
 
 ### Fixed
