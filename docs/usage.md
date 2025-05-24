@@ -2,9 +2,21 @@
 
 This guide explains how to use the Make It Rain plugin to fetch your Raindrop.io bookmarks into Obsidian.
 
+## Table of Contents
+
+- [Getting Started](#getting-started)
+- [Opening the Fetch Modal](#opening-the-fetch-modal)
+- [Fetch Modal Options](#fetch-modal-options)
+- [Fetching Process](#fetching-process)
+- [Understanding the Results](#understanding-the-results)
+- [Folder Organization](#folder-organization)
+- [Advanced Usage](#advanced-usage)
+- [Next Steps](#next-steps)
+
 ## Getting Started
 
 Before using the plugin, ensure you have:
+
 1. [Installed the plugin](installation.md)
 2. [Configured your API token](configuration.md#raindropio-api-token)
 3. Set your [default raindrop location](configuration.md#default-raindrop-location) (optional)
@@ -20,7 +32,6 @@ There are three ways to open the fetch modal:
 ## Fetch Modal Options
 
 The fetch modal provides several options for filtering and organizing your raindrops:
-
 
 ### Target Location
 
@@ -49,7 +60,11 @@ The fetch modal provides several options for filtering and organizing your raind
   - Options: All, Link, Article, Image, Video, Document, Audio
   - Useful for importing only specific types of content
 
-  **Note**: If NO filters are selected, all raindrops will be fetched. For large collections, this can take a while... The plugin will show a progress bar and rate limit warnings, if any are encountered. This is normal behavior and the plugin will continue to fetch raindrops until all are fetched. The length of time it takes to fetch all raindrops depends on the number of raindrops in your collection, the size of each raindrop's content, and your internet connection speed.
+**Note**: If NO filters are selected, all raindrops will be fetched. For large collections, this can take a while.
+The plugin will show a progress bar and rate limit warnings, if any are encountered. This is normal behavior and
+the plugin will continue to fetch raindrops until all are fetched. The length of time it takes to fetch all
+raindrops depends on the number of raindrops in your collection, the size of each raindrop's content, and your
+internet connection speed.
 
 ### Import Options
 
@@ -107,11 +122,13 @@ The plugin organizes your notes based on your Raindrop.io collection hierarchy:
 3. **Nested Collections**: Maintains the same hierarchy as in Raindrop.io
 
 For example, if you have:
+
 - A collection "Research" with a subcollection "AI"
 - And you set your vault path to "Raindrops"
 
 The resulting structure will be:
-```
+
+```markdown
 Raindrops/
 ├── Research/
 │   └── AI/

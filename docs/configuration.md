@@ -2,6 +2,16 @@
 
 This guide covers all the configuration options available in the Make It Rain plugin.
 
+## Table of Contents
+
+- [Accessing the Settings](#accessing-the-settings)
+- [API Configuration](#api-configuration)
+- [General Settings](#general-settings)
+- [Template System](#template-system)
+- [Configuration Tips](#configuration-tips)
+- [Advanced Configuration](#advanced-configuration)
+- [Next Steps](#next-steps)
+
 ## Accessing the Settings
 
 1. Open Obsidian and navigate to **Settings** (gear icon in the bottom-left corner)
@@ -27,7 +37,7 @@ This is the most important setting required for the plugin to function.
 - **Setting**: Default Raindrop Location
 - **Description**: The default folder where your Raindrop bookmarks will be saved
 - **Format**: Path relative to your vault root (e.g., "Raindrops" or "References/Web")
-- **Note**: You can override this setting every time you fetch raindrops, giving you the flexibility to save them in different locations and keep them synchronized (or not) seperately from other collections.
+- **Note**: You can override this setting every time you fetch raindrops, giving you the flexibility to save them in different locations and keep them synchronized (or not) separately from other collections.
 
 ### Filename Template
 

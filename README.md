@@ -42,11 +42,11 @@ For a complete list of changes, see the [CHANGELOG.md](CHANGELOG.md).
 
 ![Plugin Header Image](https://i.ibb.co/HTx7TnbN/makeitrain.png)
 
-## Raindrop.io Import\Sync for Obsidian
+## Raindrop.io Import/Sync for Obsidian
 
 A LIGHTWEIGHT and BLAZING FAST plugin that enables you to fetch bookmarks, highlights, notes, and other content types from your [Raindrop.io](https://raindrop.io) collections into your [Obsidian](https://obsidian.md/) vault with maximum flexibility. Seamlessly integrate your web clippings, articles, and references into your Obsidian knowledge base!
 
-I will be continually developing this plugin to further streamline user expierience and extend functionality. Please do not hesitate to leave feedback, submit feature requests, or ask for assisstance with anything; I intend to adress every inquiry to the best of my abilities... I am new to public development and have never shared anything I've made with anyone else, so if I'm overlooking something, or have made an error in etiquette, please let me know. I value and appreciate all forms of feedback and it helps immensely in my learning process.
+I will be continually developing this plugin to further streamline user experience and extend functionality. Please do not hesitate to leave feedback, submit feature requests, or ask for assistance with anything; I intend to address every inquiry to the best of my abilities. I am new to public development and have never shared anything I've made with anyone else, so if I'm overlooking something, or have made an error in etiquette, please let me know. I value and appreciate all forms of feedback and it helps immensely in my learning process.
 
 ## Features
 
@@ -71,9 +71,9 @@ I will be continually developing this plugin to further streamline user expierie
 - **Tag Management:** Automatically append custom tags to the frontmatter of every imported note.
 - **Safe Import:** Prevents overwriting by checking if a note with the target filename already exists. **New:** Added options to either skip existing files or update them based on Raindrop ID and `last_update` timestamp.
 - **Handles Pagination:** Reliably fetches all matching bookmarks from Raindrop.io, respecting API rate limits.
-- **Persistent Settings:** Configure and save your API key, default note save location, filename template, **ribbon icon visibility, and banner frontmatter field name**.
+- **Persistent Settings:** Configure and save your API key, default note save location, filename template, ribbon icon visibility, and banner frontmatter field name.
 
-### In the pipe for future releases:
+### In the pipe for future releases
 
 - **Enhanced Testing & Reliability**: Comprehensive unit tests for core utility functions.
 - **Better Documentation**: More detailed documentation and usage examples for both users and contributors.
@@ -91,9 +91,10 @@ I will be continually developing this plugin to further streamline user expierie
 
 ## Installation
 
-<!-- Reminder: Update this link when releases are available -->
 ### Manual Installation
-(Only option at the moment; you are welcome to inspect the source if you have any doubts about safety. After I get the plugin's features mostly intact and fully functioning I will submit a request for inclusion in the Community Plugin Repo.) 
+
+(Only option at the moment; you are welcome to inspect the source if you have any doubts about safety. After I get the
+plugin's features mostly intact and fully functioning I will submit a request for inclusion in the Community Plugin Repo.)
 
 1. Download `main.js`, `manifest.json`, and `styles.css` from the latest [RELEASE](https://github.com/frostmute/make-it-rain/releases/latest) on GitHub.
 2. In your Obsidian vault, navigate to the `.obsidian/plugins/` directory.
@@ -120,7 +121,8 @@ I will be continually developing this plugin to further streamline user expierie
 
 ![Settings Dialog](https://github.com/frostmute/make-it-rain/blob/main/assets/makeitrain-settings-v150.png)
 
-Before the first use, configure the plugin via Obsidian's settings panel (`Settings` -> `Community Plugins` -> `Make It Rain` -> `Options` (cog icon)).
+Before the first use, configure the plugin via Obsidian's settings panel (`Settings` -> `Community Plugins` -> `Make It Rain` ->
+`Options` (cog icon)).
 
 1. **Raindrop.io API Token (Required):**
     - You must provide a "Test Token" from Raindrop.io.
@@ -129,7 +131,8 @@ Before the first use, configure the plugin via Obsidian's settings panel (`Setti
         2. Click "+ Create new app".
         3. Give it a name (e.g., "MakeItRain").
         4. Click the newly created app, then click "Create test token".
-    - Copy this token and paste it into the plugin's API Token settings field. A **"Verify Token" button** is available to test your connection.
+    - Copy this token and paste it into the plugin's API Token settings field. A **"Verify Token" button** is available to test
+your connection.
 2. **Default Vault Location for Notes:**
     - Specify the default folder path within your vault where imported notes should be saved (e.g., `Imports/Raindrops`).
     - If left blank, notes will be saved in the root of your vault.
@@ -146,7 +149,8 @@ Before the first use, configure the plugin via Obsidian's settings panel (`Setti
 4. **Show Ribbon Icon:**
     - Toggle to show or hide the Make It Rain ribbon icon in the Obsidian sidebar.
 5. **Banner Frontmatter Field Name:**
-    - Customize the frontmatter field name used for the banner image (default is `banner`). Useful if you use plugins that expect a different field name.
+    - Customize the frontmatter field name used for the banner image (default is `banner`). Useful if you use plugins that
+expect a different field name.
 
 ## Usage
 
@@ -159,13 +163,17 @@ Before the first use, configure the plugin via Obsidian's settings panel (`Setti
         - **Vault Folder (Optional):** Override the default save location for this specific fetch.
         - **Collections:** Enter comma-separated Raindrop.io Collection *IDs or Names* to fetch from specific collections.
         - **Filter by Tags:** Enter comma-separated Raindrop.io tag names. Choose your tag matching mode (AND/OR).
-        - **Include Subcollections:** If filtering by Collections, toggle this on to also fetch from any collections nested within the specified ones.
-        - **Filter by Type:** Select the type of raindrops to fetch (All Types, Links, Articles, Images, Videos, Documents, Audio).
+        - **Include Subcollections:** If filtering by Collections, toggle this on to also fetch from any collections nested within
+the specified ones.
+        - **Filter by Type:** Select the type of raindrops to fetch (All Types, Links, Articles, Images, Videos, Documents,
+Audio).
     - **Note Options:**
         - **Append Tags to Note Frontmatter:** Enter comma-separated tags to add to the `tags` list in the YAML frontmatter.
-        - **Use Raindrop Title for File Name:** Toggle on (default) to use the File Name Template. If off, the Raindrop bookmark ID will be used as the filename.
+        - **Use Raindrop Title for File Name:** Toggle on (default) to use the File Name Template. If off, the Raindrop bookmark
+ID will be used as the filename.
         - **Fetch only new items:** If enabled, existing notes will be skipped.
-        - **Update existing notes:** If enabled, existing notes will be updated if the source raindrop has changed (based on `last_update`). This option disables "Fetch only new items".
+        - **Update existing notes:** If enabled, existing notes will be updated if the source raindrop has changed (based on
+`last_update`). This option disables "Fetch only new items".
 4. Click the **"Fetch Raindrops"** button in the modal.
 5. The plugin will display notices for progress and a final summary. Check the Obsidian Developer Console for detailed logs.
 
@@ -173,7 +181,8 @@ Before the first use, configure the plugin via Obsidian's settings panel (`Setti
 
 ![Imported Note Example](https://github.com/frostmute/make-it-rain/blob/main/assets/makeitrain-note-output.png)
 
-Each successfully imported Raindrop bookmark generates a new Markdown note with the following structure. Placeholders like `<Raindrop Title>` indicate where Raindrop.io data will be inserted.
+Each successfully imported Raindrop bookmark generates a new Markdown note with the following structure. Placeholders like
+<Raindrop Title> indicate where Raindrop.io data will be inserted.
 
 ```markdown
 ---
@@ -226,19 +235,22 @@ tags:
   *Note:* Optional note for highlight 1 (newlines are replaced with spaces)
 - Highlight text 2 (newlines are replaced with spaces)
   *Note:* Optional note for highlight 2 (newlines are replaced with spaces)
-
 ```
 
-**Note on Tags:** Tags in the frontmatter are automatically sanitized for Obsidian compatibility: spaces are replaced with underscores (`_`), and special characters are removed.
+**Note on Tags:** Tags in the frontmatter are automatically sanitized for Obsidian compatibility: spaces are replaced with
+underscores (`_`), and special characters are removed.
 
 ## Documentation
 
 Comprehensive documentation for the Make It Rain plugin is available in multiple formats:
 
 - **[GitHub Wiki](https://github.com/frostmute/make-it-rain/wiki)**: Detailed guides, tutorials, and examples
-- **[Developer Documentation](https://github.com/frostmute/make-it-rain/wiki/Developer-Guide)**: Information for developers interested in contributing to the project
-- **[API Documentation](https://github.com/frostmute/make-it-rain/wiki/API-Reference)**: Documentation for the Raindrop.io API integration
-- **[Code Documentation](https://github.com/frostmute/make-it-rain/wiki/Code-Structure)**: Overview of the codebase structure and architecture
+- **[Developer Documentation](https://github.com/frostmute/make-it-rain/wiki/Developer-Guide)**: Information for developers
+interested in contributing to the project
+- **[API Documentation](https://github.com/frostmute/make-it-rain/wiki/API-Reference)**: Documentation for the Raindrop.io API
+integration
+- **[Code Documentation](https://github.com/frostmute/make-it-rain/wiki/Code-Structure)**: Overview of the codebase structure
+and architecture
 
 In-code documentation is also available via JSDoc comments throughout the codebase, particularly in the utility modules:
 
@@ -257,37 +269,7 @@ For any issues, open the Developer Console (`Ctrl+Shift+I` or `Cmd+Option+I` -> 
 
 ## Contributing
 
-Contributions are welcome! Here's how you can help:
-
-### Feedback and Feature Requests
-
-- Open an [issue](https://github.com/frostmute/make-it-rain/issues) for bugs or feature requests
-- Join the discussions in existing issues
-- Share your use cases and suggestions
-
-### Development
-
-1. Clone this repository
-2. Install dependencies: `npm install`
-3. Build: `npm run build`
-4. For development: `npm run dev`
-
-### Testing
-
-Before submitting a pull request:
-
-1. Test your changes thoroughly
-2. Update documentation as needed
-3. Add your changes to CHANGELOG.md
-4. Ensure code style consistency
-
-### Pull Requests
-
-1. Fork the repository
-2. Create a new branch: `git checkout -b feature/your-feature-name`
-3. Commit your changes: `git commit -am 'Add some feature'`
-4. Push to the branch: `git push origin feature/your-feature-name`
-5. Submit a pull request
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 

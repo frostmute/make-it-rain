@@ -152,3 +152,6 @@ main.js
 # Ignore release backups and temporary main.ts backup
 release-backups/
 src/main.ts.bak
+
+# Backup directory
+backup/

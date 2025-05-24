@@ -1,38 +1,33 @@
-import * as fs from 'fs/promises';
-import * as path from 'path';
-import { fileURLToPath } from 'url';
+import { copyFileSync, mkdirSync, existsSync } from 'fs';
+import { dirname } from 'path';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const VAULT_PATH = '/Volumes/Storage/Obsidian Vaults/venturamute/.obsidian/plugins/make-it-rain';
-const PLUGIN_FILES = [
+const targetVaultPath = '/Volumes/Storage/Obsidian Vaults/refactormute/.obsidian/plugins/make-it-rain';
+const sourceFiles = [
     'main.js',
     'manifest.json',
     'styles.css'
 ];
 
-async function copyPluginFiles() {
-    try {
-        // Ensure the vault plugin directory exists
-        await fs.mkdir(VAULT_PATH, { recursive: true });
-
-        // Copy each plugin file
-        for (const file of PLUGIN_FILES) {
-            const srcPath = path.join(__dirname, file);
-            const destPath = path.join(VAULT_PATH, file);
-            
-            // Copy the file
-            await fs.copyFile(srcPath, destPath);
-            console.log(`Copied ${file} to vault`);
-        }
-
-        console.log('Plugin files copied successfully!');
-    } catch (error) {
-        console.error('Error copying plugin files:', error);
-        process.exit(1);
-    }
+// Create the target directory if it doesn't exist
+if (!existsSync(targetVaultPath)) {
+    mkdirSync(targetVaultPath, { recursive: true });
 }
 
-// Run the copy operation
-await copyPluginFiles();
+// Copy each file to the target vault
+for (const file of sourceFiles) {
+    const sourcePath = file;
+    const targetPath = `${targetVaultPath}/${file}`;
+    
+    // Ensure the target directory exists
+    const targetDir = dirname(targetPath);
+    if (!existsSync(targetDir)) {
+        mkdirSync(targetDir, { recursive: true });
+    }
+    
+    try {
+        copyFileSync(sourcePath, targetPath);
+        console.log(`Copied ${file} to ${targetPath}`);
+    } catch (error) {
+        console.error(`Error copying ${file}:`, error);
+    }
+}
