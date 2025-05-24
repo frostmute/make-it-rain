@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "node esbuild.config.mjs",
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-    "version": "node version-bump.mjs && git add manifest.json versions.json && npm run build"
+    "copy-to-vault": "node copy-to-vault.mjs",
+    "version": "node version-bump.mjs && git add manifest.json versions.json && npm run build",
+    "build-and-copy": "npm run build && npm run copy-to-vault"
   },
   "keywords": [
     "obsidian",
