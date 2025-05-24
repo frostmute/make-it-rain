@@ -17,13 +17,19 @@
  *    - Functions for interacting with Raindrop.io API
  *    - Examples: fetchWithRetry, createRateLimiter, handleRequestError
  * 
+ * 3. YAML Utilities (yamlUtils.ts)
+ *    - Functions for generating valid YAML frontmatter
+ *    - Examples: createYamlFrontmatter, formatYamlValue, escapeYamlString
+ * 
  * Usage:
  * ```typescript
  * import { 
  *   // File utilities
  *   doesPathExist, createFolder,
  *   // API utilities
- *   fetchWithRetry, createRateLimiter 
+ *   fetchWithRetry, createRateLimiter,
+ *   // YAML utilities
+ *   createYamlFrontmatter 
  * } from './utils';
  * ```
  */
@@ -33,3 +39,6 @@ export * from './fileUtils';
 
 // Re-export all API utilities
 export * from './apiUtils';
+
+// Re-export all YAML utilities
+export * from './yamlUtils';

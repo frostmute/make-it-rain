@@ -37,7 +37,11 @@ import {
     parseApiResponse,
     handleRequestError,
     fetchWithRetry,
-    extractCollectionData
+    extractCollectionData,
+    
+    // YAML utilities
+    createYamlFrontmatter,
+    formatYamlValue
 } from './utils';
 
 
@@ -1116,47 +1120,45 @@ export default class RaindropToObsidian extends Plugin {
                 const rdSourceUrl = raindrop.link;
                 const rdCoverUrl = raindrop.cover || '';
 
-                let fileContent = '---\n';
-                    // Add Raindrop ID to frontmatter for future updates
-                    fileContent += `id: ${raindrop._id}\n`;
-                fileContent += `title: "${rdTitle.replace(/"/g, '\\"')}"\n`;
+                // Create a frontmatter object with all raindrop metadata
+                const frontmatterData: Record<string, any> = {
+                    // Basic metadata
+                    id: raindrop._id,
+                    title: rdTitle,
+                    source: rdSourceUrl,
+                    type: raindrop.type,
+                    created: raindrop.created,
+                    last_update: raindrop.lastUpdate
+                };
                 
+                // Add description if present
                 if (rdExcerpt) {
-                    if (rdExcerpt.includes('\n')) {
-                        fileContent += 'description: |\n';
-                        rdExcerpt.split('\n').forEach((line: string) => 
-                            fileContent += `  ${line.replace(/\s+$/, '')}\n`
-                        );
-                    } else {
-                        fileContent += `description: "${rdExcerpt.replace(/"/g, '\\"')}"\n`;
-                    }
+                    frontmatterData.description = rdExcerpt;
                 }
                 
-                fileContent += `source: ${rdSourceUrl}\n`;
-                fileContent += `type: ${raindrop.type}\n`;
-                fileContent += `created: ${raindrop.created}\n`;
-                fileContent += `last_update: ${raindrop.lastUpdate}\n`;
-
-                // Add collection information to frontmatter
+                // Add collection information if available
                 if (raindrop.collection?.$id && collectionIdToNameMap.has(raindrop.collection.$id)) {
                     const collectionId = raindrop.collection.$id;
                     const collectionTitle = collectionIdToNameMap.get(collectionId) || 'Unknown';
-                     // Build the collection path relative to the Raindrop root for full frontmatter path
+                    // Build the collection path relative to the Raindrop root
                     const fullCollectionPathForFrontmatter = getFullPathSegments(collectionId, collectionHierarchy, collectionIdToNameMap).join('/');
-
-                    fileContent += `collection:\n`;
-                    fileContent += `  id: ${collectionId}\n`;
-                    fileContent += `  title: "${collectionTitle.replace(/"/g, '\\"')}"\n`;
-                    fileContent += `  path: "${fullCollectionPathForFrontmatter.replace(/"/g, '\\"')}"\n`;
-
+                    
+                    frontmatterData.collection = {
+                        id: collectionId,
+                        title: collectionTitle,
+                        path: fullCollectionPathForFrontmatter
+                    };
+                    
+                    // Add parent ID if available
                     if (collectionHierarchy.has(collectionId)) {
-                         const collectionInfo = collectionHierarchy.get(collectionId);
-                         if(collectionInfo?.parentId !== undefined) {
-                             fileContent += `  parent_id: ${collectionInfo.parentId}\n`;
-                         }
+                        const collectionInfo = collectionHierarchy.get(collectionId);
+                        if (collectionInfo?.parentId !== undefined) {
+                            frontmatterData.collection.parent_id = collectionInfo.parentId;
+                        }
                     }
                 }
-
+                
+                // Process and add tags
                 let combinedFMTags: string[] = [...settingsFMTags];
                 if (raindrop.tags && Array.isArray(raindrop.tags)) {
                     raindrop.tags.forEach((tag: string) => {
@@ -1167,50 +1169,56 @@ export default class RaindropToObsidian extends Plugin {
                     });
                 }
                 
-                if (combinedFMTags.length > 0) {
-                    fileContent += 'tags:\n';
-                    combinedFMTags.forEach((tag: string) => {
-                        const sanitizedTag = tag.replace(/ /g, "_")
-                            .replace(/[^\w\u00C0-\u00FF\u0100-\u017F\u0180-\u024F\u1E00-\u1EFF\/-]+/g, '');
-                        if (sanitizedTag) fileContent += `  - ${sanitizedTag}\n`;
-                    });
-                    fileContent += '\n'; // Add newline after tags
-                } else {
-                    fileContent += 'tags: []\n';
+                // Sanitize all tags for YAML compatibility
+                const sanitizedTags = combinedFMTags.map(tag => 
+                    tag.replace(/ /g, "_")
+                       .replace(/[^\w\u00C0-\u00FF\u0100-\u017F\u0180-\u024F\u1E00-\u1EFF\/-]+/g, '')
+                ).filter(tag => tag.length > 0);
+                
+                frontmatterData.tags = sanitizedTags;
+                
+                // Add banner/cover image if available
+                if (rdCoverUrl) {
+                    frontmatterData[this.settings.bannerFieldName] = rdCoverUrl;
                 }
                 
-                if (rdCoverUrl) {
-                        fileContent += `${this.settings.bannerFieldName}: ${rdCoverUrl}\n`;
-                }
-                fileContent += '---\n\n';
-
+                // Generate the note content (separate from frontmatter)
+                let noteContent = '';
+                
+                // Add cover image if available
                 if (rdCoverUrl) {
                     const altText = this.sanitizeFileName(rdTitle === 'Untitled Raindrop' ? 'Cover Image' : rdTitle)
                         .replace(/\.md$/i, '');
-                    fileContent += `![${altText}](${rdCoverUrl})\n\n`;
+                    noteContent += `![${altText}](${rdCoverUrl})\n\n`;
                 }
                 
-                fileContent += `# ${rdTitle}\n\n`;
+                noteContent += `# ${rdTitle}\n\n`;
                 
                 // Add description if present (outside frontmatter)
                 if (rdExcerpt && !rdExcerpt.includes('\n')) { // Only add as body if not multiline (already in frontmatter)
-                     fileContent += `## Description\n${rdExcerpt}\n\n`;
+                     noteContent += `## Description\n${rdExcerpt}\n\n`;
                 }
 
-                if (rdNoteContent) fileContent += `## Notes\n${rdNoteContent}\n\n`;
+                if (rdNoteContent) noteContent += `## Notes\n${rdNoteContent}\n\n`;
 
                 if (raindrop.highlights && Array.isArray(raindrop.highlights) && raindrop.highlights.length > 0) {
-                    fileContent += '## Highlights\n';
+                    noteContent += '## Highlights\n';
                     raindrop.highlights.forEach((highlight) => {
                         if (highlight.text) {
-                            fileContent += `- ${highlight.text.replace(/r\n|r|n/g, ' ')}\n`;
+                            noteContent += `- ${highlight.text.replace(/r\n|r|n/g, ' ')}\n`;
                             if (highlight.note) {
-                                fileContent += `  *Note:* ${highlight.note.replace(/r\n|r|n/g, ' ')}\n`;
+                                noteContent += `  *Note:* ${highlight.note.replace(/r\n|r|n/g, ' ')}\n`;
                             }
                         }
                     });
-                    fileContent += '\n';
+                    noteContent += '\n';
                 }
+                
+                // Generate properly formatted and escaped YAML frontmatter
+                const frontmatter = createYamlFrontmatter(frontmatterData);
+                
+                // Combine frontmatter and note content
+                const fileContent = frontmatter + noteContent;
 
                 await app.vault.create(filePath, fileContent);
 

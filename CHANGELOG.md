@@ -7,7 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.6.0] - 2025-05-24
+## [1.6.1] - 2025-05-24
+
+### Added
+
+- Added YAML utilities module for proper frontmatter generation
+- Fixed YAML/JSON rendering issues in note frontmatter
+- Added support for complex data types in frontmatter
+- Improved handling of multiline content in frontmatter
+
+### Changed
+
+- Replaced manual frontmatter generation with a robust YAML serialization system
+- Enhanced error handling for frontmatter generation
 
 ## [1.6.0] - 2025-05-24
 
