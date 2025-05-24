@@ -177,8 +177,11 @@ Each successfully imported Raindrop bookmark generates a new Markdown note with 
 
 ```markdown
 ---
+# Basic raindrop metadata
 id: <Raindrop ID>
 title: "<Raindrop Title>"
+
+# Description - one of these formats will be used:
 # For single-line descriptions:
 description: "<Raindrop Excerpt (summary from the webpage)>"
 # OR for multiline descriptions:
@@ -186,20 +189,28 @@ description: |
   <First line of multiline description>
   <Second line of multiline description>
   <Additional lines...>
+  
+# Source information
 source: <Raindrop URL (link)>
 type: <Raindrop Type, e.g., link, article>
 created: <Raindrop Creation Date>
 last_update: <Raindrop Last Update Date>
+
+# Collection information (nested structure)
 collection:
   id: <Raindrop Collection ID>
   title: "<Raindrop Collection Title>"
   path: "<Full Raindrop Collection Path relative to Raindrop root>"
-  parent_id: <Raindrop Parent Collection ID (if not top level)>
+  parent_id: <Raindrop Parent Collection ID> # Only present if not a top-level collection
+
+# Tags from raindrop and any you added via the modal
 tags:
   - <raindrop_tag_1_sanitized>
   - <raindrop_tag_2_sanitized>
   - <appended_tag_1_sanitized>
-<banner_field_name>: <Raindrop Cover Image URL (if available)> # Configurable in settings (default: banner)
+  
+# Banner/cover image if available
+<banner_field_name>: <Raindrop Cover Image URL> # Field name configurable in settings (default: banner)
 ---
 
 ![<Sanitized Title or 'Cover Image'>](<Raindrop Cover Image URL (if available)>)
