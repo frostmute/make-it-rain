@@ -1,7 +1,26 @@
+/**
+ * Make It Rain: Raindrop.io Integration for Obsidian
+ * ================================================
+ * 
+ * This plugin allows users to fetch bookmarks from Raindrop.io and create Markdown notes from them.
+ * The code follows a modular architecture with utility functions separated into dedicated modules
+ * to promote code reuse and maintainability.
+ * 
+ * Core components:
+ * - Main plugin class (RaindropToObsidian): Handles plugin initialization and settings
+ * - Modal UI (RaindropFetchModal): Provides user interface for fetching raindrops
+ * - Settings tab (RaindropSettingTab): Manages plugin configuration
+ * - Utility modules: Separated into file and API utilities for better organization
+ * 
+ * The plugin uses functional programming patterns where appropriate, with pure functions
+ * and immutable data structures to improve code reliability and testability.
+ */
+
 import { App, Notice, Plugin, PluginSettingTab, Setting, Modal, TextComponent, ButtonComponent, ToggleComponent, PluginManifest, TFile, TAbstractFile } from 'obsidian';
 import { request, RequestUrlParam } from 'obsidian';
 
 // Import utility functions from consolidated index
+// These utilities follow functional programming patterns and handle file operations and API interactions
 import { 
     // File utilities
     sanitizeFileName,

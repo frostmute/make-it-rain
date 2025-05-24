@@ -1,6 +1,31 @@
 /**
- * Utility functions index
- * Exports all utility functions for easier imports in the main application
+ * Utility Functions Index
+ * ====================
+ * 
+ * This module serves as a centralized export point for all utility functions
+ * used throughout the Make It Rain plugin. By consolidating exports here,
+ * we can import all utilities from a single location, improving code organization
+ * and reducing import complexity.
+ * 
+ * The utilities are organized into categories:
+ * 
+ * 1. File Utilities (fileUtils.ts)
+ *    - Functions for file and folder operations within Obsidian's vault
+ *    - Examples: doesPathExist, createFolder, sanitizeFileName
+ * 
+ * 2. API Utilities (apiUtils.ts)
+ *    - Functions for interacting with Raindrop.io API
+ *    - Examples: fetchWithRetry, createRateLimiter, handleRequestError
+ * 
+ * Usage:
+ * ```typescript
+ * import { 
+ *   // File utilities
+ *   doesPathExist, createFolder,
+ *   // API utilities
+ *   fetchWithRetry, createRateLimiter 
+ * } from './utils';
+ * ```
  */
 
 // Re-export all file utilities

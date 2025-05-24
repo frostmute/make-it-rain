@@ -1,7 +1,28 @@
 import { App, request } from 'obsidian';
 
 /**
+ * API Utilities for Make It Rain
+ * ==============================
+ * 
+ * This module provides utilities for interacting with the Raindrop.io API, focusing on:
+ * - Rate limiting to respect API usage constraints
+ * - Authentication and request handling
+ * - Error handling and retry logic
+ * - Response parsing and data extraction
+ * 
+ * These utilities follow functional programming principles, using closures for state management
+ * and pure functions for data transformation. Each function is designed to handle a specific
+ * concern, promoting separation of responsibilities and code reusability.
+ * 
+ * The API utilities are particularly important for ensuring reliable communication with
+ * Raindrop.io's servers, even in cases of temporary network issues or rate limiting.
+ */
+
+/**
  * Interface for rate limiter functionality
+ * 
+ * Provides methods to manage API request pacing to avoid hitting rate limits.
+ * Implemented using a functional closure pattern to maintain internal state.
  */
 export interface RateLimiter {
     checkLimit: () => Promise<void>;

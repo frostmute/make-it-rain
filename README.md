@@ -21,6 +21,14 @@ Import your Raindrop.io bookmarks into your Obsidian vault with ease.
 
 ## What's New
 
+### Improved (v1.6.0)
+
+- **Major Code Refactoring**: Implemented functional programming patterns for better maintainability and performance.
+- **Enhanced Modularity**: Separated code into dedicated utility modules for file operations and API interactions.
+- **Improved Error Handling**: More robust error recovery and user feedback during API operations.
+- **Better Rate Limiting**: Refined rate limiting strategy with more intelligent retry logic for API requests.
+- **TypeScript Improvements**: Fixed type definitions and eliminated compiler warnings for more reliable operation.
+
 ### Fixed (v1.5.1)
 
 - Fixed collection hierarchy to properly maintain nested folder structure when no filter options are selected.
@@ -64,20 +72,21 @@ I will be continually developing this plugin to further streamline user expierie
 - **Handles Pagination:** Reliably fetches all matching bookmarks from Raindrop.io, respecting API rate limits.
 - **Persistent Settings:** Configure and save your API key, default note save location, filename template, **ribbon icon visibility, and banner frontmatter field name**.
 
-### In the pipe for next release:
+### In the pipe for future releases:
 
-- Fix YAML/JSON render issues in front matter of templates.
-- Easy Template System... Curly bracket style customizable templates, defined per raindrop type. Will look into making this feature compatible with existing Obsidian or Templater template functions for easy integration into existing workflows.
-- Selectable raindrop collections by name or ID from multi select or drop-down in import modal, whatever works best.
-- Streamlined versioning workflow... probably bi-directional with Raindrop, as that seems to make the most sense...
-- Improved highlight/raindrop specific note handling and UI within Obsidian notes / import templates
-- Potential extended optional content scraping options ... similar to Raindrop's archive link content copy functionality, because I don't see a way to pass that feature through the API into Obsidian, so will probably have to implement similar functionality on the plugin/obsidian side of the API ... Or just integrate Obsidian's own web scraper into import workflow, optionally, and make it all happen in one go...? We'll see what works best/makes sense/is most efficient/reasonable.
-- Demo videos / tutorials / use-case examples of plugin workflow and features
-- Quick Import of specific raindrop by ID / Link, for when you just want to pull a specific bookmark/book/PDF/image/etc into a specific location within the vault
-- Undo last operation feature, for those moments when things just don't go as planned and vault structure is compromised in some way
-- Preserve last successful fetch settings until user specifies different options in fetch modal... or maybe just user configurable fetch setting saves? so you can save fetch options you frequently use and easily apply them in the future  when the fetch modal is conjured...?
-- API / Rate Limiting / Error Handling optimizations 
-- Large Raindrop collection import optimizations / better handling / improved UX ... Keep you informed of potential hiccups or performance issues
+- **Enhanced Testing & Reliability**: Comprehensive unit tests for core utility functions.
+- **Better Documentation**: More detailed documentation and usage examples for both users and contributors.
+- **Fix YAML/JSON render issues**: Improved handling of frontmatter templates.
+- **Easy Template System**: Customizable templates with curly bracket syntax, defined per raindrop type. Integration with existing Obsidian or Templater template functions.
+- **UI Improvements**: Selectable raindrop collections by name or ID from multi-select or drop-down in the import modal.
+- **Streamlined versioning workflow**: Bi-directional synchronization with Raindrop.
+- **Enhanced highlight handling**: Improved highlight/raindrop-specific note handling and UI within Obsidian notes.
+- **Extended content scraping**: Options similar to Raindrop's archive link content copy functionality.
+- **Documentation**: Demo videos, tutorials, and use-case examples of plugin workflow and features.
+- **Quick Import feature**: Import specific raindrops by ID/Link to specific vault locations.
+- **Undo functionality**: Recovery options when operations don't go as planned.
+- **Saved fetch settings**: Preserve or save frequently used fetch configurations.
+- **Performance optimization**: Further API/rate limiting improvements and better handling of large Raindrop collections.
 
 ## Installation
 

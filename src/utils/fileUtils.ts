@@ -1,10 +1,31 @@
 import { App } from 'obsidian';
 
 /**
+ * File Utilities for Make It Rain
+ * ==============================
+ * 
+ * This module provides file and folder manipulation utilities designed for Obsidian's vault system.
+ * These functions implement a functional programming approach and handle common operations like:
+ * - Checking if files/folders exist
+ * - Creating folders and folder structures
+ * - Sanitizing file names for compatibility
+ * 
+ * All functions are designed to be pure and predictable, with clear error handling and descriptive 
+ * names that follow the verb-noun pattern for better readability.
+ */
+
+/**
  * Checks if a path exists in the Obsidian vault
+ * 
  * @param app - The Obsidian App instance
- * @param path - The path to check
- * @returns True if the path exists, false otherwise
+ * @param path - The path to check (can be a file or folder)
+ * @returns Promise resolving to true if the path exists, false otherwise
+ * @example
+ * ```typescript
+ * if (await doesPathExist(app, "Notes/Raindrops")) {
+ *   // Path exists, proceed...
+ * }
+ * ```
  */
 export async function doesPathExist(app: App, path: string): Promise<boolean> {
     return app.vault.adapter.exists(path);
