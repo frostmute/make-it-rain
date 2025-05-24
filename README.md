@@ -179,7 +179,13 @@ Each successfully imported Raindrop bookmark generates a new Markdown note with 
 ---
 id: <Raindrop ID>
 title: "<Raindrop Title>"
-description: "<Raindrop Excerpt (summary from the webpage)>" # Multiline excerpts are added as a YAML block
+# For single-line descriptions:
+description: "<Raindrop Excerpt (summary from the webpage)>"
+# OR for multiline descriptions:
+description: |
+  <First line of multiline description>
+  <Second line of multiline description>
+  <Additional lines...>
 source: <Raindrop URL (link)>
 type: <Raindrop Type, e.g., link, article>
 created: <Raindrop Creation Date>
@@ -187,12 +193,12 @@ last_update: <Raindrop Last Update Date>
 collection:
   id: <Raindrop Collection ID>
   title: "<Raindrop Collection Title>"
-  path: "<Full Raindrop Collection Path relative to Raindrop root>" # e.g., "My Collections/Category/Subcategory"
+  path: "<Full Raindrop Collection Path relative to Raindrop root>"
   parent_id: <Raindrop Parent Collection ID (if not top level)>
 tags:
   - <raindrop_tag_1_sanitized>
   - <raindrop_tag_2_sanitized>
-  - <appended_tag_1_sanitized> # If you added tags via the modal
+  - <appended_tag_1_sanitized>
 <banner_field_name>: <Raindrop Cover Image URL (if available)> # Configurable in settings (default: banner)
 ---
 
