@@ -171,7 +171,7 @@ Before the first use, configure the plugin via Obsidian's settings panel (`Setti
 
 ## Created Note Structure
 
-![Imported Note Example](https://github.com/frostmute/make-it-rain/blob/main/makeitrain-imported-note.png)
+![Imported Note Example](https://github.com/frostmute/make-it-rain/blob/main/makeitrain-note-output.png)
 
 Each successfully imported Raindrop bookmark generates a new Markdown note with the following structure. Placeholders like `<Raindrop Title>` indicate where Raindrop.io data will be inserted.
 
