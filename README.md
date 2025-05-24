@@ -21,8 +21,6 @@ Import your Raindrop.io bookmarks into your Obsidian vault with ease.
 
 ## What's New
 
-### [MAJOR RELEASE 2.0.0-beta - Pre-Release Available](https://github.com/frostmute/make-it-rain/releases/tag/v2.0.0-beta)
-
 ### Fixed (v1.5.1)
 
 - Fixed collection hierarchy to properly maintain nested folder structure when no filter options are selected.
@@ -65,6 +63,15 @@ I will be continually developing this plugin to further streamline user expierie
 - **Safe Import:** Prevents overwriting by checking if a note with the target filename already exists. **New:** Added options to either skip existing files or update them based on Raindrop ID and `last_update` timestamp.
 - **Handles Pagination:** Reliably fetches all matching bookmarks from Raindrop.io, respecting API rate limits.
 - **Persistent Settings:** Configure and save your API key, default note save location, filename template, **ribbon icon visibility, and banner frontmatter field name**.
+
+### In the pipe for next release:
+
+- Fix YAML/JSON render issues in front matter of templates.
+- Easy Template System... Curly bracket style customizable templates, defined per raindrop type. Will look into making this feature compatible with existing Obsidian or Templater template functions for easy integration into existing workflows.
+- Selectable raindrop collections by name or ID from multi select or drop-down in import modal, whatever works best.
+- Streamlined versioning workflow... probably bi-directional with Raindrop, as that seems to make the most sense...
+- Improved highlight/raindrop specific note handling and UI within Obsidian notes / import templates
+- Potential extended optional content scraping options ... similar to Raindrop's archive link content copy functionality, because I don't see a way to pass that feature through the API into Obsidian, so will probably have to implement similar functionality on the plugin/obsidian side of the API ... Or just integrate Obsidian's own web scraper into import workflow, optionally, and make it all happen in one go...? We'll see what works best/makes sense/is most efficient/reasonable.
 
 ## Installation
 
