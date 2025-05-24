@@ -15,6 +15,7 @@ Import your Raindrop.io bookmarks into your Obsidian vault with ease.
 - [Configuration](#configuration)
 - [Usage](#usage)
 - [Created Note Structure](#created-note-structure)
+- [Documentation](#documentation)
 - [Troubleshooting](#troubleshooting)
 - [Contributing](#contributing)
 - [License](#license)
@@ -212,6 +213,20 @@ tags:
 ```
 
 **Note on Tags:** Tags in the frontmatter are automatically sanitized for Obsidian compatibility: spaces are replaced with underscores (`_`), and special characters are removed.
+
+## Documentation
+
+Comprehensive documentation for the Make It Rain plugin is available in multiple formats:
+
+- **[GitHub Wiki](https://github.com/frostmute/make-it-rain/wiki)**: Detailed guides, tutorials, and examples
+- **[Developer Documentation](https://github.com/frostmute/make-it-rain/wiki/Developer-Guide)**: Information for developers interested in contributing to the project
+- **[API Documentation](https://github.com/frostmute/make-it-rain/wiki/API-Reference)**: Documentation for the Raindrop.io API integration
+- **[Code Documentation](https://github.com/frostmute/make-it-rain/wiki/Code-Structure)**: Overview of the codebase structure and architecture
+
+In-code documentation is also available via JSDoc comments throughout the codebase, particularly in the utility modules:
+
+- `src/utils/fileUtils.ts`: Utilities for file operations
+- `src/utils/apiUtils.ts`: Utilities for API interactions
 
 ## Troubleshooting
 
