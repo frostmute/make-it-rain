@@ -72,6 +72,12 @@ I will be continually developing this plugin to further streamline user expierie
 - Streamlined versioning workflow... probably bi-directional with Raindrop, as that seems to make the most sense...
 - Improved highlight/raindrop specific note handling and UI within Obsidian notes / import templates
 - Potential extended optional content scraping options ... similar to Raindrop's archive link content copy functionality, because I don't see a way to pass that feature through the API into Obsidian, so will probably have to implement similar functionality on the plugin/obsidian side of the API ... Or just integrate Obsidian's own web scraper into import workflow, optionally, and make it all happen in one go...? We'll see what works best/makes sense/is most efficient/reasonable.
+- Demo videos / tutorials / use-case examples of plugin workflow and features
+- Quick Import of specific raindrop by ID / Link, for when you just want to pull a specific bookmark/book/PDF/image/etc into a specific location within the vault
+- Undo last operation feature, for those moments when things just don't go as planned and vault structure is compromised in some way
+- Preserve last successful fetch settings until user specifies different options in fetch modal... or maybe just user configurable fetch setting saves? so you can save fetch options you frequently use and easily apply them in the future  when the fetch modal is conjured...?
+- API / Rate Limiting / Error Handling optimizations 
+- Large Raindrop collection import optimizations / better handling / improved UX ... Keep you informed of potential hiccups or performance issues
 
 ## Installation
 
