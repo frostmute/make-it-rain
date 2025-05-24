@@ -1,5 +1,9 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const VAULT_PATH = '/Volumes/Storage/Obsidian Vaults/venturamute/.obsidian/plugins/make-it-rain';
 const PLUGIN_FILES = [
