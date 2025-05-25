@@ -127,12 +127,23 @@ interface ModalFetchOptions {
     readonly updateExisting: boolean;
 }
 
-interface RaindropToObsidianSettings {
-    raindropApiToken: string;
-    defaultVaultLocation: string;
-    fileNameTemplate: string;
-    showRibbonIcon: boolean;
-    bannerFieldName: string;
+interface MakeItRainSettings {
+  apiToken: string;
+  defaultFolder: string;
+  fileNameTemplate: string;
+  showRibbonIcon: boolean;
+  bannerFieldName: string;
+  // New template system settings
+  isTemplateSystemEnabled: boolean;
+  defaultTemplate: string;
+  contentTypeTemplates: {
+    link: string;
+    article: string;
+    image: string;
+    video: string;
+    document: string;
+    audio: string;
+  };
 }
 
 // Add new interface for Collection info
@@ -199,12 +210,66 @@ const getFullPathSegments = (collectionId: number, hierarchy: Map<number, { titl
     return segments;
 };
 
-const DEFAULT_SETTINGS: RaindropToObsidianSettings = {
-    raindropApiToken: '',
-    defaultVaultLocation: '',
-    fileNameTemplate: '{{title}}',
-    showRibbonIcon: true,
-    bannerFieldName: 'banner',
+const DEFAULT_SETTINGS: MakeItRainSettings = {
+  apiToken: '',
+  defaultFolder: '',
+  fileNameTemplate: '{{title}}',
+  showRibbonIcon: true,
+  bannerFieldName: 'banner',
+  // Initialize template system settings
+  isTemplateSystemEnabled: false,
+  defaultTemplate: `---
+id: {{id}}
+title: "{{title}}"
+description: "{{excerpt}}"
+source: {{link}}
+type: {{type}}
+created: {{created}}
+last_update: {{lastUpdate}}
+collection:
+  id: {{collection.id}}
+  title: "{{collection.title}}"
+  path: "{{collection.path}}"
+tags:
+{{#each tags}}
+  - {{this}}
+{{/each}}
+{{#if cover}}
+banner: {{cover}}
+{{/if}}
+---
+
+{{#if cover}}
+![{{title}}]({{cover}})
+{{/if}}
+
+# {{title}}
+
+{{#if excerpt}}
+## Description
+{{excerpt}}
+{{/if}}
+
+{{#if note}}
+## Notes
+{{note}}
+{{/if}}
+
+{{#if highlights}}
+## Highlights
+{{#each highlights}}
+- {{text}}
+{{#if note}}  *Note:* {{note}}{{/if}}
+{{/each}}
+{{/if}}`,
+  contentTypeTemplates: {
+    link: '',
+    article: '',
+    image: '',
+    video: '',
+    document: '',
+    audio: ''
+  }
 };
 
 // Rate limiting and retry utilities are now imported from './utils/apiUtils'
@@ -287,7 +352,7 @@ async function fetchCollectionInfo(app: App, collectionId: string, apiToken: str
 // Function moved inside the RaindropToObsidian class
 
 export default class RaindropToObsidian extends Plugin {
-  settings: RaindropToObsidianSettings;
+  settings: MakeItRainSettings;
   private rateLimiter: RateLimiter; // Using the functional interface type
   private ribbonIconEl: HTMLElement | undefined; // Property to store the ribbon icon element
   private isRibbonShown: boolean = false; // Descriptive variable names with auxiliary verbs
@@ -405,7 +470,7 @@ export default class RaindropToObsidian extends Plugin {
     const fetchOptions: RequestInit = {
         method: 'GET',
         headers: {
-            'Authorization': `Bearer ${this.settings.raindropApiToken}`
+            'Authorization': `Bearer ${this.settings.apiToken}`
         }
     };
 
@@ -416,7 +481,7 @@ export default class RaindropToObsidian extends Plugin {
         const perPage = 50; // Max items per page allowed by Raindrop.io API
 
         // Add error handling for API token
-        if (!this.settings.raindropApiToken) {
+        if (!this.settings.apiToken) {
             loadingNotice.hide();
             new Notice('Please configure your Raindrop.io API token in the plugin settings.', 10000);
             return;
@@ -816,7 +881,7 @@ export default class RaindropToObsidian extends Plugin {
     const { app } = this;
     const settingsFMTags = appendTagsToNotes.split(',').map(tag => tag.trim()).filter(tag => tag !== '');
 
-    if (vaultPath === undefined) vaultPath = this.settings.defaultVaultLocation;
+    if (vaultPath === undefined) vaultPath = this.settings.defaultFolder;
     const targetFolderPath = vaultPath?.trim() ?? "";
 
     // Declare and populate maps and helper function within this scope
@@ -1271,6 +1336,172 @@ export default class RaindropToObsidian extends Plugin {
   }
 
   // The updateRibbonIcon method is already defined at line ~360
+
+  async createNoteFromRaindrop(raindrop: RaindropItem, folderPath: string, fileName: string, appendTags: string[] = []): Promise<void> {
+    try {
+      const { _id: id, title: rdTitle, excerpt: rdExcerpt, note: rdNoteContent, link: rdLink, cover: rdCoverUrl, created: rdCreated, lastUpdate: rdLastUpdate, type: rdType, collection: rdCollection, tags: rdTags, highlights: rdHighlights } = raindrop;
+      const safeTitle = sanitizeFileName(rdTitle);
+      const altText = safeTitle || 'Cover Image';
+      // Prepare tags with appended ones if provided
+      const combinedTags = [...(rdTags || [])];
+      if (appendTags.length > 0) {
+        appendTags.forEach(tag => {
+          const trimmedTag = tag.trim();
+          if (trimmedTag && !combinedTags.includes(trimmedTag)) {
+            combinedTags.push(trimmedTag);
+          }
+        });
+      }
+      // Prepare data for template
+      const templateData = {
+        id,
+        title: rdTitle,
+        excerpt: rdExcerpt || '',
+        note: rdNoteContent || '',
+        link: rdLink,
+        cover: rdCoverUrl || '',
+        created: rdCreated,
+        lastUpdate: rdLastUpdate,
+        type: rdType,
+        collection: {
+          id: rdCollection?.$id || 0,
+          title: rdCollection?.title || 'Unknown',
+          path: rdCollection?.title || 'Unknown'
+        },
+        tags: combinedTags,
+        highlights: rdHighlights || [],
+        bannerFieldName: this.settings.bannerFieldName
+      };
+      let fileContent = '';
+      if (this.settings.isTemplateSystemEnabled) {
+        // Use template system if enabled
+        let template = this.settings.defaultTemplate;
+        // Check for content type specific template
+        const contentTypeTemplates = this.settings.contentTypeTemplates;
+        if (rdType in contentTypeTemplates && contentTypeTemplates[rdType as keyof typeof contentTypeTemplates].trim() !== '') {
+          template = contentTypeTemplates[rdType as keyof typeof contentTypeTemplates];
+        }
+        // Render the template with data
+        fileContent = this.renderTemplate(template, templateData);
+      } else {
+        // Fallback to original hardcoded structure
+        // Construct YAML frontmatter
+        let descriptionYaml = '';
+        if (rdExcerpt) {
+          if (rdExcerpt.includes('\n')) {
+            descriptionYaml = `description: |\n${rdExcerpt.split('\n').map((line: string) => `  ${line}`).join('\n')}`;
+          } else {
+            descriptionYaml = `description: "${rdExcerpt.replace(/"/g, '\\"')}"`;
+          }
+        } else {
+          descriptionYaml = `description: ""`;
+        }
+        let frontmatter = `---\n`;
+        frontmatter += `id: ${id}\n`;
+        frontmatter += `title: "${rdTitle.replace(/"/g, '\\"')}"\n`;
+        frontmatter += `${descriptionYaml}\n`;
+        frontmatter += `source: ${rdLink}\n`;
+        frontmatter += `type: ${rdType}\n`;
+        frontmatter += `created: ${rdCreated}\n`;
+        frontmatter += `last_update: ${rdLastUpdate}\n`;
+        frontmatter += `collection:\n`;
+        frontmatter += `  id: ${rdCollection?.$id || 0}\n`;
+        frontmatter += `  title: "${(rdCollection?.title || 'Unknown').replace(/"/g, '\\"')}"\n`;
+        frontmatter += `  path: "${(rdCollection?.title || 'Unknown').replace(/"/g, '\\"')}"\n`;
+        frontmatter += `tags:\n`;
+        if (combinedTags.length > 0) {
+          combinedTags.forEach(tag => {
+            frontmatter += `  - ${tag}\n`;
+          });
+        } else {
+          frontmatter += `  - \n`;
+        }
+        if (rdCoverUrl) {
+          frontmatter += `${this.settings.bannerFieldName}: ${rdCoverUrl}\n`;
+        }
+        frontmatter += `---\n\n`;
+        // Construct note content
+        let noteContent = '';
+        if (rdCoverUrl) {
+          noteContent += `![${altText}](${rdCoverUrl})\n\n`;
+        }
+        noteContent += `# ${rdTitle}\n\n`;
+        if (rdExcerpt) {
+          noteContent += `## Description\n${rdExcerpt}\n\n`;
+        }
+        if (rdNoteContent) noteContent += `## Notes\n${rdNoteContent}\n\n`;
+        if (rdHighlights && rdHighlights.length > 0) {
+          noteContent += '## Highlights\n';
+          rdHighlights.forEach((highlight: any) => {
+            noteContent += `- ${highlight.text.replace(/\r\n|\r|\n/g, ' ')}\n`;
+            if (highlight.note) {
+              noteContent += `  *Note:* ${highlight.note.replace(/\r\n|\r|\n/g, ' ')}\n`;
+            }
+          });
+          noteContent += '\n';
+        }
+        fileContent = frontmatter + noteContent;
+      }
+      // Check if file already exists
+      const fullFilePath = `${folderPath}/${fileName}.md`;
+      // Manually normalize path by removing leading/trailing slashes and normalizing separators
+      const normalizedPath = fullFilePath.replace(/^[\/]+|[\/]+$/g, '').replace(/[\/]+/g, '/');
+      if (await this.app.vault.adapter.exists(normalizedPath)) {
+        console.log(`File already exists: ${normalizedPath}`);
+        new Notice(`Skipped existing note: ${fileName}.md`, 3000);
+        return;
+      }
+      // Create the file
+      await this.app.vault.create(normalizedPath, fileContent);
+      new Notice(`Created note: ${fileName}.md`, 3000);
+      console.log(`Created note: ${normalizedPath}`);
+    } catch (error) {
+      console.error(`Error creating note for Raindrop ${raindrop._id}:`, error);
+      new Notice(`Failed to create note for Raindrop ${raindrop._id}. Check console.`, 5000);
+    }
+  }
+
+  // Add a method to render templates
+  renderTemplate(template: string, data: any): string {
+    // Simple Handlebars-like rendering
+    return template.replace(/{{#if ([^}]+)}}([\s\S]*?){{\/if}}/g, (match: string, conditionVar: string, content: string) => {
+      const varName = conditionVar.trim();
+      const value = this.getNestedProperty(data, varName);
+      if (value && Array.isArray(value) ? value.length > 0 : !!value) {
+        return content;
+      } else {
+        const elseMatch = content.match(/{{else}}([\s\S]*)$/);
+        if (elseMatch) {
+          return elseMatch[1];
+        }
+        return '';
+      }
+    }).replace(/{{#each ([^}]+)}}([\s\S]*?){{\/each}}/g, (match: string, arrayVar: string, content: string) => {
+      const arrayName = arrayVar.trim();
+      const array = this.getNestedProperty(data, arrayName) || [];
+      if (!Array.isArray(array)) return '';
+      let result = '';
+      array.forEach((item: any) => {
+        let itemContent = content.replace(/{{this}}/g, String(item));
+        itemContent = itemContent.replace(/{{([^}]+)}}/g, (m: string, key: string) => {
+          if (key.includes('.')) {
+            return String(this.getNestedProperty(item, key) || '');
+          }
+          return String(item[key] || '');
+        });
+        result += itemContent;
+      });
+      return result;
+    }).replace(/{{([^}]+)}}/g, (match: string, key: string) => {
+      return String(this.getNestedProperty(data, key) || '');
+    });
+  }
+
+  getNestedProperty(obj: any, path: string): any {
+    return path.split('.').reduce((current, prop) => {
+      return current && current[prop] !== undefined ? current[prop] : undefined;
+    }, obj);
+  }
 }
 
 class RaindropFetchModal extends Modal {
@@ -1289,7 +1520,7 @@ class RaindropFetchModal extends Modal {
   constructor(app: App, plugin: RaindropToObsidian) {
     super(app);
     this.plugin = plugin;
-    this.vaultPath = this.plugin.settings.defaultVaultLocation; // Initialize with default setting
+    this.vaultPath = this.plugin.settings.defaultFolder; // Initialize with default setting
   }
 
   onOpen() {
@@ -1360,7 +1591,7 @@ class RaindropFetchModal extends Modal {
       .setName('Vault Folder (Optional)')
       .setDesc('Target folder for notes. Leave blank for vault root or default setting.')
       .addText((text: TextComponent) => {
-        text.setPlaceholder(this.plugin.settings.defaultVaultLocation || 'Vault Root')
+        text.setPlaceholder(this.plugin.settings.defaultFolder || 'Vault Root')
           .setValue(this.vaultPath)
           .onChange((value: string) => { this.vaultPath = value.trim(); });
       });
@@ -1465,9 +1696,9 @@ class RaindropToObsidianSettingTab extends PluginSettingTab {
       .setDesc('You need to create a Test Token from your Raindrop.io Apps settings page (https://app.raindrop.io/settings/integrations).')
       .addText((text: TextComponent) => {
         text.setPlaceholder('Enter your token')
-          .setValue(this.plugin.settings.raindropApiToken)
+          .setValue(this.plugin.settings.apiToken)
           .onChange(async (value: string) => {
-            this.plugin.settings.raindropApiToken = value;
+            this.plugin.settings.apiToken = value;
             await this.plugin.saveSettings();
           });
       })
@@ -1503,10 +1734,10 @@ class RaindropToObsidianSettingTab extends PluginSettingTab {
       .setName('Default Vault Location for Notes')
       .setDesc('Default folder to save notes if not specified in the fetch options modal. Leave blank for vault root.')
       .addText((text: TextComponent) => {
-        text.setPlaceholder(this.plugin.settings.defaultVaultLocation || 'Vault Root')
-          .setValue(this.plugin.settings.defaultVaultLocation)
+        text.setPlaceholder(this.plugin.settings.defaultFolder || 'Vault Root')
+          .setValue(this.plugin.settings.defaultFolder)
           .onChange(async (value: string) => {
-            this.plugin.settings.defaultVaultLocation = value.trim();
+            this.plugin.settings.defaultFolder = value.trim();
             await this.plugin.saveSettings();
           });
       });
@@ -1545,9 +1776,9 @@ class RaindropToObsidianSettingTab extends PluginSettingTab {
   }
 
   async verifyApiToken(): Promise<void> {
-    const { raindropApiToken } = this.plugin.settings;
+    const { apiToken } = this.plugin.settings;
 
-    if (!raindropApiToken) {
+    if (!apiToken) {
       new Notice('Please enter an API token first.', 5000);
       return;
     }
@@ -1557,7 +1788,7 @@ class RaindropToObsidianSettingTab extends PluginSettingTab {
     const baseApiUrl = 'https://api.raindrop.io/rest/v1';
     const fetchOptions: RequestInit = {
       headers: {
-        'Authorization': `Bearer ${raindropApiToken}`,
+        'Authorization': `Bearer ${apiToken}`,
         'Content-Type': 'application/json'
       }
     };
