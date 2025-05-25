@@ -155,3 +155,6 @@ src/main.ts.bak
 
 # Backup directory
 backup/
+
+# Added saved_for_later/
+saved_for_later/
