@@ -125,6 +125,9 @@ interface ModalFetchOptions {
     readonly filterType?: FilterType;
     readonly fetchOnlyNew?: boolean;
     readonly updateExisting: boolean;
+    // Add template options
+    readonly useDefaultTemplate: boolean;
+    readonly overrideTemplates: boolean;
 }
 
 interface MakeItRainSettings {
@@ -133,7 +136,7 @@ interface MakeItRainSettings {
   fileNameTemplate: string;
   showRibbonIcon: boolean;
   bannerFieldName: string;
-  // New template system settings
+  // Template system settings
   isTemplateSystemEnabled: boolean;
   defaultTemplate: string;
   contentTypeTemplates: {
@@ -143,6 +146,15 @@ interface MakeItRainSettings {
     video: string;
     document: string;
     audio: string;
+  };
+  // Template toggle settings
+  contentTypeTemplateToggles: {
+    link: boolean;
+    article: boolean;
+    image: boolean;
+    video: boolean;
+    document: boolean;
+    audio: boolean;
   };
 }
 
@@ -217,7 +229,7 @@ const DEFAULT_SETTINGS: MakeItRainSettings = {
   showRibbonIcon: true,
   bannerFieldName: 'banner',
   // Initialize template system settings
-  isTemplateSystemEnabled: false,
+  isTemplateSystemEnabled: true, // Enable by default
   defaultTemplate: `---
 id: {{id}}
 title: "{{title}}"
@@ -263,12 +275,257 @@ banner: {{cover}}
 {{/each}}
 {{/if}}`,
   contentTypeTemplates: {
-    link: '',
-    article: '',
-    image: '',
-    video: '',
-    document: '',
-    audio: ''
+    link: `---
+id: {{id}}
+title: "{{title}}"
+source: {{link}}
+type: link
+created: {{created}}
+last_update: {{lastUpdate}}
+collection:
+  id: {{collection.id}}
+  title: "{{collection.title}}"
+  path: "{{collection.path}}"
+tags:
+{{#each tags}}
+  - {{this}}
+{{/each}}
+---
+
+# {{title}}
+
+{{#if excerpt}}
+## Summary
+{{excerpt}}
+{{/if}}
+
+{{#if note}}
+## Notes
+{{note}}
+{{/if}}
+
+[Visit Link]({{link}})`,
+    article: `---
+id: {{id}}
+title: "{{title}}"
+source: {{link}}
+type: article
+created: {{created}}
+last_update: {{lastUpdate}}
+collection:
+  id: {{collection.id}}
+  title: "{{collection.title}}"
+  path: "{{collection.path}}"
+tags:
+{{#each tags}}
+  - {{this}}
+{{/each}}
+{{#if cover}}
+banner: {{cover}}
+{{/if}}
+---
+
+{{#if cover}}
+![{{title}}]({{cover}})
+{{/if}}
+
+# {{title}}
+
+{{#if excerpt}}
+## Summary
+{{excerpt}}
+{{/if}}
+
+{{#if note}}
+## Notes
+{{note}}
+{{/if}}
+
+{{#if highlights}}
+## Key Points
+{{#each highlights}}
+> {{text}}
+{{#if note}}  *Note:* {{note}}{{/if}}
+{{/each}}
+{{/if}}
+
+[Read Article]({{link}})`,
+    image: `---
+id: {{id}}
+title: "{{title}}"
+source: {{link}}
+type: image
+created: {{created}}
+last_update: {{lastUpdate}}
+collection:
+  id: {{collection.id}}
+  title: "{{collection.title}}"
+  path: "{{collection.path}}"
+tags:
+{{#each tags}}
+  - {{this}}
+{{/each}}
+{{#if cover}}
+banner: {{cover}}
+{{/if}}
+---
+
+# {{title}}
+
+{{#if cover}}
+![[{{cover}}]]
+{{/if}}
+
+{{#if excerpt}}
+## Description
+{{excerpt}}
+{{/if}}
+
+{{#if note}}
+## Notes
+{{note}}
+{{/if}}
+
+[View Original]({{link}})`,
+    video: `---
+id: {{id}}
+title: "{{title}}"
+source: {{link}}
+type: video
+created: {{created}}
+last_update: {{lastUpdate}}
+collection:
+  id: {{collection.id}}
+  title: "{{collection.title}}"
+  path: "{{collection.path}}"
+tags:
+{{#each tags}}
+  - {{this}}
+{{/each}}
+{{#if cover}}
+banner: {{cover}}
+{{/if}}
+---
+
+# {{title}}
+
+{{#if cover}}
+![{{title}}]({{cover}})
+{{/if}}
+
+{{#if excerpt}}
+## Description
+{{excerpt}}
+{{/if}}
+
+{{#if highlights}}
+## Timestamps
+{{#each highlights}}
+- {{text}}
+{{#if note}}  *Comment:* {{note}}{{/if}}
+{{/each}}
+{{/if}}
+
+{{#if note}}
+## Notes
+{{note}}
+{{/if}}
+
+[Watch Video]({{link}})`,
+    document: `---
+id: {{id}}
+title: "{{title}}"
+source: {{link}}
+type: document
+created: {{created}}
+last_update: {{lastUpdate}}
+collection:
+  id: {{collection.id}}
+  title: "{{collection.title}}"
+  path: "{{collection.path}}"
+tags:
+{{#each tags}}
+  - {{this}}
+{{/each}}
+{{#if cover}}
+banner: {{cover}}
+{{/if}}
+---
+
+# {{title}}
+
+{{#if excerpt}}
+## Summary
+{{excerpt}}
+{{/if}}
+
+{{#if highlights}}
+## Key Points
+{{#each highlights}}
+- {{text}}
+{{#if note}}  *Note:* {{note}}{{/if}}
+{{/each}}
+{{/if}}
+
+{{#if note}}
+## Notes
+{{note}}
+{{/if}}
+
+[Open Document]({{link}})`,
+    audio: `---
+id: {{id}}
+title: "{{title}}"
+source: {{link}}
+type: audio
+created: {{created}}
+last_update: {{lastUpdate}}
+collection:
+  id: {{collection.id}}
+  title: "{{collection.title}}"
+  path: "{{collection.path}}"
+tags:
+{{#each tags}}
+  - {{this}}
+{{/each}}
+{{#if cover}}
+banner: {{cover}}
+{{/if}}
+---
+
+# {{title}}
+
+{{#if cover}}
+![{{title}}]({{cover}})
+{{/if}}
+
+{{#if excerpt}}
+## Description
+{{excerpt}}
+{{/if}}
+
+{{#if highlights}}
+## Timestamps
+{{#each highlights}}
+- {{text}}
+{{#if note}}  *Comment:* {{note}}{{/if}}
+{{/each}}
+{{/if}}
+
+{{#if note}}
+## Notes
+{{note}}
+{{/if}}
+
+[Listen to Audio]({{link}})`
+  },
+  contentTypeTemplateToggles: {
+    link: true,
+    article: true,
+    image: true,
+    video: true,
+    document: true,
+    audio: true
   }
 };
 
@@ -353,14 +610,14 @@ async function fetchCollectionInfo(app: App, collectionId: string, apiToken: str
 
 export default class RaindropToObsidian extends Plugin {
   settings: MakeItRainSettings;
-  private rateLimiter: RateLimiter; // Using the functional interface type
-  private ribbonIconEl: HTMLElement | undefined; // Property to store the ribbon icon element
-  private isRibbonShown: boolean = false; // Descriptive variable names with auxiliary verbs
+  private rateLimiter: RateLimiter;
+  private ribbonIconEl: HTMLElement | undefined;
+  private isRibbonShown: boolean = false;
 
   constructor(app: App, manifest: PluginManifest) {
     super(app, manifest);
     this.settings = { ...DEFAULT_SETTINGS };
-    this.rateLimiter = createRateLimiter(); // Using factory function instead of constructor
+    this.rateLimiter = createRateLimiter();
   }
 
   async onload() {
@@ -388,7 +645,18 @@ export default class RaindropToObsidian extends Plugin {
   }
 
   async loadSettings(): Promise<void> {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    const savedData = await this.loadData();
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, savedData);
+    
+    // Ensure template system is properly initialized
+    if (!this.settings.contentTypeTemplates) {
+      this.settings.contentTypeTemplates = DEFAULT_SETTINGS.contentTypeTemplates;
+    }
+    if (!this.settings.contentTypeTemplateToggles) {
+      this.settings.contentTypeTemplateToggles = DEFAULT_SETTINGS.contentTypeTemplateToggles;
+    }
+    
+    await this.saveSettings();
   }
 
   /**
@@ -877,468 +1145,255 @@ export default class RaindropToObsidian extends Plugin {
     }
   }
 
-  async processRaindrops(raindrops: RaindropItem[], vaultPath: string | undefined, appendTagsToNotes: string, useRaindropTitleForFileName: boolean, loadingNotice: Notice, options: ModalFetchOptions, collectionsData?: CollectionResponse, resolvedCollectionIds: number[] = [], collectionIdToNameMap: Map<number, string> = new Map<number, string>()) {
+  async processRaindrops(
+    raindrops: RaindropItem[],
+    vaultPath: string | undefined,
+    appendTagsToNotes: string,
+    useRaindropTitleForFileName: boolean,
+    loadingNotice: Notice,
+    options: ModalFetchOptions,
+    collectionsData?: CollectionResponse,
+    resolvedCollectionIds: number[] = [],
+    collectionIdToNameMap: Map<number, string> = new Map<number, string>()
+  ): Promise<void> {
     const { app } = this;
     const settingsFMTags = appendTagsToNotes.split(',').map(tag => tag.trim()).filter(tag => tag !== '');
 
     if (vaultPath === undefined) vaultPath = this.settings.defaultFolder;
     const targetFolderPath = vaultPath?.trim() ?? "";
 
-    // Declare and populate maps and helper function within this scope
+    // Initialize collection hierarchy
     const collectionHierarchy = new Map<number, { title: string, parentId?: number }>();
-
-    // If collectionsData was fetched (meaning user filtered by collection), build the hierarchy map
     if (collectionsData?.result) {
-        collectionsData.items.forEach(col => {
-            collectionHierarchy.set(col._id, { title: col.title, parentId: col.parent?.$id });
-        });
-    }
-
-    // Helper function to get ancestor IDs from a given collection ID up to the root
-    const getAncestorIds = (collectionId: number): number[] => {
-        const ancestors: number[] = [];
-        
-        // First add the starting collection ID itself
-        ancestors.push(collectionId);
-        
-        let currentId: number | undefined = collectionId;
-
-        // Traverse upwards until a system collection or unknown parent is reached
-        while (currentId !== undefined && currentId !== 0 && currentId !== SystemCollections.UNSORTED && currentId !== SystemCollections.TRASH) {
-            const collection = collectionHierarchy.get(currentId);
-            if (!collection || collection.parentId === undefined) {
-                // Stop if collection not found in hierarchy map or no parent defined
-                break;
-            }
-            // Add the parent ID to the list
-            ancestors.push(collection.parentId);
-            // Move up to the parent
-            currentId = collection.parentId;
-        }
-        return ancestors; // Returns the current collection ID and all ancestors up to the root
-    };
-
-    // Convert resolvedCollectionIds to a set of SANITIZED names for easier lookup (only needed if filtering by name)
-    const resolvedCollectionNames = new Set<string>();
-    // Only build this set if we have collection names resolved
-    if (collectionIdToNameMap.size > 0) {
-        resolvedCollectionIds.forEach(id => {
-            const name = collectionIdToNameMap.get(id);
-            if (name) {
-                // Sanitize the name before adding to the set, and convert to lower case
-                resolvedCollectionNames.add(this.sanitizeFileName(name).toLowerCase());
-            }
-        });
-    }
-
-    // Create base folder if needed
-    if (targetFolderPath) {
-        try {
-            const folder = app.vault.getAbstractFileByPath(targetFolderPath);
-            if (!folder) {
-                console.log(`Creating base folder: ${targetFolderPath}`);
-                await app.vault.createFolder(targetFolderPath);
-            } else if (!folder.hasOwnProperty('children')) {
-                throw new Error(`Path exists but is not a folder: ${targetFolderPath}`);
-            }
-        } catch (error) {
-            let errorMsg = 'folder creation failed';
-            if (error instanceof Error) errorMsg = error.message;
-            new Notice(`Failed to create/verify base folder: ${targetFolderPath}. Error: ${errorMsg}.`, 10000);
-            console.error("Error with folder operation:", error);
-            loadingNotice.hide(); // Dismiss notice on critical error
-            return; // Stop processing if base folder cannot be created
-        }
+      collectionsData.items.forEach(col => {
+        collectionHierarchy.set(col._id, { title: col.title, parentId: col.parent?.$id });
+      });
     }
 
     let createdCount = 0;
     let skippedCount = 0;
     let errorCount = 0;
-    let updatedCount = 0; // Counter for updated notes
-    const total = raindrops.length;
+    let updatedCount = 0;
     let processed = 0;
+    const total = raindrops.length;
 
-    // Group raindrops by their direct collection ID (needed for path building)
-    const raindropsByCollection: { [key: string]: RaindropItem[] } = {};
-    for (const raindrop of raindrops) {
+    try {
+      // Group raindrops by collection
+      const raindropsByCollection: { [key: string]: RaindropItem[] } = {};
+      for (const raindrop of raindrops) {
         const collectionId = raindrop.collection?.$id?.toString() || 'uncategorized';
         if (!raindropsByCollection[collectionId]) {
-            raindropsByCollection[collectionId] = [];
+          raindropsByCollection[collectionId] = [];
         }
         raindropsByCollection[collectionId].push(raindrop);
-    }
+      }
 
-    // Process raindrops collection by collection
-    for (const [collectionId, collectionRaindrops] of Object.entries(raindropsByCollection)) {
-
-        // Determine the folder path within the target folder
-        let relativeFolderPathSegments: string[] = [];
-        let collectionTitleForNotice = 'Unknown Collection'; // Declare once here
-
-        const currentCollectionId = parseInt(collectionId, 10); // collectionId from Object.entries is a string
-
-        // Only attempt complex path building if we have hierarchy data and it's not a system/uncategorized collection
-        // Note: We should still build hierarchy even when no specific collections are selected
-        if (!isNaN(currentCollectionId) && currentCollectionId > 0 && collectionHierarchy.size > 0) {
-
-             // Find the deepest user-specified ancestor in the current collection's ancestry
-             // Note: getAncestorIds now includes the current collection ID as the first element
-             const ancestorIds = getAncestorIds(currentCollectionId);
-             let deepestSpecifiedAncestorId: number | undefined = undefined;
-             
-             // If no specific collections are selected (resolvedCollectionIds is empty),
-             // we need to build the full path from the root
-             if (resolvedCollectionIds.length === 0) {
-                 // For no filters, we don't set a deepestSpecifiedAncestorId
-                 // This will make the traversal go all the way to the root
-                 deepestSpecifiedAncestorId = undefined;
-             }
-             // If the current collection itself is a user-specified collection, prioritize it
-             else if (resolvedCollectionIds.includes(currentCollectionId)) {
-                 deepestSpecifiedAncestorId = currentCollectionId;
-             } else {
-                 // Check ancestors from closest to furthest
-                 for (const ancestorId of ancestorIds) {
-                     if (resolvedCollectionIds.includes(ancestorId)) {
-                         deepestSpecifiedAncestorId = ancestorId; // Found the deepest ancestor that is specified
-                         break; // Stop at the deepest specified ancestor
-                     }
-                 }
-             }
-
-            // Build a path for this collection
-            // For collections with a specified ancestor or when no filters are selected
-            if (deepestSpecifiedAncestorId !== undefined || resolvedCollectionIds.length === 0) {
-                  // Reconstruct the path segments from the current collection up to the root
-                  const pathSegments: string[] = [];
-                  let currentTraverseId: number | undefined = currentCollectionId;
-                  const tempSegments: string[] = [];
-
-                  // Build the full path from the current collection up to the root
-                  // When no filters are selected, we'll build the complete hierarchy
-                  while (currentTraverseId !== undefined && currentTraverseId !== 0 && currentTraverseId !== -1 && currentTraverseId !== -99) {
-                       const collection = collectionHierarchy.get(currentTraverseId);
-                       if (!collection) break; // Should not happen
-                       
-                       // Add the current collection's title to the path segments
-                       const sanitizedTitle = this.sanitizeFileName(collection.title);
-                       if (sanitizedTitle) {
-                           tempSegments.unshift(sanitizedTitle);
-                       }
-                       
-                       // When filters are selected, stop at the specified ancestor
-                       // When no filters are selected, this condition is never true (deepestSpecifiedAncestorId is undefined)
-                       if (resolvedCollectionIds.length > 0 && currentTraverseId === deepestSpecifiedAncestorId) {
-                           break;
-                       }
-                       
-                       // Move to parent to continue building the path upwards
-                       currentTraverseId = collection.parentId;
-                  }
-
-                  relativeFolderPathSegments = tempSegments;
-
-                  // Update notice title to show path
-                  collectionTitleForNotice = relativeFolderPathSegments.join('/');
-
-              } else {
-                  // If no user-specified ancestor is found (and current is not specified),
-                  // place it under an 'Uncategorized' folder within the target folder.
-                  console.warn(`Collection path did not contain a user-specified ancestor or was not the specified collection itself. Placing in Uncategorized: Collection ID ${currentCollectionId}`);
-                  relativeFolderPathSegments = ['Uncategorized'];
-                  collectionTitleForNotice = 'Uncategorized';
-              }
-
-        } else if (currentCollectionId === -1 || currentCollectionId === 0) {
-             // Handle Unsorted and All Collections (should typically go to targetFolderPath directly)
-             relativeFolderPathSegments = []; // No subfolder needed relative to target
-             collectionTitleForNotice = currentCollectionId === -1 ? 'Unsorted' : 'All Items';
-        } else if (collectionId === 'uncategorized') {
-             // Handle items without a collection ID explicitly grouped as 'uncategorized'
-             relativeFolderPathSegments = ['Uncategorized'];
-             collectionTitleForNotice = 'Uncategorized';
-        } else {
-             // Fallback for cases where collectionHierarchy is not available (user didn't filter by collection)
-             // or other unexpected IDs. Place in target folder.
-             relativeFolderPathSegments = [];
-             collectionTitleForNotice = 'Unknown Collection';
-             console.warn(`Could not determine collection path for ID: ${collectionId}. Placing in target folder.`);
-        }
-
-        // Construct the full desired folder path within the vault by joining target and relative segments
-        const fullDesiredFolderPath = relativeFolderPathSegments.length > 0
-                                      ? `${targetFolderPath}${targetFolderPath ? '/' : ''}${relativeFolderPathSegments.join('/')}`
-                                      : targetFolderPath; // Use targetFolderPath directly if no relative segments
-
-        // Manually create the folder structure step by step
-        // Start from the targetFolderPath and create each segment of the relative path
-        let currentPath = targetFolderPath;
-        const pathSegmentsToCreate = relativeFolderPathSegments;
-
-        for (const segment of pathSegmentsToCreate) {
-             if (!segment) continue; // Skip empty segments
-             currentPath = currentPath ? `${currentPath}/${segment}` : segment; // Build the path segment by segment
-             try {
-                  // createFolderStructure now handles full paths and checks existence
-                  await createFolderStructure(app, currentPath);
-             } catch (error) {
-                  let errorMsg = 'folder creation failed';
-                  if (error instanceof Error) errorMsg = error.message;
-                  new Notice(`Failed to create/verify folder: ${currentPath}. Error: ${errorMsg}.`, 10000);
-                  console.error("Error with folder operation:", error);
-                  // Stop creating deeper levels for this path on error
-                  break; // Exit the folder creation loop
-             }
-        }
-        // The final currentPath is the path to the deepest successfully created folder for this collection group
-        const collectionFolderPath = currentPath; // Use this path for saving notes
-
-        // Process raindrops in this collection group
-        for (const raindrop of collectionRaindrops) {
+      // Process each collection
+      for (const [collectionId, collectionRaindrops] of Object.entries(raindropsByCollection)) {
+        try {
+          // Process collection raindrops
+          for (const raindrop of collectionRaindrops) {
             try {
-                const generatedFilename = this.generateFileName(raindrop, useRaindropTitleForFileName);
-                // Use the determined collectionFolderPath for the file path
-                const filePath = `${collectionFolderPath}/${generatedFilename}.md`;
+              // Process individual raindrop
+              const result = await this.processRaindrop(
+                raindrop,
+                targetFolderPath,
+                settingsFMTags,
+                options,
+                loadingNotice,
+                processed,
+                total,
+                collectionHierarchy,
+                collectionIdToNameMap
+              );
 
-                // Update loading notice with current processing item
-                const raindropTitle = raindrop.title || 'Untitled';
-                loadingNotice.setMessage(`Processing '${raindropTitle}' in '${collectionTitleForNotice}'... (${processed}/${total})`);
-
-                const fileExists = await app.vault.adapter.exists(filePath);
-                let processOutcome = 'created'; // 'created', 'updated', 'skipped', 'error'
-
-                if (fileExists) {
-                    // If file exists, check update conditions based on options
-                    if (options.fetchOnlyNew) {
-                        console.log(`Skipping existing file (Fetch Only New enabled): ${filePath}`);
-                        processOutcome = 'skipped';
-                    } else if (options.updateExisting) {
-                        // --- Update Existing Logic ---
-                        console.log(`Checking existing file for update: ${filePath}`);
-                        let shouldUpdate = false;
-                        try {
-                            const existingFile = app.vault.getAbstractFileByPath(filePath);
-                            if (existingFile instanceof TFile) {
-                                const existingContent = await app.vault.cachedRead(existingFile);
-                                const match = existingContent.match(/^---\n([^\s\S]*?)\n---/);
-                                if (match && match[1]) {
-                                    const frontmatterRaw = match[1];
-                                    // Using regex to find the ID and last_update fields
-                                    const idMatch = frontmatterRaw.match(/^id:\s*(\d+)/m); // 'm' flag for multiline
-                                    const lastUpdateMatch = frontmatterRaw.match(/^last_update:\s*(.*)/m);
-
-                                    const existingRaindropId = idMatch && idMatch[1] ? parseInt(idMatch[1], 10) : null;
-                                    const existingLastUpdate = lastUpdateMatch && lastUpdateMatch[1] ? new Date(lastUpdateMatch[1]) : null;
-                                    const fetchedLastUpdate = new Date(raindrop.lastUpdate);
-
-                                    // Check if it's the same raindrop and if fetched data is newer
-                                    if (existingRaindropId === raindrop._id) {
-                                        // Compare timestamps. Also update if existing timestamp is invalid or missing.
-                                        if (!existingLastUpdate || isNaN(existingLastUpdate.getTime()) || fetchedLastUpdate > existingLastUpdate) {
-                                            console.log(`Update needed for ${filePath}: Raindrop.io data is newer or existing timestamp invalid.`);
-                                            shouldUpdate = true;
-                                        } else {
-                                            console.log(`No update needed for ${filePath}: Raindrop.io data is not newer.`);
-                                            // This will be handled as skipped below
-                                        }
-                                    } else {
-                                         // File exists but doesn't match this raindrop ID - treat as skipped
-                                         console.warn(`File exists with matching name but different Raindrop ID: ${filePath} (Existing ID: ${existingRaindropId}, Fetched ID: ${raindrop._id}). Skipping.`);
-                                         // This will be handled as skipped below
-                                    }
-                                } else {
-                                    // File exists but no valid frontmatter found or missing ID/last_update - treat as skipped
-                                    console.warn(`File exists but has no valid frontmatter or required fields: ${filePath}. Skipping.`);
-                                    // This will be handled as skipped below
-                                }
-                            } else {
-                                 // Path exists but is not a file (e.g., a folder) - treat as skipped
-                                 console.warn(`Path exists but is not a file: ${filePath}. Skipping.`);
-                                 // This will be handled as skipped below
-                            }
-                        } catch (readError) {
-                            console.error(`Error reading existing file ${filePath}:`, readError);
-                            processOutcome = 'error'; // Count as error if reading fails
-                        }
-
-                        if (shouldUpdate) {
-                            processOutcome = 'updated';
-                        } else if (processOutcome !== 'error') {
-                            // If update was not needed and no error occurred during read/check
-                            processOutcome = 'skipped';
-                        }
-                        // If shouldUpdate is true, flow continues below to generate content and overwrite
-
-                    } else {
-                        // File exists, neither fetchOnlyNew nor updateExisting is true - skip
-                    console.log(`Skipping existing file: ${filePath}`);
-                        processOutcome = 'skipped';
-                    }
-                }
-                // --- End Existing File Handling ---
-
-                // If outcome is not skipped or error (meaning it's a new file or needs update)
-                if (processOutcome === 'created' || processOutcome === 'updated') {
-                const rdTitle = raindrop.title || 'Untitled Raindrop';
-                const rdNoteContent = raindrop.note || '';
-                const rdExcerpt = raindrop.excerpt || '';
-                const rdSourceUrl = raindrop.link;
-                const rdCoverUrl = raindrop.cover || '';
-
-                // Create a frontmatter object with all raindrop metadata
-                const frontmatterData: Record<string, any> = {
-                    // Basic metadata
-                    id: raindrop._id,
-                    title: rdTitle,
-                    source: rdSourceUrl,
-                    type: raindrop.type,
-                    created: raindrop.created,
-                    last_update: raindrop.lastUpdate
-                };
-                
-                // Add description if present
-                if (rdExcerpt) {
-                    frontmatterData.description = rdExcerpt;
-                }
-                
-                // Add collection information if available
-                if (raindrop.collection?.$id && collectionIdToNameMap.has(raindrop.collection.$id)) {
-                    const collectionId = raindrop.collection.$id;
-                    const collectionTitle = collectionIdToNameMap.get(collectionId) || 'Unknown';
-                    // Build the collection path relative to the Raindrop root
-                    const fullCollectionPathForFrontmatter = getFullPathSegments(collectionId, collectionHierarchy, collectionIdToNameMap).join('/');
-                    
-                    frontmatterData.collection = {
-                        id: collectionId,
-                        title: collectionTitle,
-                        path: fullCollectionPathForFrontmatter
-                    };
-                    
-                    // Add parent ID if available
-                    if (collectionHierarchy.has(collectionId)) {
-                        const collectionInfo = collectionHierarchy.get(collectionId);
-                        if (collectionInfo?.parentId !== undefined) {
-                            frontmatterData.collection.parent_id = collectionInfo.parentId;
-                        }
-                    }
-                }
-                
-                // Process and add tags
-                let combinedFMTags: string[] = [...settingsFMTags];
-                if (raindrop.tags && Array.isArray(raindrop.tags)) {
-                    raindrop.tags.forEach((tag: string) => {
-                        const trimmedTag = tag.trim();
-                        if (trimmedTag && !combinedFMTags.includes(trimmedTag)) {
-                            combinedFMTags.push(trimmedTag);
-                        }
-                    });
-                }
-                
-                // Sanitize all tags for YAML compatibility
-                const sanitizedTags = combinedFMTags.map(tag => 
-                    tag.replace(/ /g, "_")
-                       .replace(/[^\w\u00C0-\u00FF\u0100-\u017F\u0180-\u024F\u1E00-\u1EFF\/-]+/g, '')
-                ).filter(tag => tag.length > 0);
-                
-                frontmatterData.tags = sanitizedTags;
-                
-                // Add banner/cover image if available
-                if (rdCoverUrl) {
-                    frontmatterData[this.settings.bannerFieldName] = rdCoverUrl;
-                }
-                
-                // Generate the note content (separate from frontmatter)
-                let noteContent = '';
-                
-                // Add cover image if available
-                if (rdCoverUrl) {
-                    const altText = this.sanitizeFileName(rdTitle === 'Untitled Raindrop' ? 'Cover Image' : rdTitle)
-                        .replace(/\.md$/i, '');
-                    noteContent += `![${altText}](${rdCoverUrl})\n\n`;
-                }
-                
-                noteContent += `# ${rdTitle}\n\n`;
-                
-                // Add description if present (outside frontmatter)
-                if (rdExcerpt && !rdExcerpt.includes('\n')) { // Only add as body if not multiline (already in frontmatter)
-                     noteContent += `## Description\n${rdExcerpt}\n\n`;
-                }
-
-                if (rdNoteContent) noteContent += `## Notes\n${rdNoteContent}\n\n`;
-
-                if (raindrop.highlights && Array.isArray(raindrop.highlights) && raindrop.highlights.length > 0) {
-                    noteContent += '## Highlights\n';
-                    raindrop.highlights.forEach((highlight) => {
-                        if (highlight.text) {
-                            noteContent += `- ${highlight.text.replace(/r\n|r|n/g, ' ')}\n`;
-                            if (highlight.note) {
-                                noteContent += `  *Note:* ${highlight.note.replace(/r\n|r|n/g, ' ')}\n`;
-                            }
-                        }
-                    });
-                    noteContent += '\n';
-                }
-                
-                // Generate properly formatted and escaped YAML frontmatter
-                const frontmatter = createYamlFrontmatter(frontmatterData);
-                
-                // Combine frontmatter and note content
-                const fileContent = frontmatter + noteContent;
-
-                await app.vault.create(filePath, fileContent);
-
-                    // Increment appropriate counter based on outcome
-                    if (processOutcome === 'created') {
-                createdCount++;
-                    } else if (processOutcome === 'updated') {
-                        updatedCount++;
-                    }
-                } else if (processOutcome === 'skipped') {
-                    skippedCount++;
-                } else if (processOutcome === 'error') {
-                    errorCount++; // Count as error if processing failed
-                }
-                processed++;
-
-                // Update loading notice after processing (create, update, or skip)
-                const raindropTitleAfterProcessing = raindrop.title || 'Untitled'; // Re-get title
-                let statusText = '';
-                if (processOutcome === 'created') statusText = 'Created';
-                else if (processOutcome === 'updated') statusText = 'Updated';
-                else if (processOutcome === 'skipped') statusText = 'Skipped';
-                else if (processOutcome === 'error') statusText = 'Error';
-
-                loadingNotice.setMessage(`${statusText} '${raindropTitleAfterProcessing}' in '${collectionTitleForNotice}'... (${processed}/${total})`);
+              if (result.success) {
+                if (result.type === 'created') createdCount++;
+                else if (result.type === 'updated') updatedCount++;
+                else if (result.type === 'skipped') skippedCount++;
+              } else {
+                errorCount++;
+              }
+              processed++;
 
             } catch (error) {
-                errorCount++;
-                processed++;
-                let processErrorMsg = 'An unknown error occurred';
-                if (error instanceof Error) processErrorMsg = error.message;
-                else if (typeof error === 'string') processErrorMsg = error;
-
-                const raindropTitleForError = raindrop?.title || 'an unknown raindrop';
-                console.error('Error processing file:', processErrorMsg, error, raindrop);
-                // Update loading notice on error
-                loadingNotice.setMessage(`Error processing '${raindropTitleForError}' in '${collectionTitleForNotice}'... (${processed}/${total})`);
+              errorCount++;
+              processed++;
+              console.error('Error processing raindrop:', error);
             }
+          }
+        } catch (error) {
+          console.error(`Error processing collection ${collectionId}:`, error);
         }
+      }
+
+      // Show final summary
+      loadingNotice.hide();
+      let summary = `${createdCount} notes created.`;
+      if (updatedCount > 0) summary += ` ${updatedCount} updated.`;
+      if (skippedCount > 0) summary += ` ${skippedCount} skipped (already exist).`;
+      if (errorCount > 0) summary += ` ${errorCount} errors.`;
+      new Notice(summary, 7000);
+
+    } catch (error) {
+      loadingNotice.hide();
+      let errorMsg = 'An unknown error occurred';
+      if (error instanceof Error) errorMsg = error.message;
+      else if (typeof error === 'string') errorMsg = error;
+      new Notice(`Error processing raindrops: ${errorMsg}`, 10000);
+      console.error('Error processing raindrops:', error);
+    }
+  }
+
+  private async processRaindrop(
+    raindrop: RaindropItem,
+    targetFolderPath: string,
+    settingsFMTags: string[],
+    options: ModalFetchOptions,
+    loadingNotice: Notice,
+    processed: number,
+    total: number,
+    collectionHierarchy: Map<number, { title: string, parentId?: number }>,
+    collectionIdToNameMap: Map<number, string>
+  ): Promise<{ success: boolean; type: 'created' | 'updated' | 'skipped' }> {
+    try {
+      const { app } = this;
+      const generatedFilename = this.generateFileName(raindrop, options.useRaindropTitleForFileName);
+      
+      // Ensure target directory exists before attempting to write
+      if (targetFolderPath && !(await app.vault.adapter.exists(targetFolderPath))) {
+        await app.vault.createFolder(targetFolderPath);
+      }
+      
+      const filePath = `${targetFolderPath}/${generatedFilename}.md`;
+
+      // Update loading notice with current processing item
+      const raindropTitle = raindrop.title || 'Untitled';
+      loadingNotice.setMessage(`Processing '${raindropTitle}'... (${processed}/${total})`);
+
+      let processOutcome: 'created' | 'updated' | 'skipped' = 'created';
+      let fileContent = '';
+
+      // Add collection information if available
+      const frontmatterData: Record<string, any> = {
+        // Basic metadata
+        id: raindrop._id,
+        title: raindrop.title,
+        source: raindrop.link,
+        type: raindrop.type,
+        created: raindrop.created,
+        last_update: raindrop.lastUpdate
+      };
+
+      // Add collection information if available
+      if (raindrop.collection?.$id && collectionIdToNameMap.has(raindrop.collection.$id)) {
+        const collectionId = raindrop.collection.$id;
+        const collectionTitle = collectionIdToNameMap.get(collectionId) || 'Unknown';
+        // Build the collection path relative to the Raindrop root
+        const fullCollectionPathForFrontmatter = this.getFullPathSegments(collectionId, collectionHierarchy, collectionIdToNameMap).join('/');
+        
+        frontmatterData.collection = {
+          id: collectionId,
+          title: collectionTitle,
+          path: fullCollectionPathForFrontmatter
+        };
+        
+        // Add parent ID if available
+        if (collectionHierarchy.has(collectionId)) {
+          const collectionInfo = collectionHierarchy.get(collectionId);
+          if (collectionInfo?.parentId !== undefined) {
+            frontmatterData.collection.parent_id = collectionInfo.parentId;
+          }
+        }
+      }
+
+      // Process and add tags
+      let combinedFMTags: string[] = [...settingsFMTags];
+      if (raindrop.tags && Array.isArray(raindrop.tags)) {
+        raindrop.tags.forEach((tag: string) => {
+          const trimmedTag = tag.trim();
+          if (trimmedTag && !combinedFMTags.includes(trimmedTag)) {
+            combinedFMTags.push(trimmedTag);
+          }
+        });
+      }
+
+      // Generate template data
+      const templateData = {
+        ...frontmatterData,
+        tags: combinedFMTags,
+        highlights: raindrop.highlights || [],
+        bannerFieldName: this.settings.bannerFieldName
+      };
+
+      try {
+        if (this.settings.isTemplateSystemEnabled) {
+          // Use template system if enabled
+          let template = this.settings.defaultTemplate;
+          // Check for content type specific template if not forced to use default
+          if (!options.useDefaultTemplate) {
+            const contentTypeTemplates = this.settings.contentTypeTemplates;
+            const shouldUseTypeTemplate = options.overrideTemplates || 
+              (this.settings.contentTypeTemplateToggles[raindrop.type as keyof typeof contentTypeTemplates] && 
+               contentTypeTemplates[raindrop.type as keyof typeof contentTypeTemplates]?.trim() !== '');
+            
+            if (shouldUseTypeTemplate) {
+              template = contentTypeTemplates[raindrop.type as keyof typeof contentTypeTemplates];
+            }
+          }
+
+          // Render the template
+          fileContent = this.renderTemplate(template, templateData);
+          processOutcome = 'created';
+        }
+
+        // Create or update the file
+        await app.vault.create(filePath, fileContent);
+        return { success: true, type: processOutcome };
+
+      } catch (error) {
+        console.error(`Error processing file ${generatedFilename}:`, error);
+        return { success: false, type: 'skipped' };
+      }
+
+    } catch (error) {
+      console.error('Error processing raindrop:', error);
+      return { success: false, type: 'skipped' };
+    }
+  }
+
+  private getFullPathSegments(
+    collectionId: number,
+    collectionHierarchy: Map<number, { title: string, parentId?: number }>,
+    collectionIdToNameMap: Map<number, string>
+  ): string[] {
+    const segments: string[] = [];
+    let currentId: number | undefined = collectionId;
+
+    while (currentId !== undefined && currentId !== 0 && currentId !== SystemCollections.UNSORTED && currentId !== SystemCollections.TRASH) {
+      const collection = collectionHierarchy.get(currentId);
+      if (!collection) break;
+
+      const name = collectionIdToNameMap.get(currentId);
+      if (name) {
+        segments.unshift(this.sanitizeFileName(name));
+      }
+
+      currentId = collection.parentId;
     }
 
-    loadingNotice.hide(); // Dismiss loading notice after processing
-
-    let summary = `${createdCount} notes created.`;
-    if (updatedCount > 0) summary += ` ${updatedCount} updated.`;
-    if (skippedCount > 0) summary += ` ${skippedCount} skipped (already exist).`;
-    if (errorCount > 0) summary += ` ${errorCount} errors.`;
-    new Notice(summary, 7000);
-    console.log(`Raindrop processing complete. Created: ${createdCount}, Updated: ${updatedCount}, Skipped: ${skippedCount}, Errors: ${errorCount}`);
+    return segments;
   }
 
   // The updateRibbonIcon method is already defined at line ~360
 
-  async createNoteFromRaindrop(raindrop: RaindropItem, folderPath: string, fileName: string, appendTags: string[] = []): Promise<void> {
+  async createNoteFromRaindrop(raindrop: RaindropItem, folderPath: string, fileName: string, appendTags: string[] = [], options: ModalFetchOptions): Promise<void> {
     try {
+      // Ensure target directory exists before attempting to write
+      if (folderPath && !(await this.app.vault.adapter.exists(folderPath))) {
+        await this.app.vault.createFolder(folderPath);
+      }
+
       const { _id: id, title: rdTitle, excerpt: rdExcerpt, note: rdNoteContent, link: rdLink, cover: rdCoverUrl, created: rdCreated, lastUpdate: rdLastUpdate, type: rdType, collection: rdCollection, tags: rdTags, highlights: rdHighlights } = raindrop;
       const safeTitle = sanitizeFileName(rdTitle);
       const altText = safeTitle || 'Cover Image';
@@ -1376,10 +1431,13 @@ export default class RaindropToObsidian extends Plugin {
       if (this.settings.isTemplateSystemEnabled) {
         // Use template system if enabled
         let template = this.settings.defaultTemplate;
-        // Check for content type specific template
-        const contentTypeTemplates = this.settings.contentTypeTemplates;
-        if (rdType in contentTypeTemplates && contentTypeTemplates[rdType as keyof typeof contentTypeTemplates].trim() !== '') {
-          template = contentTypeTemplates[rdType as keyof typeof contentTypeTemplates];
+        // Check for content type specific template if not forced to use default
+        if (!options.useDefaultTemplate) {
+          const contentTypeTemplates = this.settings.contentTypeTemplates;
+          const shouldUseTypeTemplate = options.overrideTemplates || this.settings.contentTypeTemplateToggles[rdType as keyof typeof contentTypeTemplates];
+          if (shouldUseTypeTemplate && rdType in contentTypeTemplates && contentTypeTemplates[rdType as keyof typeof contentTypeTemplates].trim() !== '') {
+            template = contentTypeTemplates[rdType as keyof typeof contentTypeTemplates];
+          }
         }
         // Render the template with data
         fileContent = this.renderTemplate(template, templateData);
@@ -1498,7 +1556,7 @@ export default class RaindropToObsidian extends Plugin {
   }
 
   getNestedProperty(obj: any, path: string): any {
-    return path.split('.').reduce((current, prop) => {
+    return path.split('.').reduce((current: any, prop: string) => {
       return current && current[prop] !== undefined ? current[prop] : undefined;
     }, obj);
   }
@@ -1516,11 +1574,15 @@ class RaindropFetchModal extends Modal {
   filterType: FilterType = FilterTypes.ALL;
   fetchOnlyNew: boolean = false;
   updateExisting: boolean = false;
+  /* The above code is written in TypeScript and it declares a class property `useDefaultTemplate` of
+  type boolean with an initial value of `false`. */
+  useDefaultTemplate: boolean = false;
+  overrideTemplates: boolean = false;
 
   constructor(app: App, plugin: RaindropToObsidian) {
     super(app);
     this.plugin = plugin;
-    this.vaultPath = this.plugin.settings.defaultFolder; // Initialize with default setting
+    this.vaultPath = this.plugin.settings.defaultFolder;
   }
 
   onOpen() {
@@ -1639,6 +1701,42 @@ class RaindropFetchModal extends Modal {
           });
       });
 
+    contentEl.createEl('h3', { text: 'Template Options' });
+
+    if (this.plugin.settings.isTemplateSystemEnabled) {
+      new Setting(contentEl)
+        .setName('Use Default Template Only')
+        .setDesc('Ignore content type specific templates and use the default template for all items.')
+        .addToggle((toggle: ToggleComponent) => {
+          toggle.setValue(this.useDefaultTemplate)
+            .onChange((value: boolean) => {
+              this.useDefaultTemplate = value;
+              // If using default template, disable override option
+              if (value) {
+                this.overrideTemplates = false;
+                (contentEl.querySelector('.override-templates input[type="checkbox"]') as HTMLInputElement)!.checked = false;
+              }
+            });
+        });
+
+      new Setting(contentEl)
+        .setClass('override-templates')
+        .setName('Override Disabled Templates')
+        .setDesc('Use content type templates even if they are disabled in settings.')
+        .setDisabled(this.useDefaultTemplate)
+        .addToggle((toggle: ToggleComponent) => {
+          toggle.setValue(this.overrideTemplates)
+            .onChange((value: boolean) => {
+              this.overrideTemplates = value;
+            });
+        });
+    } else {
+      contentEl.createEl('p', {
+        text: 'Template system is disabled. Enable it in plugin settings to use custom templates.',
+        cls: 'setting-item-description'
+      });
+    }
+
     new Setting(contentEl)
       .addButton((btn: ButtonComponent) => {
         btn.setButtonText('Fetch Raindrops')
@@ -1655,6 +1753,8 @@ class RaindropFetchModal extends Modal {
               filterType: this.filterType,
               fetchOnlyNew: this.fetchOnlyNew,
               updateExisting: this.updateExisting,
+              useDefaultTemplate: this.useDefaultTemplate,
+              overrideTemplates: this.overrideTemplates
             };
             this.close();
             await this.plugin.fetchRaindrops(options);
@@ -1662,10 +1762,14 @@ class RaindropFetchModal extends Modal {
       })
       .addButton((btn: ButtonComponent) => {
         btn.setButtonText('Cancel')
-        .onClick(() => { this.close(); });
+          .onClick(() => { this.close(); });
       });
   }
-  onClose() { const { contentEl } = this; contentEl.empty(); }
+
+  onClose() {
+    const { contentEl } = this;
+    contentEl.empty();
+  }
 }
 
 class RaindropToObsidianSettingTab extends PluginSettingTab {
@@ -1767,6 +1871,82 @@ class RaindropToObsidianSettingTab extends PluginSettingTab {
                 await this.plugin.saveSettings();
             });
       });
+
+     containerEl.createEl('hr');
+
+     containerEl.createEl('h3', { text: 'Template System' });
+     
+     new Setting(containerEl)
+       .setName('Enable Template System')
+       .setDesc('Enable custom templates for formatting your notes.')
+       .addToggle((toggle: ToggleComponent) => {
+         toggle.setValue(this.plugin.settings.isTemplateSystemEnabled)
+           .onChange(async (value: boolean) => {
+             this.plugin.settings.isTemplateSystemEnabled = value;
+             await this.plugin.saveSettings();
+             // Refresh the settings display to show/hide template options
+             this.display();
+           });
+       });
+
+     if (this.plugin.settings.isTemplateSystemEnabled) {
+       new Setting(containerEl)
+         .setName('Default Template')
+         .setDesc('The default template used for all content types unless overridden.')
+         .addTextArea((text) => {
+           text.setPlaceholder('Enter your default template')
+             .setValue(this.plugin.settings.defaultTemplate)
+             .onChange(async (value) => {
+               this.plugin.settings.defaultTemplate = value;
+               await this.plugin.saveSettings();
+             });
+           text.inputEl.rows = 10;
+           text.inputEl.cols = 50;
+         });
+
+       containerEl.createEl('h4', { text: 'Content Type Templates' });
+       containerEl.createEl('p', { 
+         text: 'Specify templates for different content types. If disabled or left empty, the default template will be used.',
+         cls: 'setting-item-description'
+       });
+
+       const contentTypes = ['link', 'article', 'image', 'video', 'document', 'audio'] as const;
+       for (const type of contentTypes) {
+         const templateContainer = containerEl.createDiv({ cls: 'template-container' });
+         
+         // Add toggle for this content type template
+         new Setting(templateContainer)
+           .setName(`Use Custom ${type.charAt(0).toUpperCase() + type.slice(1)} Template`)
+           .setDesc(`Enable/disable custom template for ${type} content.`)
+           .addToggle((toggle) => {
+             toggle
+               .setValue(this.plugin.settings.contentTypeTemplateToggles[type])
+               .onChange(async (value) => {
+                 this.plugin.settings.contentTypeTemplateToggles[type] = value;
+                 await this.plugin.saveSettings();
+                 // Refresh the settings display to show/hide template
+                 this.display();
+               });
+           });
+
+         // Only show template textarea if toggle is enabled
+         if (this.plugin.settings.contentTypeTemplateToggles[type]) {
+           new Setting(templateContainer)
+             .setName(`${type.charAt(0).toUpperCase() + type.slice(1)} Template`)
+             .setDesc(`Template for ${type} content.`)
+             .addTextArea((text) => {
+               text.setPlaceholder(`Enter template for ${type} content`)
+                 .setValue(this.plugin.settings.contentTypeTemplates[type])
+                 .onChange(async (value) => {
+                   this.plugin.settings.contentTypeTemplates[type] = value;
+                   await this.plugin.saveSettings();
+                 });
+               text.inputEl.rows = 6;
+               text.inputEl.cols = 50;
+             });
+         }
+       }
+     }
 
      containerEl.createEl('hr');
 

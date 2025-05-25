@@ -1,7 +1,7 @@
 import { copyFileSync, mkdirSync, existsSync } from 'fs';
 import { dirname } from 'path';
 
-const targetVaultPath = '/home/bazzite/Github Repos/make-it-rain/testvault/.obsidian/plugins/make-it-rain/';
+const targetVaultPath = '/var/home/bazzite/Github Repos/make-it-rain/testvault/.obsidian/plugins/make-it-rain/';
 const sourceFiles = [
     'main.js',
     'manifest.json',
