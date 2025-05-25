@@ -1,0 +1,7 @@
+{
+  "raindropApiToken": "88b103da-48d3-471e-8521-a10d6520bac0",
+  "defaultVaultLocation": "Raindrops",
+  "fileNameTemplate": "{{title}}",
+  "showRibbonIcon": true,
+  "bannerFieldName": "banner"
+}

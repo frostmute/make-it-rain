@@ -1,0 +1,211 @@
+{
+  "main": {
+    "id": "4d41d5b3134408e8",
+    "type": "split",
+    "children": [
+      {
+        "id": "3a46091a5a58e6d0",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "e8906a6bc1d6b937",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Raindrops/Link Collections/Bookmarks  ALL.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Bookmarks  ALL"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "4f423813c807ff6e",
+    "type": "split",
+    "children": [
+      {
+        "id": "ce06c7cfab776378",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "c00022f63cfeab32",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "7cf6a3555514efbd",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "aa781786c2c6ff79",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "98e1fd5c6d85d5b4",
+    "type": "split",
+    "children": [
+      {
+        "id": "13c1ae126e5cf097",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "434f18c63417c88f",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Welcome.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for Welcome"
+            }
+          },
+          {
+            "id": "721cd98138b5d886",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "Welcome.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from Welcome"
+            }
+          },
+          {
+            "id": "8841234de1b7f556",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "1c80b1d5ddff3106",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "Welcome.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of Welcome"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "make-it-rain:Fetch Raindrops": false
+    }
+  },
+  "active": "e8906a6bc1d6b937",
+  "lastOpenFiles": [
+    "Raindrops/ALL MY STUFF AND THINGS 1.md",
+    "Raindrops/Note Taking/Notesnook.md",
+    "Raindrops/Nuxt Studio.md",
+    "Raindrops/LittleLink.md",
+    "Raindrops/Hello, I’m Jonathan..md",
+    "Raindrops/Vercel.md",
+    "Raindrops/chronark.com.md",
+    "Raindrops/digital_garden_blog_templatehome.md at main · magicGinadigital_garden_blog_template.md",
+    "Raindrops/Flowershow Markdown Publishing - DataHub.md",
+    "Raindrops/DataHub.md",
+    "Raindrops/Welcome to Quartz 4.md",
+    "Raindrops/Self publish your digital garden with Obsidian Flowershow plugin  Flowershow.md",
+    "Raindrops/Jonathan J Wagner.md",
+    "Raindrops/Bullet.site Pages - Jonathan J Wagner.md",
+    "Raindrops/Care doesnt scale.md",
+    "Raindrops/My Software  Apps I Use/Grafx Software/Free Online Analog Film Emulator - 29a.ch.md",
+    "Raindrops/My Software  Apps I Use/Grafx Software/Ruri - Your design superpower.md",
+    "Raindrops/My Software  Apps I Use/Grafx Software",
+    "Raindrops/My Software  Apps I Use/Sava OS.md",
+    "Raindrops/My Software  Apps I Use",
+    "Raindrops/Streaming Video/123movies.com.md",
+    "Raindrops/Streaming Video",
+    "Raindrops/File Sources  Dumps/Video - Movies  TV Shows/Marvel Media.md",
+    "Raindrops/File Sources  Dumps/Video - Movies  TV Shows/Prof.md",
+    "Raindrops/File Sources  Dumps/Video - Movies  TV Shows",
+    "Raindrops/File Sources  Dumps/Software - Mobile/vx.md",
+    "Raindrops/File Sources  Dumps/Software - Mobile",
+    "Raindrops/File Sources  Dumps/Software - Graphics/SAGE THUMBS(2) Google Drive.md",
+    "Raindrops/File Sources  Dumps/Software - Graphics/COREL DRAW Google Drive.md",
+    "Raindrops/File Sources  Dumps/Software - Graphics",
+    "Raindrops/File Sources  Dumps/Fonts/5000 FUENTES PREMIUM - PREMIUM FONTS Google Drive.md",
+    "Raindrops/File Sources  Dumps/Fonts",
+    "Raindrops/File Sources  Dumps/Graphics - Photo Editing/Photoshop Presets Google Drive.md",
+    "Raindrops/File Sources  Dumps/Graphics - Photo Editing",
+    "Raindrops/File Sources  Dumps/Video Editing  Motion Graphics",
+    "Raindrops/File Sources  Dumps/Graphics - Vectors"
+  ]
+}
