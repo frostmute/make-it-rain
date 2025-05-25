@@ -7,7 +7,9 @@
     "dev": "node scripts/esbuild.config.mjs",
     "build": "tsc -noEmit -skipLibCheck && node scripts/esbuild.config.mjs production",
     "version": "node scripts/version-bump.mjs && git add manifest.json versions.json",
-    "lint:md": "markdownlint '**/*.md' --fix"
+    "lint:md": "markdownlint '**/*.md' --fix",
+    "copy-to-vault": "node scripts/copy-to-vault.mjs",
+    "build-and-copy": "npm run build && npm run copy-to-vault"
   },
   "keywords": [
     "obsidian",

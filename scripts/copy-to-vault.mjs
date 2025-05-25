@@ -1,7 +1,7 @@
 import { copyFileSync, mkdirSync, existsSync } from 'fs';
 import { dirname } from 'path';
 
-const targetVaultPath = '/Volumes/Storage/Obsidian Vaults/refactormute/.obsidian/plugins/make-it-rain';
+const targetVaultPath = '/home/bazzite/Github Repos/make-it-rain/testvault/.obsidian/plugins/make-it-rain/';
 const sourceFiles = [
     'main.js',
     'manifest.json',
