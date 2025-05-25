@@ -15,7 +15,8 @@ if (!existsSync(targetVaultPath)) {
 
 // Copy each file to the target vault
 for (const file of sourceFiles) {
-    const sourcePath = file;
+    // All source files are now in the 'build/' directory
+    const sourcePath = `build/${file}`;
     const targetPath = `${targetVaultPath}${file}`;
     
     // Ensure the target directory exists

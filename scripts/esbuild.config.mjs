@@ -37,12 +37,22 @@ const context = await esbuild.context({
 	logLevel: "info",
 	sourcemap: prod ? false : "inline",
 	treeShaking: true,
-	outfile: "main.js",
+	outfile: "build/main.js",
+});
+
+// Add output for styles.css
+const styleContext = await esbuild.context({
+	entryPoints: ["styles.css"],
+	bundle: true,
+	outfile: "build/styles.css",
+	logLevel: "info",
 });
 
 if (prod) {
 	await context.rebuild();
+	await styleContext.rebuild();
 	process.exit(0);
 } else {
 	await context.watch();
+	await styleContext.watch();
 } 
