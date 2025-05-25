@@ -27,7 +27,8 @@ This is the most important setting required for the plugin to function.
 - **Setting**: Default Raindrop Location
 - **Description**: The default folder where your Raindrop bookmarks will be saved
 - **Format**: Path relative to your vault root (e.g., "Raindrops" or "References/Web")
-- **Note**: You can override this setting every time you fetch raindrops, giving you the flexibility to save them in different locations and keep them synchronized (or not) seperately from other collections.
+- **Note**: You can override this setting every time you fetch raindrops, giving you the flexibility to save them in different locations and keep them synchronized (or not)
+  seperately from other collections.
 
 ### Filename Template
 
