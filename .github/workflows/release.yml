@@ -1,0 +1,105 @@
+name: Automated Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'New version number (e.g., 1.0.0)'
+        required: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Update version in files
+        run: |
+          VERSION=${{ inputs.version }}
+          echo "Updating version to $VERSION"
+          
+          # Update package.json
+          node -e "
+            const fs = require('fs');
+            const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            packageJson.version = process.argv[1];
+            fs.writeFileSync('package.json', JSON.stringify(packageJson, null, 2));
+          " $VERSION
+
+          # Update manifest.json
+          node -e "
+            const fs = require('fs');
+            const manifestJson = JSON.parse(fs.readFileSync('manifest.json', 'utf8'));
+            manifestJson.version = process.argv[1];
+            fs.writeFileSync('manifest.json', JSON.stringify(manifestJson, null, '\t'));
+          " $VERSION
+
+          # Update versions.json
+          node -e "
+            const fs = require('fs');
+            const versionsJson = JSON.parse(fs.readFileSync('versions.json', 'utf8'));
+            const manifestJson = JSON.parse(fs.readFileSync('manifest.json', 'utf8'));
+            versionsJson[process.argv[1]] = manifestJson.minAppVersion;
+            fs.writeFileSync('versions.json', JSON.stringify(versionsJson, null, '\t'));
+          " $VERSION
+
+          echo "Version updated successfully."
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Note: Automated CHANGELOG update is more complex and not included here.
+      # You may need to update CHANGELOG.md manually before triggering this workflow
+      # or implement a separate step/tool for this.
+
+      - name: Commit version changes
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add package.json manifest.json versions.json
+          # Add CHANGELOG.md if you update it manually or automatically before this step
+          # git add CHANGELOG.md
+          git commit -m "chore: release ${{ inputs.version }}"
+          git push origin main
+
+      - name: Create Git Tag
+        run: |
+          TAG_NAME=v${{ inputs.version }}
+          git tag $TAG_NAME
+          git push origin $TAG_NAME
+
+      - name: Run build script
+        run: npm run build
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ inputs.version }}
+          name: Release v${{ inputs.version }}
+          body_path: ./release-notes-${{ inputs.version }}.md # Assumes your version-bump script created this file, or you create it before the workflow
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Release Assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          assets: |
+            main.js
+            manifest.json
+            styles.css 
