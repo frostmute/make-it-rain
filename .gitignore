@@ -162,4 +162,4 @@ saved_for_later/
 # Ignore project backups
 make-it-rain-backup-*.tar.gz
 
-/home/bazzite/Github Repos/make-it-rain/testvault
+testvault/
