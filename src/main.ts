@@ -18,9 +18,6 @@
 
 import { App, Notice, Plugin, PluginSettingTab, Setting, Modal, TextComponent, ButtonComponent, ToggleComponent, PluginManifest, TFile, TAbstractFile } from 'obsidian';
 import { request, RequestUrlParam } from 'obsidian';
-import { RaindropFetchModal } from './components/RaindropFetchModal';
-import { RaindropSettingTab } from './components/RaindropSettingTab';
-import { RaindropToObsidianSettings, ModalFetchOptions } from './types';
 import { 
     createRateLimiter, 
     RateLimiter, 
@@ -31,8 +28,8 @@ import {
     handleRequestError,
     extractCollectionData
 } from './utils/apiUtils';
-import { TemplateService } from './services/templateService';
-import { DEFAULT_TEMPLATE_SETTINGS } from './types/templates';
+// import { TemplateService } from './services/templateService'; // Removed as services folder was moved
+// import { DEFAULT_TEMPLATE_SETTINGS } from './types/templates'; // Removed as types folder was moved
 
 // Import utility functions from consolidated index
 // These utilities follow functional programming patterns and handle file operations and API interactions
@@ -183,14 +180,6 @@ const getFullPathSegments = (collectionId: number, hierarchy: Map<number, { titl
     return segments;
 };
 
-const DEFAULT_SETTINGS: RaindropToObsidianSettings = {
-    raindropApiToken: '',
-    defaultVaultLocation: '',
-    fileNameTemplate: '{{title}}',
-    showRibbonIcon: true,
-    bannerFieldName: 'banner',
-};
-
 /**
  * Fetches collection information with error handling and rate limiting
  * Uses functional composition by breaking the process into smaller, focused operations
@@ -234,56 +223,31 @@ async function fetchCollectionInfo(app: App, collectionId: string, apiToken: str
 }
 
 export class RaindropToObsidian extends Plugin {
-    settings!: RaindropToObsidianSettings;
+    settings!: any;
     public rateLimiter: RateLimiter;
     private ribbonIconEl: HTMLElement | undefined;
     private isRibbonShown: boolean = false;
-    private templateService: TemplateService;
 
     constructor(app: App, manifest: PluginManifest) {
         super(app, manifest);
         this.rateLimiter = createRateLimiter(1000); // 1 second delay between requests
-        this.templateService = new TemplateService(DEFAULT_TEMPLATE_SETTINGS);
     }
 
     async onload(): Promise<void> {
         await this.loadSettings();
-        this.addSettingTab(new RaindropSettingTab(this.app, this));
-        this.updateRibbonIcon();
-        
-        // Initialize template service with saved settings
-        if (this.settings.templateSettings) {
-            this.templateService.updateSettings(this.settings.templateSettings);
-        }
+        console.log('Make It Rain plugin loaded.');
     }
 
     onunload(): void {
-        if (this.ribbonIconEl) {
-            this.ribbonIconEl.remove();
-        }
+        console.log('Make It Rain plugin unloaded.');
     }
 
     async loadSettings(): Promise<void> {
-        this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+        this.settings = Object.assign({}, { raindropApiToken: '', defaultVaultLocation: '', fileNameTemplate: '{{title}}', showRibbonIcon: true, bannerFieldName: 'banner' }, await this.loadData());
     }
 
     async saveSettings(): Promise<void> {
         await this.saveData(this.settings);
-    }
-
-    updateRibbonIcon(): void {
-        if (this.settings.showRibbonIcon && !this.isRibbonShown) {
-            this.ribbonIconEl = this.addRibbonIcon('droplet', 'Fetch Raindrops', () => {
-                const modal = new RaindropFetchModal(this.app, this);
-                modal.open();
-            });
-            this.isRibbonShown = true;
-        } else if (!this.settings.showRibbonIcon && this.isRibbonShown) {
-            if (this.ribbonIconEl) {
-                this.ribbonIconEl.remove();
-            }
-            this.isRibbonShown = false;
-        }
     }
 
     private async fetchCollectionHierarchy(): Promise<Map<number, { title: string, parentId?: number }>> {
@@ -331,7 +295,7 @@ export class RaindropToObsidian extends Plugin {
         }
     }
 
-    async fetchRaindrops(options: ModalFetchOptions): Promise<void> {
+    async fetchRaindrops(options: any): Promise<void> {
         const { 
             vaultPath, 
             collections, 
@@ -356,13 +320,13 @@ export class RaindropToObsidian extends Plugin {
         }
 
         // Parse collection IDs
-        const collectionIds = collections.split(',').map(id => id.trim()).filter(Boolean);
+        const collectionIds = collections.split(',').map((id: string) => id.trim()).filter(Boolean);
         if (collectionIds.length === 0) {
             throw new Error('No collection IDs provided');
         }
 
         // Parse filter tags
-        const filterTags = apiFilterTags.split(',').map(tag => tag.trim()).filter(Boolean);
+        const filterTags = apiFilterTags.split(',').map((tag: string) => tag.trim()).filter(Boolean);
 
         // Fetch collection hierarchy if needed
         let collectionHierarchy: Map<number, { title: string, parentId?: number }> | undefined;
@@ -480,9 +444,10 @@ export class RaindropToObsidian extends Plugin {
     }
 
     private createMarkdownContent(raindrop: RaindropItem, appendTags: boolean): string {
-        if (this.settings.templateSettings?.enabled) {
-            return this.templateService.renderTemplate(raindrop);
-        }
+        // Removed template service usage as it was moved
+        // if (this.settings.templateSettings?.enabled) {
+        //     return this.templateService.renderTemplate(raindrop);
+        // }
 
         // Fallback to original implementation
         const frontmatter: Record<string, any> = {
