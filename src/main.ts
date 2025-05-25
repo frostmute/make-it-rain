@@ -18,8 +18,7 @@
 
 import { App, Notice, Plugin, PluginSettingTab, Setting, Modal, TextComponent, ButtonComponent, ToggleComponent, PluginManifest, TFile, TAbstractFile } from 'obsidian';
 import { request, RequestUrlParam } from 'obsidian';
-import { MakeItRainSettings, RaindropType, CONTENT_TYPES } from './types';
-import { ModalFetchOptions, RaindropFetchModal } from './modal';
+import { MakeItRainSettings, RaindropType, CONTENT_TYPES, ModalFetchOptions } from './types';
 
 // Import utility functions from consolidated index
 // These utilities follow functional programming patterns and handle file operations and API interactions
@@ -1435,6 +1434,218 @@ export class RaindropToObsidian extends Plugin {
         return path.split('.').reduce((current: any, prop: string) => {
             return current && current[prop] !== undefined ? current[prop] : undefined;
         }, obj);
+    }
+}
+
+class RaindropFetchModal extends Modal {
+    plugin: RaindropToObsidian;
+    vaultPath: string;
+    collections: string = '';
+    apiFilterTags: string = '';
+    includeSubcollections: boolean = false;
+    appendTagsToNotes: string = '';
+    useRaindropTitleForFileName: boolean = true;
+    tagMatchType: 'all' | 'any' = 'all';
+    filterType: string = 'all';
+    fetchOnlyNew: boolean = false;
+    updateExisting: boolean = false;
+    useDefaultTemplate: boolean = false;
+    overrideTemplates: boolean = false;
+
+    constructor(app: App, plugin: RaindropToObsidian) {
+        super(app);
+        this.plugin = plugin;
+        this.vaultPath = this.plugin.settings.defaultFolder;
+    }
+
+    onOpen() {
+        const { contentEl } = this;
+        contentEl.empty();
+        contentEl.createEl('h2', { text: 'Make It Rain Options' });
+
+        contentEl.createEl('h3', { text: 'Fetch Criteria' });
+
+        new Setting(contentEl)
+            .setName('Collections (comma-separated names or IDs)')
+            .setDesc('Enter collection names or IDs, separated by commas. Leave blank to fetch from all collections (unless tags below are specified).')
+            .addText((text: TextComponent) => {
+                text.setPlaceholder('Enter Collection ID or Name or leave blank for all')
+                    .setValue(this.collections)
+                    .onChange((value: string) => { this.collections = value; });
+            });
+
+        new Setting(contentEl)
+            .setName('Filter by Tags (comma-separated)')
+            .setDesc('Filter raindrops by tags.')
+            .addText((text: TextComponent) => {
+                text.setPlaceholder('e.g., article, project-x')
+                    .setValue(this.apiFilterTags)
+                    .onChange((value: string) => { this.apiFilterTags = value; });
+            });
+
+        new Setting(contentEl)
+            .setName('Tag Match Type')
+            .setDesc('Should raindrops match ALL specified tags or ANY of them?')
+            .addDropdown((dropdown) => {
+                dropdown
+                    .addOption('all', 'Match ALL tags (AND)')
+                    .addOption('any', 'Match ANY tag (OR)')
+                    .setValue(this.tagMatchType)
+                    .onChange(value => {
+                        this.tagMatchType = value as 'all' | 'any';
+                    });
+            });
+
+        new Setting(contentEl)
+            .setName('Include Subcollections')
+            .setDesc('If filtering by Collection IDs or Names, also include items from their subcollections.')
+            .addToggle((toggle: ToggleComponent) => {
+                toggle.setValue(this.includeSubcollections)
+                    .onChange((value: boolean) => { this.includeSubcollections = value; });
+            });
+
+        // Add type filter dropdown
+        new Setting(contentEl)
+            .setName('Filter by Type')
+            .setDesc('Select the type of raindrops to fetch.')
+            .addDropdown((dropdown) => {
+                dropdown
+                    .addOption('all', 'All Types')
+                    .addOption('link', 'Links')
+                    .addOption('article', 'Articles')
+                    .addOption('image', 'Images')
+                    .addOption('video', 'Videos')
+                    .addOption('document', 'Documents')
+                    .addOption('audio', 'Audio')
+                    .setValue(this.filterType)
+                    .onChange(value => {
+                        this.filterType = value as 'link' | 'article' | 'image' | 'video' | 'document' | 'audio' | 'all';
+                    });
+            });
+
+        contentEl.createEl('h3', { text: 'Note Options' });
+
+        new Setting(contentEl)
+            .setName('Vault Folder (Optional)')
+            .setDesc('Target folder for notes. Leave blank for vault root or default setting.')
+            .addText((text: TextComponent) => {
+                text.setPlaceholder(this.plugin.settings.defaultFolder || 'Vault Root')
+                    .setValue(this.vaultPath)
+                    .onChange((value: string) => { this.vaultPath = value.trim(); });
+            });
+
+        new Setting(contentEl)
+            .setName('Append Tags to Note Frontmatter (comma-separated)')
+            .setDesc('Additional tags to add to the YAML frontmatter of each created note.')
+            .addText((text: TextComponent) => {
+                text.setPlaceholder('e.g., #imported/raindrop')
+                    .setValue(this.appendTagsToNotes)
+                    .onChange((value: string) => { this.appendTagsToNotes = value; });
+            });
+
+        new Setting(contentEl)
+            .setName('Use Raindrop Title for File Name')
+            .setDesc('Use title (via template) for filenames? If off, uses Raindrop ID.')
+            .addToggle((toggle: ToggleComponent) => {
+                toggle.setValue(this.useRaindropTitleForFileName)
+                    .onChange((value: boolean) => { this.useRaindropTitleForFileName = value; });
+            });
+
+        // Add fetch only new toggle to modal
+        const fetchOnlyNewSetting = new Setting(contentEl)
+            .setName('Fetch only new items')
+            .setDesc('If the target folder is not empty, only fetch raindrops that have not been imported before.')
+            .addToggle((toggle: ToggleComponent) => {
+                toggle.setValue(this.fetchOnlyNew)
+                    .onChange((value: boolean) => { this.fetchOnlyNew = value; });
+            });
+
+        // Add update existing toggle to modal
+        const updateExistingSetting = new Setting(contentEl)
+            .setName('Update existing notes')
+            .setDesc('If a note with the same name exists, update its content if the source raindrop has changed.')
+            .addToggle((toggle: ToggleComponent) => {
+                toggle.setValue(this.updateExisting)
+                    .onChange((value: boolean) => {
+                        this.updateExisting = value;
+                        // Disable Fetch only new toggle if Update existing is enabled
+                        fetchOnlyNewSetting.setDisabled(value);
+                        if (value) {
+                            // If Update existing is enabled, ensure Fetch only new is false and update its toggle
+                            this.fetchOnlyNew = false;
+                            (fetchOnlyNewSetting.controlEl.querySelector('input[type="checkbox"]') as HTMLInputElement)!.checked = false; // Update the visual state
+                        }
+                    });
+            });
+
+        contentEl.createEl('h3', { text: 'Template Options' });
+
+        if (this.plugin.settings.isTemplateSystemEnabled) {
+            new Setting(contentEl)
+                .setName('Use Default Template Only')
+                .setDesc('Ignore content type specific templates and use the default template for all items.')
+                .addToggle((toggle: ToggleComponent) => {
+                    toggle.setValue(this.useDefaultTemplate)
+                        .onChange((value: boolean) => {
+                            this.useDefaultTemplate = value;
+                            // If using default template, disable override option
+                            if (value) {
+                                this.overrideTemplates = false;
+                                (contentEl.querySelector('.override-templates input[type="checkbox"]') as HTMLInputElement)!.checked = false;
+                            }
+                        });
+                });
+
+            new Setting(contentEl)
+                .setClass('override-templates')
+                .setName('Override Disabled Templates')
+                .setDesc('Use content type templates even if they are disabled in settings.')
+                .setDisabled(this.useDefaultTemplate)
+                .addToggle((toggle: ToggleComponent) => {
+                    toggle.setValue(this.overrideTemplates)
+                        .onChange((value: boolean) => {
+                            this.overrideTemplates = value;
+                        });
+                });
+        } else {
+            contentEl.createEl('p', {
+                text: 'Template system is disabled. Enable it in plugin settings to use custom templates.',
+                cls: 'setting-item-description'
+            });
+        }
+
+        new Setting(contentEl)
+            .addButton((btn: ButtonComponent) => {
+                btn.setButtonText('Fetch Raindrops')
+                    .setCta()
+                    .onClick(async () => {
+                        const options: ModalFetchOptions = {
+                            vaultPath: this.vaultPath || undefined,
+                            collections: this.collections,
+                            apiFilterTags: this.apiFilterTags,
+                            includeSubcollections: this.includeSubcollections,
+                            appendTagsToNotes: this.appendTagsToNotes,
+                            useRaindropTitleForFileName: this.useRaindropTitleForFileName,
+                            tagMatchType: this.tagMatchType,
+                            filterType: this.filterType,
+                            fetchOnlyNew: this.fetchOnlyNew,
+                            updateExisting: this.updateExisting,
+                            useDefaultTemplate: this.useDefaultTemplate,
+                            overrideTemplates: this.overrideTemplates
+                        };
+                        this.close();
+                        await this.plugin.fetchRaindrops(options);
+                    });
+            })
+            .addButton((btn: ButtonComponent) => {
+                btn.setButtonText('Cancel')
+                    .onClick(() => { this.close(); });
+            });
+    }
+
+    onClose() {
+        const { contentEl } = this;
+        contentEl.empty();
     }
 }
 
