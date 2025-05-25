@@ -1,8 +1,8 @@
 {
     "compilerOptions": {
-      "baseUrl": ".", // Helps resolve non-relative imports if needed
-      "inlineSourceMap": true, // Embed sourcemaps in JS files for debugging
-      "inlineSources": true, // Include TS source in sourcemaps
+      "baseUrl": ".",
+      "inlineSourceMap": true,
+      "inlineSources": true,
       "module": "ESNext", // Use ES Modules for modern tooling like esbuild
       "target": "ES6", // Target modern JavaScript environments (like Obsidian's Electron)
       "allowJs": true, // Allow JavaScript files to be compiled

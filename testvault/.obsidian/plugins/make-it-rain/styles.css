@@ -25,3 +25,57 @@
       border-bottom: 1px solid var(--background-modifier-border);
       padding-bottom: 0.3em;
   }
+
+/* Template Settings Styles */
+.template-variables {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.template-variable {
+    background-color: var(--background-secondary);
+    border-radius: 4px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.template-variable strong {
+    color: var(--text-accent);
+    font-size: 1.1em;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.template-variable p {
+    margin: 0.5rem 0;
+    color: var(--text-muted);
+}
+
+.template-variable code {
+    background-color: var(--background-primary);
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.9em;
+    display: block;
+    margin-top: 0.5rem;
+}
+
+/* Template Editor Styles */
+.template-editor {
+    width: 100%;
+    min-height: 200px;
+    font-family: var(--font-monospace);
+    margin: 1rem 0;
+}
+
+/* Template Preview Styles */
+.template-preview {
+    background-color: var(--background-secondary);
+    border-radius: 4px;
+    padding: 1rem;
+    margin-top: 1rem;
+    white-space: pre-wrap;
+    font-family: var(--font-monospace);
+}
