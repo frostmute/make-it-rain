@@ -158,3 +158,6 @@ backup/
 
 # Added saved_for_later/
 saved_for_later/
+
+# Ignore project backups
+make-it-rain-backup-*.tar.gz
