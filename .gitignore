@@ -163,3 +163,6 @@ saved_for_later/
 make-it-rain-backup-*.tar.gz
 
 testvault/
+
+# Ignore build output directory
+build/
