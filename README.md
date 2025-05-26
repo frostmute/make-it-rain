@@ -220,59 +220,51 @@ Before the first use, configure the plugin via Obsidian's settings panel
 
 ![Imported Note Example](https://github.com/frostmute/make-it-rain/blob/main/assets/makeitrain-note-output.png)
 
-Each successfully imported Raindrop bookmark generates a new Markdown note. When the
-**Template System** is enabled (default), the structure is defined by the active
-template. The built-in default template produces the following:
+Each successfully imported Raindrop bookmark generates a new Markdown note. When the **Template System** is enabled (default), the structure is defined by the active template. The built-in default template produces a note that looks like this example:
 
-```handlebars
----
-title: "{{title}}"
-source: {{link}}
-type: {{type}}
-created: {{created}}
-lastupdate: {{lastupdate}}
-id: {{id}}
-collectionId: {{collectionId}}
-collectionTitle: "{{collectionTitle}}"
-collectionPath: "{{collectionPath}}"
-{{#if collectionParentId}}collectionParentId: {{collectionParentId}}{{/if}}
-{{#if tags}}tags:
-{{#each tags}}  - {{this}}
-{{/each}}{{/if}}
-{{#if cover}}{{bannerFieldName}}: {{cover}}{{/if}}
+```markdown
 ---
 
-{{#if cover}}
-![{{title}}]({{cover}})
-{{/if}}
+title: "Example Bookmark Title"
+source: https://example.com/article
+type: article
+created: 2023-10-27T10:30:00Z
+lastupdate: 2023-10-28T12:00:00Z
+id: 123456789
+collectionId: 98765
+collectionTitle: "My Research"
+collectionPath: "My Research/Tech Articles"
+collectionParentId: 12345
+tags:
+  - web-clipping
+  - important-read
+banner: https://example.com/cover-image.jpg
 
-# {{title}}
+---
 
-{{#if excerpt}}
+![Example Bookmark Title](https://example.com/cover-image.jpg)
+
+# Example Bookmark Title
+
 ## Description
-{{excerpt}}
-{{/if}}
+This is a brief summary or excerpt of the web page. It might contain a few sentences describing the content.
 
-{{#if note}}
 ## Notes
-{{note}}
-{{/if}}
+This is a note I added to my Raindrop bookmark. It can be multi-line.
+Another line of my note.
 
-{{#if highlights}}
 ## Highlights
-{{#each highlights}}
-- {{text}}
-{{#if note}}  *Note:* {{note}}{{/if}}
-{{/each}}
-{{/if}}
+- This is the first highlighted text from the article.
+  *Note:* A small comment on the first highlight.
+- And here is a second piece of highlighted text.
 
 ---
 ## Details
-- **Type**: {{renderedType}}
-- **Domain**: {{domain}}
-- **Created**: {{formattedCreatedDate}}
-- **Updated**: {{formattedUpdatedDate}}
-- **Tags**: {{formattedTags}}
+- **Type**: Article
+- **Domain**: example.com
+- **Created**: Oct 27, 2023
+- **Updated**: Oct 28, 2023
+- **Tags**: web-clipping, important-read
 ```
 
 **Key Frontmatter Fields (using Default Template):**
