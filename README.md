@@ -199,24 +199,20 @@ description: |
   <Second line of multiline description>
   <Additional lines...>
   
-# Source information
+# Source Information
 source: <Raindrop URL (link)>
 type: <Raindrop Type, e.g., link, article>
 created: <Raindrop Creation Date>
-last_update: <Raindrop Last Update Date>
+lastupdate: <Raindrop Last Update Date>
 
-# Collection information (nested structure)
-collection:
-  id: <Raindrop Collection ID>
-  title: "<Raindrop Collection Title>"
-  path: "<Full Raindrop Collection Path relative to Raindrop root>"
-  parent_id: <Raindrop Parent Collection ID> # Only present if not a top-level collection
+# Collection Information
+collectionId: <Raindrop Collection ID>
+collectionTitle: "<Raindrop Collection Title>"
+collectionPath: "<Full Raindrop Collection Path relative to Raindrop root>"
+collectionParentId: <Raindrop Parent Collection ID> # Only present if not a top-level collection and available
 
 # Tags from raindrop and any you added via the modal
-tags:
-  - <raindrop_tag_1_sanitized>
-  - <raindrop_tag_2_sanitized>
-  - <appended_tag_1_sanitized>
+tags: <raindrop_tag_1_sanitized>, <raindrop_tag_2_sanitized>, <appended_tag_1_sanitized>
   
 # Banner/cover image if available
 <banner_field_name>: <Raindrop Cover Image URL> # Field name configurable in settings (default: banner)

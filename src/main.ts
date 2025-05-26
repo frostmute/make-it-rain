@@ -16,7 +16,7 @@
  * and immutable data structures to improve code reliability and testability.
  */
 
-import { App, Notice, Plugin, PluginSettingTab, Setting, Modal, TextComponent, ButtonComponent, ToggleComponent, PluginManifest, TFile, TAbstractFile } from 'obsidian';
+import { App, Notice, Plugin, PluginSettingTab, Setting, Modal, TextComponent, ButtonComponent, ToggleComponent, PluginManifest, TFile, TAbstractFile, normalizePath } from 'obsidian';
 import { request, RequestUrlParam } from 'obsidian';
 import { MakeItRainSettings, RaindropType, CONTENT_TYPES, ModalFetchOptions } from './types';
 
@@ -163,8 +163,8 @@ const getFullPathSegments = (collectionId: number, hierarchy: Map<number, { titl
     for (const id of pathIds) {
          const name = idToNameMap.get(id);
          if (name) {
-              // Sanitize the name before adding to segments
-              const sanitizedName = name.replace(/[\/\\:*?"<>|#%&{}\$\!\'@`+=]/g, '').trim();
+              // Use the imported sanitizeFileName utility directly as this is a standalone function
+              const sanitizedName = sanitizeFileName(name);
               if(sanitizedName) segments.push(sanitizedName);
          } else {
              // If name not found, add a placeholder or skip?
@@ -188,17 +188,18 @@ title: "{{title}}"
 source: {{link}}
 type: {{type}}
 created: {{created}}
-last_update: {{lastUpdate}}
-collection:
-  id: {{collection.id}}
-  title: "{{collection.title}}"
-  path: "{{collection.path}}"
+lastupdate: {{lastupdate}}
+id: {{id}}
+collectionId: {{collectionId}}
+collectionTitle: "{{collectionTitle}}"
+collectionPath: "{{collectionPath}}"
+{{#if collectionParentId}}collectionParentId: {{collectionParentId}}{{/if}}
 tags:
 {{#each tags}}
   - {{this}}
 {{/each}}
 {{#if cover}}
-banner: {{cover}}
+{{bannerFieldName}}: {{cover}}
 {{/if}}
 ---
 
@@ -224,18 +225,27 @@ banner: {{cover}}
 - {{text}}
 {{#if note}}  *Note:* {{note}}{{/if}}
 {{/each}}
-{{/if}}`,
+{{/if}}
+
+---
+## Details
+- **Type**: {{renderedType}}
+- **Domain**: {{domain}}
+- **Created**: {{formattedCreatedDate}}
+- **Updated**: {{formattedUpdatedDate}}
+- **Tags**: {{formattedTags}}
+`,
     contentTypeTemplates: {
         link: `---
 title: "{{title}}"
 source: {{link}}
 type: link
 created: {{formatDateISO created}}
-updated: {{formatDateISO lastUpdate}}
-collection:
-  id: {{collection.id}}
-  title: "{{collection.title}}"
-  path: "{{collection.path}}"
+updated: {{formatDateISO lastupdate}}
+collectionId: {{collectionId}}
+collectionTitle: "{{collectionTitle}}"
+collectionPath: "{{collectionPath}}"
+{{#if collectionParentId}}collectionParentId: {{collectionParentId}}{{/if}}
 tags:
 {{#each tags}}
   - {{this}}
@@ -276,7 +286,7 @@ banner: {{cover}}
 - **Type**: {{raindropType type}}
 - **Domain**: {{domain}}
 - **Created**: {{formatDate created}}
-- **Updated**: {{formatDate lastUpdate}}
+- **Updated**: {{formatDate lastupdate}}
 - **Tags**: {{#each tags}}#{{this}} {{/each}}
 
 ## References
@@ -1302,10 +1312,25 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     new Notice('No raindrops found in your account.', 5000);
                 }
             } else {
-                loadingNotice.setMessage(`Found ${allData.length} raindrops. Processing...`); // Update notice message
+                loadingNotice.setMessage(`Found ${allData.length} raindrops. Applying type filter...`);
+
+                // Apply type filter if specified
+                let filteredData = allData;
+                if (options.filterType && options.filterType !== 'all') {
+                    filteredData = allData.filter(item => item.type === options.filterType);
+                    loadingNotice.setMessage(`Found ${filteredData.length} raindrops of type '${options.filterType}'. Processing...`);
+                    if (filteredData.length === 0) {
+                        new Notice(`No raindrops found matching type '${options.filterType}'.`, 5000);
+                        loadingNotice.hide();
+                        return;
+                    }
+                } else {
+                    loadingNotice.setMessage(`Found ${allData.length} raindrops. Processing...`); // Update notice message
+                }
+
                 // The loadingNotice will be hidden in processRaindrops
                 // Pass all necessary data including collectionsData, resolvedCollectionIds, and collectionIdToNameMap
-                await this.processRaindrops(allData, options.vaultPath, options.appendTagsToNotes, options.useRaindropTitleForFileName, loadingNotice, options, collectionsData, resolvedCollectionIds, collectionIdToNameMap);
+                await this.processRaindrops(filteredData, options.vaultPath, options.appendTagsToNotes, options.useRaindropTitleForFileName, loadingNotice, options, collectionsData, resolvedCollectionIds, collectionIdToNameMap);
             }
 
         } catch (error) {
@@ -1333,7 +1358,8 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         const settingsFMTags = appendTagsToNotes.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag !== '');
 
         if (vaultPath === undefined) vaultPath = this.settings.defaultFolder;
-        const targetFolderPath = vaultPath?.trim() ?? "";
+        // Normalize the base target folder path once
+        const baseTargetFolderPath = vaultPath?.trim() ? normalizePath(vaultPath.trim()) : normalizePath("");
 
         // Initialize collection hierarchy
         const collectionHierarchy = new Map<number, { title: string, parentId?: number }>();
@@ -1370,7 +1396,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                             // Process individual raindrop
                             const result = await this.processRaindrop(
                                 raindrop,
-                                targetFolderPath,
+                                baseTargetFolderPath,
                                 settingsFMTags,
                                 options,
                                 loadingNotice,
@@ -1420,7 +1446,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
 
     private async processRaindrop(
         raindrop: RaindropItem,
-        targetFolderPath: string,
+        baseTargetFolderPath: string, // Already normalized
         settingsFMTags: string[],
         options: ModalFetchOptions,
         loadingNotice: Notice,
@@ -1431,14 +1457,32 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
     ): Promise<{ success: boolean; type: 'created' | 'updated' | 'skipped' }> {
         try {
             const { app } = this;
+
+            const escapeYamlStringValue = (str: string | undefined | null): string => {
+                if (str === undefined || str === null) return '';
+                return str.replace(/"/g, '\\"'); // Escape double quotes for YAML
+            };
+
             const generatedFilename = this.generateFileName(raindrop, options.useRaindropTitleForFileName);
             
+            let individualNoteTargetFolderPath = baseTargetFolderPath; // Starts as normalized
+            if (raindrop.collection?.$id) {
+                const pathSegments = this.getFullPathSegments(raindrop.collection.$id, collectionHierarchy, collectionIdToNameMap); // getFullPathSegments now uses sanitizeFileName
+                if (pathSegments.length > 0) {
+                    const collectionSubPath = pathSegments.join('/');
+                    // Use normalizePath for the full path
+                    individualNoteTargetFolderPath = normalizePath(`${baseTargetFolderPath}/${collectionSubPath}`);
+                }
+            }
+
             // Ensure target directory exists before attempting to write
-            if (targetFolderPath && !(await app.vault.adapter.exists(targetFolderPath))) {
-                await createFolderStructure(app, targetFolderPath);
+            // individualNoteTargetFolderPath is already normalized
+            if (individualNoteTargetFolderPath && !(await app.vault.adapter.exists(individualNoteTargetFolderPath))) {
+                await createFolderStructure(app, individualNoteTargetFolderPath);
             }
             
-            const filePath = `${targetFolderPath}/${generatedFilename}.md`;
+            // Use normalizePath for the final file path
+            const filePath = normalizePath(`${individualNoteTargetFolderPath}/${generatedFilename}.md`);
 
             // Update loading notice with current processing item
             const raindropTitle = raindrop.title || 'Untitled';
@@ -1449,72 +1493,121 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             // Generate template data
             const templateData: Record<string, any> = {
                 id: raindrop._id,
-                title: raindrop.title || 'Untitled',
-                excerpt: raindrop.excerpt || '',
-                note: raindrop.note || '',
-                link: raindrop.link,
-                url: raindrop.link, // Add url alias for link
-                cover: raindrop.cover || '',
+                title: escapeYamlStringValue(raindrop.title),
+                excerpt: escapeYamlStringValue(raindrop.excerpt || ''),
+                note: escapeYamlStringValue(raindrop.note || ''),
+                link: raindrop.link, // URLs generally don't need YAML escaping unless they have special chars
+                cover: raindrop.cover || '', // URLs generally don't need YAML escaping
                 created: raindrop.created,
-                lastUpdate: raindrop.lastUpdate,
-                updated: raindrop.lastUpdate, // Add updated alias for lastUpdate
+                lastupdate: raindrop.lastUpdate, // Changed from lastUpdate
                 type: raindrop.type,
-                tags: [...settingsFMTags],
-                highlights: raindrop.highlights || []
+                // Flattened collection data
+                collectionId: raindrop.collection?.$id || 0,
+                collectionTitle: escapeYamlStringValue(collectionIdToNameMap.get(raindrop.collection?.$id || 0) || 'Unknown'),
+                collectionPath: escapeYamlStringValue(this.getFullPathSegments(raindrop.collection?.$id || 0, collectionHierarchy, collectionIdToNameMap).join('/')),
+                // Add collectionParentId if it exists
+                ...(collectionHierarchy.has(raindrop.collection?.$id || 0) && collectionHierarchy.get(raindrop.collection?.$id || 0)?.parentId !== undefined && {
+                    collectionParentId: collectionHierarchy.get(raindrop.collection?.$id || 0)?.parentId
+                }),
+                tags: (raindrop.tags || []).map(tag => escapeYamlStringValue(tag)),
+                highlights: (raindrop.highlights || []).map(h => ({
+                    ...h,
+                    text: escapeYamlStringValue(h.text),
+                    note: escapeYamlStringValue(h.note)
+                })),
+                bannerFieldName: this.settings.bannerFieldName,
+                // Pre-calculated fields for helpers
+                url: raindrop.link || '',
             };
 
-            // Add collection information if available
-            if (raindrop.collection?.$id && collectionIdToNameMap.has(raindrop.collection.$id)) {
-                const collectionId = raindrop.collection.$id;
-                const collectionTitle = collectionIdToNameMap.get(collectionId) || 'Unknown';
-                const fullCollectionPathForFrontmatter = this.getFullPathSegments(collectionId, collectionHierarchy, collectionIdToNameMap).join('/');
-                
-                templateData.collection = {
-                    id: collectionId,
-                    title: collectionTitle,
-                    path: fullCollectionPathForFrontmatter
-                };
-                
-                if (collectionHierarchy.has(collectionId)) {
-                    const collectionInfo = collectionHierarchy.get(collectionId);
-                    if (collectionInfo?.parentId !== undefined) {
-                        templateData.collection.parent_id = collectionInfo.parentId;
-                    }
-                }
-            }
-
-            // Process and add tags
-            if (raindrop.tags && Array.isArray(raindrop.tags)) {
-                raindrop.tags.forEach((tag: string) => {
-                    const trimmedTag = tag.trim();
-                    if (trimmedTag && !templateData.tags.includes(trimmedTag)) {
-                        templateData.tags.push(trimmedTag);
-                    }
-                });
-            }
-
             try {
+                // Prepare data for the rendering engine (including pre-calculated fields for helpers)
+                const enhancedDataForRender = {
+                    ...templateData, // Spread the original templateData
+                    url: templateData.link || '', // Ensure url is available, aliasing link
+                    domain: this.getDomain(templateData.link || ''),
+                    // Pre-calculate values that used helpers in the template:
+                    renderedType: this.raindropType(templateData.type as RaindropType), // Cast type to RaindropType
+                    formattedCreatedDate: this.formatDate(templateData.created),
+                    formattedUpdatedDate: this.formatDate(templateData.lastupdate), // Changed from lastUpdate
+                    formattedTags: this.formatTags(templateData.tags || []),
+                };
+
                 if (this.settings.isTemplateSystemEnabled) {
                     const template = this.getTemplateForType(raindrop.type as RaindropType, options);
-                    const fileContent = this.renderTemplate(template, templateData);
+                    const fileContent = this.renderTemplate(template, enhancedDataForRender);
                     await app.vault.create(filePath, fileContent);
                     return { success: true, type: processOutcome };
                 } else {
                     // Fallback to basic format if template system is disabled
-                    const basicContent = `---
-title: "${raindrop.title || 'Untitled'}"
-source: ${raindrop.link}
-type: ${raindrop.type}
-created: ${raindrop.created}
-tags:
-${templateData.tags.map((tag: string) => `  - ${tag}`).join('\n')}
----
+                    // Logic moved from createNoteFromRaindrop
+                    const { 
+                        id, title, excerpt, note, link, cover, created, lastUpdate: rdLastUpdate, type, tags // Keep raindrop.lastUpdate as rdLastUpdate for source
+                    } = raindrop; // Use raindrop directly for source data here to avoid confusion with templateData.lastupdate
 
-# ${raindrop.title || 'Untitled'}
+                    let descriptionYaml = '';
+                    if (excerpt) {
+                        if (excerpt.includes('\n')) {
+                            descriptionYaml = `description: |\n${excerpt.split('\n').map((line: string) => `  ${line}`).join('\n')}`;
+                        } else {
+                            descriptionYaml = `description: "${excerpt.replace(/"/g, '\"')}"`;
+                        }
+                    } else {
+                        descriptionYaml = `description: ""`;
+                    }
 
-${raindrop.excerpt ? `\n${raindrop.excerpt}\n` : ''}
+                    let frontmatter = `---\n`;
+                    frontmatter += `id: ${id}\n`;
+                    frontmatter += `title: "${title.replace(/"/g, '\"')}"\n`;
+                    frontmatter += `${descriptionYaml}\n`;
+                    frontmatter += `source: ${link}\n`;
+                    frontmatter += `type: ${type}\n`;
+                    frontmatter += `created: ${created}\n`;
+                    frontmatter += `lastupdate: ${rdLastUpdate}\n`;
+                    
+                    if (templateData.collectionId) { // Use flattened collectionId from templateData
+                        frontmatter += `collectionId: ${templateData.collectionId}\n`;
+                        frontmatter += `collectionTitle: "${escapeYamlStringValue(templateData.collectionTitle)}"\n`;
+                        frontmatter += `collectionPath: "${escapeYamlStringValue(templateData.collectionPath)}"\n`;
+                        if (templateData.collectionParentId) {
+                            frontmatter += `collectionParentId: ${templateData.collectionParentId}\n`;
+                        }
+                    }
+                    
+                    frontmatter += `tags:\n`;
+                    const finalTags = (tags || []).map((tag: string) => `  - ${tag.trim().replace(/ /g, '_').replace(/[#?"*<>:|]/g, '')}`).join('\n');
+                    frontmatter += `${finalTags}\n`;
+                    
+                    if (cover) {
+                        frontmatter += `${this.settings.bannerFieldName}: ${cover}\n`;
+                    }
+                    frontmatter += `---\n\n`; // Corrected: Actual newlines here
 
-[Visit Link](${raindrop.link})`;
+                    // Construct note content
+                    let noteBody = '';
+                    const altText = sanitizeFileName(title) || 'Cover Image';
+                    if (cover) {
+                        noteBody += `![${altText}](${cover})\n\n`; // Corrected
+                    }
+                    noteBody += `# ${title}\n\n`; // Corrected
+                    if (excerpt) {
+                        noteBody += `## Description\n${excerpt}\n\n`; // Corrected
+                    }
+                    if (templateData.note) { 
+                         noteBody += `## Notes\n${templateData.note}\n\n`; // Corrected
+                    }
+
+                    if (templateData.highlights && templateData.highlights.length > 0) {
+                        noteBody += '## Highlights\n'; // Corrected
+                        templateData.highlights.forEach((highlight: any) => {
+                            noteBody += `- ${highlight.text.replace(/\r\n|\r|\n/g, ' ')}\n`; // Corrected
+                            if (highlight.note) {
+                                noteBody += `  *Note:* ${highlight.note.replace(/\r\n|\r|\n/g, ' ')}\n`; // Corrected
+                            }
+                        });
+                        noteBody += '\n'; // Corrected
+                    }
+                    const basicContent = frontmatter + noteBody;
                     await app.vault.create(filePath, basicContent);
                     return { success: true, type: processOutcome };
                 }
@@ -1542,7 +1635,8 @@ ${raindrop.excerpt ? `\n${raindrop.excerpt}\n` : ''}
 
             const name = collectionIdToNameMap.get(currentId);
             if (name) {
-                segments.unshift(this.sanitizeFileName(name));
+                // Use the imported sanitizeFileName utility for path segments
+                segments.unshift(sanitizeFileName(name)); 
             }
 
             currentId = collection.parentId;
@@ -1552,138 +1646,6 @@ ${raindrop.excerpt ? `\n${raindrop.excerpt}\n` : ''}
     }
 
     // The updateRibbonIcon method is already defined at line ~360
-
-    async createNoteFromRaindrop(raindrop: RaindropItem, folderPath: string, fileName: string, appendTags: string[] = [], options: ModalFetchOptions): Promise<void> {
-        try {
-            // Ensure target directory exists before attempting to write
-            if (folderPath && !(await this.app.vault.adapter.exists(folderPath))) {
-                await createFolderStructure(this.app, folderPath);
-            }
-
-            const { _id: id, title: rdTitle, excerpt: rdExcerpt, note: rdNoteContent, link: rdLink, cover: rdCoverUrl, created: rdCreated, lastUpdate: rdLastUpdate, type: rdType, collection: rdCollection, tags: rdTags, highlights: rdHighlights } = raindrop;
-            const safeTitle = sanitizeFileName(rdTitle);
-            const altText = safeTitle || 'Cover Image';
-            // Prepare tags with appended ones if provided
-            const combinedTags = [...(rdTags || [])];
-            if (appendTags.length > 0) {
-                appendTags.forEach(tag => {
-                    const trimmedTag = tag.trim();
-                    if (trimmedTag && !combinedTags.includes(trimmedTag)) {
-                        combinedTags.push(trimmedTag);
-                    }
-                });
-            }
-            // Prepare data for template
-            const templateData = {
-                id,
-                title: rdTitle,
-                excerpt: rdExcerpt || '',
-                note: rdNoteContent || '',
-                link: rdLink,
-                cover: rdCoverUrl || '',
-                created: rdCreated,
-                lastUpdate: rdLastUpdate,
-                type: rdType,
-                collection: {
-                    id: rdCollection?.$id || 0,
-                    title: rdCollection?.title || 'Unknown',
-                    path: rdCollection?.title || 'Unknown'
-                },
-                tags: combinedTags,
-                highlights: rdHighlights || [],
-                bannerFieldName: this.settings.bannerFieldName
-            };
-            let fileContent = '';
-            if (this.settings.isTemplateSystemEnabled) {
-                // Use template system if enabled
-                let template = this.settings.defaultTemplate;
-                // Check for content type specific template if not forced to use default
-                if (!options.useDefaultTemplate) {
-                    const contentTypeTemplates = this.settings.contentTypeTemplates;
-                    const shouldUseTypeTemplate = options.overrideTemplates || this.settings.contentTypeTemplateToggles[rdType as keyof typeof contentTypeTemplates];
-                    if (shouldUseTypeTemplate && rdType in contentTypeTemplates && contentTypeTemplates[rdType as keyof typeof contentTypeTemplates].trim() !== '') {
-                        template = contentTypeTemplates[rdType as keyof typeof contentTypeTemplates];
-                    }
-                }
-                // Render the template with data
-                fileContent = this.renderTemplate(template, templateData);
-            } else {
-                // Fallback to original hardcoded structure
-                // Construct YAML frontmatter
-                let descriptionYaml = '';
-                if (rdExcerpt) {
-                    if (rdExcerpt.includes('\n')) {
-                        descriptionYaml = `description: |\n${rdExcerpt.split('\n').map((line: string) => `  ${line}`).join('\n')}`;
-                    } else {
-                        descriptionYaml = `description: "${rdExcerpt.replace(/"/g, '\\"')}"`;
-                    }
-                } else {
-                    descriptionYaml = `description: ""`;
-                }
-                let frontmatter = `---\n`;
-                frontmatter += `id: ${id}\n`;
-                frontmatter += `title: "${rdTitle.replace(/"/g, '\\"')}"\n`;
-                frontmatter += `${descriptionYaml}\n`;
-                frontmatter += `source: ${rdLink}\n`;
-                frontmatter += `type: ${rdType}\n`;
-                frontmatter += `created: ${rdCreated}\n`;
-                frontmatter += `last_update: ${rdLastUpdate}\n`;
-                frontmatter += `collection:\n`;
-                frontmatter += `  id: ${rdCollection?.$id || 0}\n`;
-                frontmatter += `  title: "${(rdCollection?.title || 'Unknown').replace(/"/g, '\\"')}"\n`;
-                frontmatter += `  path: "${(rdCollection?.title || 'Unknown').replace(/"/g, '\\"')}"\n`;
-                frontmatter += `tags:\n`;
-                if (combinedTags.length > 0) {
-                    combinedTags.forEach(tag => {
-                        frontmatter += `  - ${tag}\n`;
-                    });
-                } else {
-                    frontmatter += `  - \n`;
-                }
-                if (rdCoverUrl) {
-                    frontmatter += `${this.settings.bannerFieldName}: ${rdCoverUrl}\n`;
-                }
-                frontmatter += `---\n\n`;
-                // Construct note content
-                let noteContent = '';
-                if (rdCoverUrl) {
-                    noteContent += `![${altText}](${rdCoverUrl})\n\n`;
-                }
-                noteContent += `# ${rdTitle}\n\n`;
-                if (rdExcerpt) {
-                    noteContent += `## Description\n${rdExcerpt}\n\n`;
-                }
-                if (rdNoteContent) noteContent += `## Notes\n${rdNoteContent}\n\n`;
-                if (rdHighlights && rdHighlights.length > 0) {
-                    noteContent += '## Highlights\n';
-                    rdHighlights.forEach((highlight: any) => {
-                        noteContent += `- ${highlight.text.replace(/\r\n|\r|\n/g, ' ')}\n`;
-                        if (highlight.note) {
-                            noteContent += `  *Note:* ${highlight.note.replace(/\r\n|\r|\n/g, ' ')}\n`;
-                        }
-                    });
-                    noteContent += '\n';
-                }
-                fileContent = frontmatter + noteContent;
-            }
-            // Check if file already exists
-            const fullFilePath = `${folderPath}/${fileName}.md`;
-            // Manually normalize path by removing leading/trailing slashes and normalizing separators
-            const normalizedPath = fullFilePath.replace(/^[\/]+|[\/]+$/g, '').replace(/[\/]+/g, '/');
-            if (await this.app.vault.adapter.exists(normalizedPath)) {
-                console.log(`File already exists: ${normalizedPath}`);
-                new Notice(`Skipped existing note: ${fileName}.md`, 3000);
-                return;
-            }
-            // Create the file
-            await this.app.vault.create(normalizedPath, fileContent);
-            new Notice(`Created note: ${fileName}.md`, 3000);
-            console.log(`Created note: ${normalizedPath}`);
-        } catch (error) {
-            console.error(`Error creating note for Raindrop ${raindrop._id}:`, error);
-            new Notice(`Failed to create note for Raindrop ${raindrop._id}. Check console.`, 5000);
-        }
-    }
 
     private formatDate(date: string): string {
         try {
@@ -1735,7 +1697,7 @@ ${raindrop.excerpt ? `\n${raindrop.excerpt}\n` : ''}
             formatDateISO: (date: string) => this.formatDateISO(date),
             formatTags: (tags: string[]) => this.formatTags(tags),
             raindropType: (type: string) => this.raindropType(type),
-            updated: data.lastUpdate || '',
+            updated: data.lastupdate || '', // Changed from lastUpdate
         };
 
         // Simple Handlebars-like rendering
@@ -1819,14 +1781,24 @@ ${raindrop.excerpt ? `\n${raindrop.excerpt}\n` : ''}
         if (typeof value === 'object') {
             const entries = Object.entries(value);
             if (entries.length === 0) {
-                return '{}';
+                return '{}'; // Flow style for empty is fine
             }
+            // Keys of this object will be indented one level more than the object itself.
+            const keysIndent = '  '.repeat(indentLevel + 1); 
             return entries.map(([key, val]) => {
+                // Format the value; it will be indented according to its own type and level.
                 const formattedValue = this.formatYamlValue(val, indentLevel + 1);
-                if (formattedValue.includes('\n')) {
-                    return `\n${indent}${key}:${formattedValue}`;
+                
+                // Check if the formattedValue is already a multi-line block (starts with newline and indent)
+                // or if it's a simple single-line value.
+                if (formattedValue.startsWith('\\n')) { 
+                    // If formattedValue is already a block (e.g., a nested object),
+                    // it starts with '\\n' and its own correct indentation.
+                    // So, we just place our key before it.
+                    return `\\n${keysIndent}${key}:${formattedValue}`;
+                } else { // Sub-value is single line
+                    return `\\n${keysIndent}${key}: ${formattedValue}`;
                 }
-                return `\n${indent}${key}: ${formattedValue}`;
             }).join('');
         }
         
