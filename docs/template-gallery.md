@@ -38,6 +38,7 @@ title: "{{title}}"
 source: {{link}} 
 created: {{created}}
 lastupdate: {{lastupdate}}
+id: {{id}}
 collectionId: {{collectionId}}
 collectionTitle: "{{collectionTitle}}"
 collectionPath: "{{collectionPath}}"
@@ -86,6 +87,7 @@ title: "{{title}}"
 source: {{link}}
 created: {{created}}
 lastupdate: {{lastupdate}}
+id: {{id}}
 collectionId: {{collectionId}}
 collectionTitle: "{{collectionTitle}}"
 collectionPath: "{{collectionPath}}"

@@ -184,6 +184,7 @@ source: {{link}}
 type: {{type}}
 created: {{created}}
 lastupdate: {{lastupdate}}
+id: {{id}}
 collectionId: {{collectionId}}
 collectionTitle: "{{collectionTitle}}"
 collectionPath: "{{collectionPath}}"

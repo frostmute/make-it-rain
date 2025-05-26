@@ -181,60 +181,77 @@ ID will be used as the filename.
 
 ![Imported Note Example](https://github.com/frostmute/make-it-rain/blob/main/assets/makeitrain-note-output.png)
 
-Each successfully imported Raindrop bookmark generates a new Markdown note with the following structure. Placeholders like
-<Raindrop Title> indicate where Raindrop.io data will be inserted.
+Each successfully imported Raindrop bookmark generates a new Markdown note. When the **Template System** is enabled (default), the structure is defined by the active template. The built-in default template produces the following:
 
 ```markdown
 ---
-# Basic raindrop metadata
-id: <Raindrop ID>
-title: "<Raindrop Title>"
-
-# Description - one of these formats will be used:
-# For single-line descriptions:
-description: "<Raindrop Excerpt (summary from the webpage)>"
-# OR for multiline descriptions:
-description: |
-  <First line of multiline description>
-  <Second line of multiline description>
-  <Additional lines...>
-  
-# Source Information
-source: <Raindrop URL (link)>
-type: <Raindrop Type, e.g., link, article>
-created: <Raindrop Creation Date>
-lastupdate: <Raindrop Last Update Date>
-
-# Collection Information
-collectionId: <Raindrop Collection ID>
-collectionTitle: "<Raindrop Collection Title>"
-collectionPath: "<Full Raindrop Collection Path relative to Raindrop root>"
-collectionParentId: <Raindrop Parent Collection ID> # Only present if not a top-level collection and available
-
-# Tags from raindrop and any you added via the modal
-tags: <raindrop_tag_1_sanitized>, <raindrop_tag_2_sanitized>, <appended_tag_1_sanitized>
-  
-# Banner/cover image if available
-<banner_field_name>: <Raindrop Cover Image URL> # Field name configurable in settings (default: banner)
+title: "{{title}}"
+source: {{link}}
+type: {{type}}
+created: {{created}}
+lastupdate: {{lastupdate}}
+id: {{id}}
+collectionId: {{collectionId}}
+collectionTitle: "{{collectionTitle}}"
+collectionPath: "{{collectionPath}}"
+{{#if collectionParentId}}collectionParentId: {{collectionParentId}}{{/if}}
+{{#if tags}}tags:
+{{#each tags}}  - {{this}}
+{{/each}}{{/if}}
+{{#if cover}}{{bannerFieldName}}: {{cover}}{{/if}}
 ---
 
-![<Sanitized Title or 'Cover Image'>](<Raindrop Cover Image URL (if available)>)
+{{#if cover}}
+![{{title}}]({{cover}})
+{{/if}}
 
-# <Raindrop Title>
+# {{title}}
 
-## <Raindrop Note (your personal annotation, if any)>
+{{#if excerpt}}
+## Description
+{{excerpt}}
+{{/if}}
 
-<Raindrop Excerpt (summary from the webpage)> # Included here if not multiline (multiline goes in frontmatter description)
+{{#if note}}
+## Notes
+{{note}}
+{{/if}}
 
-### Highlights
-- Highlight text 1 (newlines are replaced with spaces)
-  *Note:* Optional note for highlight 1 (newlines are replaced with spaces)
-- Highlight text 2 (newlines are replaced with spaces)
-  *Note:* Optional note for highlight 2 (newlines are replaced with spaces)
+{{#if highlights}}
+## Highlights
+{{#each highlights}}
+- {{text}}
+{{#if note}}  *Note:* {{note}}{{/if}}
+{{/each}}
+{{/if}}
+
+---
+## Details
+- **Type**: {{renderedType}}
+- **Domain**: {{domain}}
+- **Created**: {{formattedCreatedDate}}
+- **Updated**: {{formattedUpdatedDate}}
+- **Tags**: {{formattedTags}}
 ```
 
-**Note on Tags:** Tags in the frontmatter are automatically sanitized for Obsidian compatibility: spaces are replaced with
-underscores (`_`), and special characters are removed.
+**Key Frontmatter Fields (using Default Template):**
+
+*   `id`: Unique Raindrop.io ID (e.g., `12345678`). **Required for updates.**
+*   `title`: Title of the Raindrop (e.g., `"My Awesome Bookmark"`).
+*   `source`: The original URL of the bookmark (e.g., `https://example.com`).
+*   `type`: The raw Raindrop type (e.g., `article`, `link`).
+*   `created`: Creation timestamp in ISO 8601 format (e.g., `2023-10-27T14:30:00Z`).
+*   `lastupdate`: Last update timestamp in ISO 8601 format (e.g., `2023-10-28T10:20:00Z`). **Required for updates.**
+*   `collectionId`: ID of the Raindrop's collection (e.g., `98765`).
+*   `collectionTitle`: Title of the Raindrop's collection (e.g., `"My Research"`).
+*   `collectionPath`: Full path of the collection (e.g., `"Archive/Tech Articles"`).
+*   `collectionParentId` (optional): ID of the parent collection if it exists.
+*   `tags`: A list of tags associated with the Raindrop (e.g., `tags:
+  - obsidian
+  - productivity`).
+*   `{{bannerFieldName}}`: (Optional) The field name for the banner image (from settings, defaults to `banner`), with the cover image URL (e.g., `banner: https://example.com/image.jpg`).
+
+If the **Template System is disabled**, a more basic fallback structure is used. See [Note Structure Documentation](docs/note-structure.md) for details on both.
 
 ## Documentation
 

@@ -239,9 +239,10 @@ tags:
         link: `---
 title: "{{title}}"
 source: {{link}}
-type: link
-created: {{formatDateISO created}}
-updated: {{formatDateISO lastupdate}}
+type: {{type}}
+created: {{created}}
+lastupdate: {{lastupdate}}
+id: {{id}}
 collectionId: {{collectionId}}
 collectionTitle: "{{collectionTitle}}"
 collectionPath: "{{collectionPath}}"
@@ -251,15 +252,15 @@ tags:
   - {{this}}
 {{/each}}
 {{#if cover}}
-banner: {{cover}}
+{{bannerFieldName}}: {{cover}}
 {{/if}}
 ---
-
-# {{title}}
 
 {{#if cover}}
 ![{{title}}]({{cover}})
 {{/if}}
+
+# {{title}}
 
 {{#if excerpt}}
 ## Description
@@ -280,29 +281,31 @@ banner: {{cover}}
 {{/if}}
 
 ---
-
 ## Details
-
-- **Type**: {{raindropType type}}
+- **Type**: {{renderedType}}
 - **Domain**: {{domain}}
-- **Created**: {{formatDate created}}
-- **Updated**: {{formatDate lastupdate}}
-- **Tags**: {{#each tags}}#{{this}} {{/each}}
-
-## References
+- **Created**: {{formattedCreatedDate}}
+- **Updated**: {{formattedUpdatedDate}}
+- **Tags**: {{formattedTags}}
 
 [Source]({{link}})`,
         article: `---
 title: "{{title}}"
 source: {{link}}
-type: article
+type: {{type}}
 created: {{created}}
+lastupdate: {{lastupdate}}
+id: {{id}}
+collectionId: {{collectionId}}
+collectionTitle: "{{collectionTitle}}"
+collectionPath: "{{collectionPath}}"
+{{#if collectionParentId}}collectionParentId: {{collectionParentId}}{{/if}}
 tags:
 {{#each tags}}
   - {{this}}
 {{/each}}
 {{#if cover}}
-banner: {{cover}}
+{{bannerFieldName}}: {{cover}}
 {{/if}}
 ---
 
@@ -315,6 +318,11 @@ banner: {{cover}}
 {{#if excerpt}}
 ## Summary
 {{excerpt}}
+{{/if}}
+
+{{#if note}}
+## Notes
+{{note}}
 {{/if}}
 
 {{#if highlights}}
@@ -323,50 +331,80 @@ banner: {{cover}}
 > {{text}}
 {{#if note}}  *Note:* {{note}}{{/if}}
 {{/each}}
-{{/if}}`,
+{{/if}}
+
+---
+## Details
+- **Type**: {{renderedType}}
+- **Domain**: {{domain}}
+- **Created**: {{formattedCreatedDate}}
+- **Updated**: {{formattedUpdatedDate}}
+- **Tags**: {{formattedTags}}
+
+[Read Article]({{link}})`,
         image: `---
 title: "{{title}}"
 source: {{link}}
-type: image
+type: {{type}}
 created: {{created}}
+lastupdate: {{lastupdate}}
+id: {{id}}
+collectionId: {{collectionId}}
+collectionTitle: "{{collectionTitle}}"
+collectionPath: "{{collectionPath}}"
+{{#if collectionParentId}}collectionParentId: {{collectionParentId}}{{/if}}
 tags:
 {{#each tags}}
   - {{this}}
 {{/each}}
-{{#if cover}}
-banner: {{cover}}
-{{/if}}
+{{bannerFieldName}}: {{cover}}
 ---
 
-# {{title}}
-
-{{#if cover}}
-![[{{cover}}]]
-{{/if}}
+![{{title}}]({{cover}})
 
 {{#if excerpt}}
-## Description
-{{excerpt}}
-{{/if}}`,
+*{{excerpt}}*
+{{/if}}
+
+{{#if note}}
+## Notes
+{{note}}
+{{/if}}
+
+---
+## Details
+- **Type**: {{renderedType}}
+- **Domain**: {{domain}}
+- **Created**: {{formattedCreatedDate}}
+- **Updated**: {{formattedUpdatedDate}}
+- **Tags**: {{formattedTags}}
+
+[View Original]({{link}})`,
         video: `---
 title: "{{title}}"
 source: {{link}}
-type: video
+type: {{type}}
 created: {{created}}
+lastupdate: {{lastupdate}}
+id: {{id}}
+collectionId: {{collectionId}}
+collectionTitle: "{{collectionTitle}}"
+collectionPath: "{{collectionPath}}"
+{{#if collectionParentId}}collectionParentId: {{collectionParentId}}{{/if}}
 tags:
 {{#each tags}}
   - {{this}}
 {{/each}}
 {{#if cover}}
-banner: {{cover}}
+{{bannerFieldName}}: {{cover}}
 {{/if}}
 ---
-
-# {{title}}
 
 {{#if cover}}
 ![{{title}}]({{cover}})
 {{/if}}
+
+# {{title}}
 
 {{#if excerpt}}
 ## Description
@@ -379,18 +417,39 @@ banner: {{cover}}
 - {{text}}
 {{#if note}}  *Comment:* {{note}}{{/if}}
 {{/each}}
-{{/if}}`,
+{{/if}}
+
+{{#if note}}
+## Notes
+{{note}}
+{{/if}}
+
+---
+## Details
+- **Type**: {{renderedType}}
+- **Domain**: {{domain}}
+- **Created**: {{formattedCreatedDate}}
+- **Updated**: {{formattedUpdatedDate}}
+- **Tags**: {{formattedTags}}
+
+[Watch Video]({{link}})`,
         document: `---
 title: "{{title}}"
 source: {{link}}
-type: document
+type: {{type}}
 created: {{created}}
+lastupdate: {{lastupdate}}
+id: {{id}}
+collectionId: {{collectionId}}
+collectionTitle: "{{collectionTitle}}"
+collectionPath: "{{collectionPath}}"
+{{#if collectionParentId}}collectionParentId: {{collectionParentId}}{{/if}}
 tags:
 {{#each tags}}
   - {{this}}
 {{/each}}
 {{#if cover}}
-banner: {{cover}}
+{{bannerFieldName}}: {{cover}}
 {{/if}}
 ---
 
@@ -407,20 +466,45 @@ banner: {{cover}}
 - {{text}}
 {{#if note}}  *Note:* {{note}}{{/if}}
 {{/each}}
-{{/if}}`,
+{{/if}}
+
+{{#if note}}
+## Notes
+{{note}}
+{{/if}}
+
+---
+## Details
+- **Type**: {{renderedType}}
+- **Domain**: {{domain}}
+- **Created**: {{formattedCreatedDate}}
+- **Updated**: {{formattedUpdatedDate}}
+- **Tags**: {{formattedTags}}
+
+[Open Document]({{link}})`,
         audio: `---
 title: "{{title}}"
 source: {{link}}
-type: audio
+type: {{type}}
 created: {{created}}
+lastupdate: {{lastupdate}}
+id: {{id}}
+collectionId: {{collectionId}}
+collectionTitle: "{{collectionTitle}}"
+collectionPath: "{{collectionPath}}"
+{{#if collectionParentId}}collectionParentId: {{collectionParentId}}{{/if}}
 tags:
 {{#each tags}}
   - {{this}}
 {{/each}}
 {{#if cover}}
-banner: {{cover}}
+{{bannerFieldName}}: {{cover}}
 {{/if}}
 ---
+
+{{#if cover}}
+![{{title}}]({{cover}})
+{{/if}}
 
 # {{title}}
 
@@ -435,7 +519,22 @@ banner: {{cover}}
 - {{text}}
 {{#if note}}  *Comment:* {{note}}{{/if}}
 {{/each}}
-{{/if}}`
+{{/if}}
+
+{{#if note}}
+## Notes
+{{note}}
+{{/if}}
+
+---
+## Details
+- **Type**: {{renderedType}}
+- **Domain**: {{domain}}
+- **Created**: {{formattedCreatedDate}}
+- **Updated**: {{formattedUpdatedDate}}
+- **Tags**: {{formattedTags}}
+
+[Listen to Audio]({{link}})`
     },
     contentTypeTemplateToggles: {
         link: true,
