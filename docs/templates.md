@@ -25,30 +25,30 @@ Make It Rain uses a Handlebars-based template system to give you full control ov
 
 ### Enabling the Template System
 
-1.  Navigate to Obsidian Settings → Community Plugins → Make It Rain.
-2.  Toggle "Enable Template System" to ON.
+1. Navigate to Obsidian Settings → Community Plugins → Make It Rain.
+2. Toggle "Enable Template System" to ON.
     - This reveals options for the "Default Template" and "Content Type Templates".
 
 ### Default Template
 
--   Located in the plugin settings under "Template System".
--   This template is used for any Raindrop item if:
-    1.  Its specific content type template (e.g., for `article`) is disabled or empty.
-    2.  The "Use Default Template Only" option is checked in the fetch modal.
--   The plugin comes with a comprehensive [built-in default template structure](#default-template-structure-built-in).
+- Located in the plugin settings under "Template System".
+- This template is used for any Raindrop item if:
+    1. Its specific content type template (e.g., for `article`) is disabled or empty.
+    2. The "Use Default Template Only" option is checked in the fetch modal.
+- The plugin comes with a comprehensive [built-in default template structure](#default-template-structure-built-in).
 
 ### Content-Type Specific Templates
 
--   In plugin settings, under "Content Type Templates", you can enable and define custom templates for each Raindrop type (`link`, `article`, `image`, `video`, `document`, `audio`).
--   If a specific content type template is enabled and has content, it will be used for items of that type, unless overridden by modal options.
+- In plugin settings, under "Content Type Templates", you can enable and define custom templates for each Raindrop type (`link`, `article`, `image`, `video`, `document`, `audio`).
+- If a specific content type template is enabled and has content, it will be used for items of that type, unless overridden by modal options.
 
 ### Modal Fetch Options for Templates
 
 When you trigger a fetch, the modal provides these choices if the template system is enabled:
 
--   **Use Default Template Only**: If checked, forces all items to use the "Default Template" from settings, ignoring any content-type specific templates.
--   **Override Disabled Templates**: If checked, uses any defined content-type specific templates *even if their toggle in settings is off*. The main "Enable Template System" toggle must still be on.
--   If neither is checked, behavior follows standard settings: enabled content-type templates are used for their respective types, and the default template is used for others.
+- **Use Default Template Only**: If checked, forces all items to use the "Default Template" from settings, ignoring any content-type specific templates.
+- **Override Disabled Templates**: If checked, uses any defined content-type specific templates *even if their toggle in settings is off*. The main "Enable Template System" toggle must still be on.
+- If neither is checked, behavior follows standard settings: enabled content-type templates are used for their respective types, and the default template is used for others.
 
 ## Available Template Variables
 
@@ -125,13 +125,16 @@ Show content only if a variable exists and has a non-empty/non-false value. Espe
 Iterate over arrays like `tags` and `highlights`.
 
 **For YAML frontmatter tags:**
+
 ```handlebars
 frontmatterKey:
 {{#each arrayVariable}}
   - {{this}} {{! 'this' refers to the current item in the array }}
 {{/each}}
 ```
+
 Example:
+
 ```handlebars
 tags:
 {{#each tags}}
@@ -140,6 +143,7 @@ tags:
 ```
 
 **For `highlights` (accessing properties of objects in an array):**
+
 ```handlebars
 {{#if highlights}}
 ## Highlights
@@ -153,10 +157,13 @@ tags:
 
 **For inline display of tags in the note body:**
 Use the pre-calculated `{{formattedTags}}` variable:
+
 ```markdown
 **Topics:** {{formattedTags}}
 ```
+
 Or, for more custom inline formatting:
+
 ```handlebars
 {{#each tags}}<span class="custom-tag">#{{this}}</span> {{/each}}
 ```
@@ -218,6 +225,7 @@ collectionPath: "{{collectionPath}}"
 
 **Important Note on Required Frontmatter Fields:**
 For the "Update existing notes" functionality to reliably identify and update notes, your frontmatter **must** include:
+
 - `id: {{id}}`
 - `lastupdate: {{lastupdate}}`
 
@@ -225,20 +233,20 @@ If these are missing from your custom template's frontmatter, the plugin may not
 
 ## Best Practices for Templates
 
-1.  **Start Simple:** Begin with the default template or a minimal version and add complexity gradually.
-2.  **Test Often:** After making changes, fetch a few sample Raindrops to see the output.
-3.  **YAML Validity:** Pay close attention to YAML syntax in the frontmatter, especially indentation and quoting for strings that might contain special characters (though many core fields are pre-escaped).
-4.  **Consistent Naming:** If you use custom frontmatter fields, try to be consistent for easier searching and Dataview querying in Obsidian.
-5.  **Consult `template-gallery.md`:** Check the [Template Gallery](template-gallery.md) for more examples and ideas.
-6.  **Backup Your Templates:** Keep a copy of your complex custom templates outside of Obsidian settings, just in case.
+1. **Start Simple:** Begin with the default template or a minimal version and add complexity gradually.
+2. **Test Often:** After making changes, fetch a few sample Raindrops to see the output.
+3. **YAML Validity:** Pay close attention to YAML syntax in the frontmatter, especially indentation and quoting for strings that might contain special characters (though many core fields are pre-escaped).
+4. **Consistent Naming:** If you use custom frontmatter fields, try to be consistent for easier searching and Dataview querying in Obsidian.
+5. **Consult `template-gallery.md`:** Check the [Template Gallery](template-gallery.md) for more examples and ideas.
+6. **Backup Your Templates:** Keep a copy of your complex custom templates outside of Obsidian settings, just in case.
 
 ## Troubleshooting Common Issues
 
--   **Broken Frontmatter:** Usually due to incorrect YAML syntax. Check for missing quotes around strings, improper indentation, or special characters that weren't escaped. Using the pre-escaped variables like `"{{title}}"` for string fields in YAML is recommended.
--   **Variable Not Appearing:**
-    -   Check for typos in the variable name: `{{titl}}` vs `{{title}}`.
-    -   Ensure the variable actually exists for that Raindrop item (e.g., not all items have a `cover` or `excerpt`). Use `{{#if variable}}` to handle optional data.
--   **Content Not Displaying as Expected:** Review your `{{#if}}` or `{{#each}}` blocks for correct logic.
+- **Broken Frontmatter:** Usually due to incorrect YAML syntax. Check for missing quotes around strings, improper indentation, or special characters that weren't escaped. Using the pre-escaped variables like `"{{title}}"` for string fields in YAML is recommended.
+- **Variable Not Appearing:**
+  - Check for typos in the variable name: `{{titl}}` vs `{{title}}`.
+  - Ensure the variable actually exists for that Raindrop item (e.g., not all items have a `cover` or `excerpt`). Use `{{#if variable}}` to handle optional data.
+- **Content Not Displaying as Expected:** Review your `{{#if}}` or `{{#each}}` blocks for correct logic.
 
 ## Further Examples
 

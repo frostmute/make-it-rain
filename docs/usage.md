@@ -5,6 +5,7 @@ This guide explains how to use the Make It Rain plugin to fetch your Raindrop.io
 ## Getting Started
 
 Before using the plugin, ensure you have:
+
 1. [Installed the plugin](installation.md)
 2. [Configured your API token](configuration.md#raindropio-api-token)
 3. Set your [default raindrop location](configuration.md#default-raindrop-location) (optional)
@@ -20,7 +21,6 @@ There are three ways to open the fetch modal:
 ## Fetch Modal Options
 
 The fetch modal provides several options for filtering and organizing your raindrops:
-
 
 ### Target Location
 
@@ -107,10 +107,12 @@ The plugin organizes your notes based on your Raindrop.io collection hierarchy:
 3. **Nested Collections**: Maintains the same hierarchy as in Raindrop.io
 
 For example, if you have:
+
 - A collection "Research" with a subcollection "AI"
 - And you set your vault path to "Raindrops"
 
 The resulting structure will be:
+
 ```
 Raindrops/
 ├── Research/

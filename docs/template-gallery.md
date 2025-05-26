@@ -3,6 +3,7 @@
 This document provides a collection of pre-built templates for various use cases with the Make It Rain plugin. Adapt them to your needs or use them as inspiration for your own creations!
 
 **Key Changes to Note (Recent Updates):**
+
 - Collection data is now flattened: use `{{collectionId}}`, `{{collectionTitle}}`, `{{collectionPath}}`, and `{{#if collectionParentId}}{{collectionParentId}}{{/if}}` instead of `{{collection.id}}`, etc.
 - The last update field is now `{{lastupdate}}` (previously `last_update` or `lastUpdate`).
 - Helper functions like `formatDate` or `raindropType` are now pre-calculated variables: `{{formattedCreatedDate}}`, `{{formattedUpdatedDate}}`, `{{renderedType}}`, `{{domain}}`, `{{formattedTags}}`.

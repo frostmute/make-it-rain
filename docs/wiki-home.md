@@ -1,4 +1,4 @@
-# Welcome to the Make It Rain Wiki!
+# Welcome to the Make It Rain Wiki
 
 This wiki provides comprehensive documentation for the **Make It Rain** Obsidian plugin.
 

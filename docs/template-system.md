@@ -123,6 +123,7 @@ You can also include an `{{else}}` clause:
 You can loop through arrays like `tags` and `highlights`:
 
 **Tags Example (for YAML frontmatter):**
+
 ```handlebars
 tags:
 {{#each tags}}
@@ -131,10 +132,13 @@ tags:
 ```
 
 **Tags Example (for inline display in note body):**
+
 ```markdown
 **Tags**: {{formattedTags}}
 ```
+
 Or, if you need more custom formatting for inline tags:
+
 ```handlebars
 {{#each tags}}
 #{{this}}&nbsp;
@@ -142,6 +146,7 @@ Or, if you need more custom formatting for inline tags:
 ```
 
 **Highlights Example:**
+
 ```handlebars
 {{#if highlights}}
 ## Highlights
@@ -316,6 +321,7 @@ tags:
 ```
 
 ### Image Gallery Template
+
 (Assuming you want a simple Markdown gallery or list of images if a Raindrop item represented a collection of images; this is a conceptual example as Raindrop items are singular.)
 
 This example is more conceptual. If you tag multiple image-type Raindrops with a common project tag, you might create a separate summary note. The template for individual image notes could be:
