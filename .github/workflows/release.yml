@@ -90,16 +90,9 @@ jobs:
           body_path: ./release-notes-${{ inputs.version }}.md # Assumes your version-bump script created this file, or you create it before the workflow
           draft: false
           prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload Release Assets
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          assets: |
-            main.js
+          files: |
+            build/main.js
             manifest.json
-            styles.css 
+            styles.css
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 

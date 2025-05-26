@@ -189,6 +189,10 @@ source: {{link}}
 type: {{type}}
 created: {{created}}
 last_update: {{lastUpdate}}
+collection:
+  id: {{collection.id}}
+  title: "{{collection.title}}"
+  path: "{{collection.path}}"
 tags:
 {{#each tags}}
   - {{this}}
@@ -212,27 +216,72 @@ banner: {{cover}}
 {{#if note}}
 ## Notes
 {{note}}
+{{/if}}
+
+{{#if highlights}}
+## Highlights
+{{#each highlights}}
+- {{text}}
+{{#if note}}  *Note:* {{note}}{{/if}}
+{{/each}}
 {{/if}}`,
     contentTypeTemplates: {
         link: `---
 title: "{{title}}"
 source: {{link}}
 type: link
-created: {{created}}
+created: {{formatDateISO created}}
+updated: {{formatDateISO lastUpdate}}
+collection:
+  id: {{collection.id}}
+  title: "{{collection.title}}"
+  path: "{{collection.path}}"
 tags:
 {{#each tags}}
   - {{this}}
 {{/each}}
+{{#if cover}}
+banner: {{cover}}
+{{/if}}
 ---
 
 # {{title}}
 
+{{#if cover}}
+![{{title}}]({{cover}})
+{{/if}}
+
 {{#if excerpt}}
-## Summary
+## Description
 {{excerpt}}
 {{/if}}
 
-[Visit Link]({{link}})`,
+{{#if note}}
+## Notes
+{{note}}
+{{/if}}
+
+{{#if highlights}}
+## Highlights
+{{#each highlights}}
+- {{text}}
+{{#if note}}  *Note:* {{note}}{{/if}}
+{{/each}}
+{{/if}}
+
+---
+
+## Details
+
+- **Type**: {{raindropType type}}
+- **Domain**: {{domain}}
+- **Created**: {{formatDate created}}
+- **Updated**: {{formatDate lastUpdate}}
+- **Tags**: {{#each tags}}#{{this}} {{/each}}
+
+## References
+
+[Source]({{link}})`,
         article: `---
 title: "{{title}}"
 source: {{link}}
@@ -484,7 +533,7 @@ class RaindropFetchModal extends Modal {
     appendTagsToNotes: string = '';
     useRaindropTitleForFileName: boolean = true;
     tagMatchType: 'all' | 'any' = 'all';
-    filterType: string = 'all';
+    filterType: RaindropType | 'all' = 'all';
     fetchOnlyNew: boolean = false;
     updateExisting: boolean = false;
     useDefaultTemplate: boolean = false;
@@ -557,7 +606,7 @@ class RaindropFetchModal extends Modal {
                     .addOption('audio', 'Audio')
                     .setValue(this.filterType)
                     .onChange(value => {
-                        this.filterType = value as 'link' | 'article' | 'image' | 'video' | 'document' | 'audio' | 'all';
+                        this.filterType = value as RaindropType | 'all';
                     });
             });
 
@@ -1056,7 +1105,11 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
 
                         loadingNotice.setMessage(`Fetching from collection: ${collectionNameForNotice}, page ${page + 1}...`);
 
-                        const response = await fetchWithRetry(currentApiUrl, fetchOptions, this.rateLimiter);
+                        const response = await fetchWithRetry(
+                            currentApiUrl,
+                            fetchOptions,
+                            this.rateLimiter
+                        );
                         const data = response as RaindropResponse;
 
                         if (!data.result) {
@@ -1108,7 +1161,11 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                             console.log(`Requesting items with tag: ${tag}`, currentApiUrl);
                             loadingNotice.setMessage(`Fetching items with tag: ${tag}, page ${page + 1}...`);
 
-                            const response = await fetchWithRetry(this.app, currentApiUrl, fetchOptions, this.rateLimiter);
+                            const response = await fetchWithRetry(
+                                currentApiUrl,
+                                fetchOptions,
+                                this.rateLimiter
+                            );
                             const data = response as RaindropResponse;
 
                             if (!data.result) {
@@ -1167,7 +1224,11 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                         console.log(`Requesting items with tags: ${searchParameterString}`, currentApiUrl);
                         loadingNotice.setMessage(`Fetching items with tags: ${searchParameterString}, page ${page + 1}...`);
 
-                        const response = await fetchWithRetry(currentApiUrl, fetchOptions, this.rateLimiter);
+                        const response = await fetchWithRetry(
+                            currentApiUrl,
+                            fetchOptions,
+                            this.rateLimiter
+                        );
                         const data = response as RaindropResponse;
 
                         if (!data.result) {
@@ -1205,7 +1266,11 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     console.log('Requesting all items:', currentApiUrl);
                     loadingNotice.setMessage(`Fetching all items, page ${page + 1}...`);
 
-                    const response = await fetchWithRetry(currentApiUrl, fetchOptions, this.rateLimiter);
+                    const response = await fetchWithRetry(
+                        currentApiUrl,
+                        fetchOptions,
+                        this.rateLimiter
+                    );
                     const data = response as RaindropResponse;
 
                     if (!data.result) {
@@ -1370,7 +1435,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             
             // Ensure target directory exists before attempting to write
             if (targetFolderPath && !(await app.vault.adapter.exists(targetFolderPath))) {
-                await app.vault.createFolder(targetFolderPath);
+                await createFolderStructure(app, targetFolderPath);
             }
             
             const filePath = `${targetFolderPath}/${generatedFilename}.md`;
@@ -1380,77 +1445,83 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             loadingNotice.setMessage(`Processing '${raindropTitle}'... (${processed}/${total})`);
 
             let processOutcome: 'created' | 'updated' | 'skipped' = 'created';
-            let fileContent = '';
 
-            // Add collection information if available
-            const frontmatterData: Record<string, any> = {
-                // Basic metadata
+            // Generate template data
+            const templateData: Record<string, any> = {
                 id: raindrop._id,
-                title: raindrop.title,
-                source: raindrop.link,
-                type: raindrop.type,
+                title: raindrop.title || 'Untitled',
+                excerpt: raindrop.excerpt || '',
+                note: raindrop.note || '',
+                link: raindrop.link,
+                url: raindrop.link, // Add url alias for link
+                cover: raindrop.cover || '',
                 created: raindrop.created,
-                last_update: raindrop.lastUpdate
+                lastUpdate: raindrop.lastUpdate,
+                updated: raindrop.lastUpdate, // Add updated alias for lastUpdate
+                type: raindrop.type,
+                tags: [...settingsFMTags],
+                highlights: raindrop.highlights || []
             };
 
             // Add collection information if available
             if (raindrop.collection?.$id && collectionIdToNameMap.has(raindrop.collection.$id)) {
                 const collectionId = raindrop.collection.$id;
                 const collectionTitle = collectionIdToNameMap.get(collectionId) || 'Unknown';
-                // Build the collection path relative to the Raindrop root
                 const fullCollectionPathForFrontmatter = this.getFullPathSegments(collectionId, collectionHierarchy, collectionIdToNameMap).join('/');
                 
-                frontmatterData.collection = {
+                templateData.collection = {
                     id: collectionId,
                     title: collectionTitle,
                     path: fullCollectionPathForFrontmatter
                 };
                 
-                // Add parent ID if available
                 if (collectionHierarchy.has(collectionId)) {
                     const collectionInfo = collectionHierarchy.get(collectionId);
                     if (collectionInfo?.parentId !== undefined) {
-                        frontmatterData.collection.parent_id = collectionInfo.parentId;
+                        templateData.collection.parent_id = collectionInfo.parentId;
                     }
                 }
             }
 
             // Process and add tags
-            let combinedFMTags: string[] = [...settingsFMTags];
             if (raindrop.tags && Array.isArray(raindrop.tags)) {
                 raindrop.tags.forEach((tag: string) => {
                     const trimmedTag = tag.trim();
-                    if (trimmedTag && !combinedFMTags.includes(trimmedTag)) {
-                        combinedFMTags.push(trimmedTag);
+                    if (trimmedTag && !templateData.tags.includes(trimmedTag)) {
+                        templateData.tags.push(trimmedTag);
                     }
                 });
             }
 
-            // Generate template data
-            const templateData = {
-                ...frontmatterData,
-                tags: combinedFMTags,
-                highlights: raindrop.highlights || [],
-                bannerFieldName: this.settings.bannerFieldName
-            };
-
             try {
                 if (this.settings.isTemplateSystemEnabled) {
                     const template = this.getTemplateForType(raindrop.type as RaindropType, options);
-                    fileContent = this.renderTemplate(template, templateData);
-                    console.log(`Using ${options.useDefaultTemplate ? 'default' : raindrop.type} template for ${generatedFilename}`);
-                    processOutcome = 'created';
+                    const fileContent = this.renderTemplate(template, templateData);
+                    await app.vault.create(filePath, fileContent);
+                    return { success: true, type: processOutcome };
+                } else {
+                    // Fallback to basic format if template system is disabled
+                    const basicContent = `---
+title: "${raindrop.title || 'Untitled'}"
+source: ${raindrop.link}
+type: ${raindrop.type}
+created: ${raindrop.created}
+tags:
+${templateData.tags.map((tag: string) => `  - ${tag}`).join('\n')}
+---
+
+# ${raindrop.title || 'Untitled'}
+
+${raindrop.excerpt ? `\n${raindrop.excerpt}\n` : ''}
+
+[Visit Link](${raindrop.link})`;
+                    await app.vault.create(filePath, basicContent);
+                    return { success: true, type: processOutcome };
                 }
-
-                // Create or update the file
-                await app.vault.create(filePath, fileContent);
-                return { success: true, type: processOutcome };
-
             } catch (error) {
                 console.error(`Error processing file ${generatedFilename}:`, error);
                 return { success: false, type: 'skipped' };
             }
-
         } catch (error) {
             console.error('Error processing raindrop:', error);
             return { success: false, type: 'skipped' };
@@ -1486,7 +1557,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         try {
             // Ensure target directory exists before attempting to write
             if (folderPath && !(await this.app.vault.adapter.exists(folderPath))) {
-                await this.app.vault.createFolder(folderPath);
+                await createFolderStructure(this.app, folderPath);
             }
 
             const { _id: id, title: rdTitle, excerpt: rdExcerpt, note: rdNoteContent, link: rdLink, cover: rdCoverUrl, created: rdCreated, lastUpdate: rdLastUpdate, type: rdType, collection: rdCollection, tags: rdTags, highlights: rdHighlights } = raindrop;
@@ -1614,43 +1685,163 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         }
     }
 
-    // Add a method to render templates
-    renderTemplate(template: string, data: any): string {
-        // Simple Handlebars-like rendering
-        return template.replace(/{{#if ([^}]+)}}([\s\S]*?){{\/if}}/g, (match: string, conditionVar: string, content: string) => {
-            const varName = conditionVar.trim();
-            const value = this.getNestedProperty(data, varName);
-            if (value && Array.isArray(value) ? value.length > 0 : !!value) {
-                return content;
-            } else {
-                const elseMatch = content.match(/{{else}}([\s\S]*)$/);
-                if (elseMatch) {
-                    return elseMatch[1];
-                }
-                return '';
-            }
-        }).replace(/{{#each ([^}]+)}}([\s\S]*?){{\/each}}/g, (match: string, arrayVar: string, content: string) => {
-            const arrayName = arrayVar.trim();
-            const array = this.getNestedProperty(data, arrayName) || [];
-            if (!Array.isArray(array)) return '';
-            let result = '';
-            array.forEach((item: any) => {
-                let itemContent = content.replace(/{{this}}/g, String(item));
-                itemContent = itemContent.replace(/{{([^}]+)}}/g, (m: string, key: string) => {
-                    if (key.includes('.')) {
-                        return String(this.getNestedProperty(item, key) || '');
-                    }
-                    return String(item[key] || '');
-                });
-                result += itemContent;
-            });
-            return result;
-        }).replace(/{{([^}]+)}}/g, (match: string, key: string) => {
-            return String(this.getNestedProperty(data, key) || '');
-        });
+    private formatDate(date: string): string {
+        try {
+            return new Date(date).toLocaleDateString();
+        } catch {
+            return '';
+        }
     }
 
-    getNestedProperty(obj: any, path: string): any {
+    private formatDateISO(date: string): string {
+        try {
+            return new Date(date).toISOString();
+        } catch {
+            return '';
+        }
+    }
+
+    private formatTags(tags: string[]): string {
+        return tags.map(tag => `#${tag.trim()}`).join(' ');
+    }
+
+    private getDomain(url: string): string {
+        try {
+            return new URL(url).hostname;
+        } catch {
+            return '';
+        }
+    }
+
+    private raindropType(type: string): string {
+        const types = {
+            link: 'Web Link',
+            article: 'Article',
+            image: 'Image',
+            video: 'Video',
+            document: 'Document',
+            audio: 'Audio'
+        };
+        return types[type as keyof typeof types] || type;
+    }
+
+    private renderTemplate(template: string, data: Record<string, any>): string {
+        // Add helper functions to the data
+        const enhancedData = {
+            ...data,
+            url: data.link || '',
+            domain: this.getDomain(data.link || ''),
+            formatDate: (date: string) => this.formatDate(date),
+            formatDateISO: (date: string) => this.formatDateISO(date),
+            formatTags: (tags: string[]) => this.formatTags(tags),
+            raindropType: (type: string) => this.raindropType(type),
+            updated: data.lastUpdate || '',
+        };
+
+        // Simple Handlebars-like rendering
+        return template
+            // Handle if conditions first
+            .replace(/{{#if ([^}]+)}}([\s\S]*?)(?:{{else}}([\s\S]*?))?{{\/if}}/g, (match: string, conditionVar: string, content: string, elseContent?: string) => {
+                const value = this.getNestedProperty(enhancedData, conditionVar.trim());
+                if (value && (Array.isArray(value) ? value.length > 0 : !!value)) {
+                    return content;
+                }
+                return elseContent || '';
+            })
+            // Handle each loops
+            .replace(/{{#each ([^}]+)}}([\s\S]*?){{\/each}}/g, (match: string, arrayVar: string, content: string) => {
+                const array = this.getNestedProperty(enhancedData, arrayVar.trim());
+                if (!Array.isArray(array)) return '';
+                
+                return array.map(item => {
+                    let itemContent = content.replace(/{{this}}/g, String(item));
+                    return itemContent.replace(/{{([^}]+)}}/g, (m: string, key: string) => {
+                        if (key.includes('.')) {
+                            return String(this.getNestedProperty(item, key) || '');
+                        }
+                        return String(item[key] || '');
+                    });
+                }).join('');
+            })
+            // Handle simple variables
+            .replace(/{{([^}]+)}}/g, (match: string, key: string) => {
+                const value = this.getNestedProperty(enhancedData, key.trim());
+                if (typeof value === 'object' && value !== null) {
+                    // Handle objects (like collection) by converting to YAML format
+                    return this.formatYamlValue(value);
+                }
+                return String(value || '');
+            });
+    }
+
+    private formatYamlValue(value: any, indentLevel: number = 0): string {
+        const indent = '  '.repeat(indentLevel);
+        
+        if (value === null || value === undefined) {
+            return 'null';
+        }
+        
+        if (typeof value === 'boolean') {
+            return value ? 'true' : 'false';
+        }
+        
+        if (typeof value === 'number') {
+            return value.toString();
+        }
+        
+        if (typeof value === 'string') {
+            // Check if the string needs special handling
+            if (value.includes('\n') || value.includes(':') || value.includes('{') || 
+                value.includes('}') || value.includes('[') || value.includes(']') ||
+                value.includes('#') || value.includes('*') || value.includes('&') ||
+                value.includes('!') || value.includes('|') || value.includes('>') ||
+                value.includes('`') || value.trim() === '' ||
+                /^[0-9]/.test(value) || /^true$|^false$|^yes$|^no$|^on$|^off$/i.test(value)) {
+                
+                // If the string contains newlines, use the block scalar syntax
+                if (value.includes('\n')) {
+                    return '|\n' + value.split('\n').map(line => `${indent}  ${line}`).join('\n');
+                }
+                
+                // Otherwise use quoted string with escaping
+                return `"${value.replace(/"/g, '\\"')}"`;
+            }
+            return value;
+        }
+        
+        if (Array.isArray(value)) {
+            if (value.length === 0) {
+                return '[]';
+            }
+            return value.map(item => `\n${indent}- ${this.formatYamlValue(item, indentLevel + 1)}`).join('');
+        }
+        
+        if (typeof value === 'object') {
+            const entries = Object.entries(value);
+            if (entries.length === 0) {
+                return '{}';
+            }
+            return entries.map(([key, val]) => {
+                const formattedValue = this.formatYamlValue(val, indentLevel + 1);
+                if (formattedValue.includes('\n')) {
+                    return `\n${indent}${key}:${formattedValue}`;
+                }
+                return `\n${indent}${key}: ${formattedValue}`;
+            }).join('');
+        }
+        
+        return String(value);
+    }
+
+    private escapeYamlString(str: string): string {
+        return str
+            .replace(/\\/g, '\\\\')
+            .replace(/"/g, '\\"')
+            .replace(/\t/g, '\\t')
+            .replace(/\r/g, '\\r');
+    }
+
+    private getNestedProperty(obj: any, path: string): any {
         return path.split('.').reduce((current: any, prop: string) => {
             return current && current[prop] !== undefined ? current[prop] : undefined;
         }, obj);

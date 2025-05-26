@@ -35,10 +35,30 @@
  */
 
 // Re-export all file utilities
-export * from './fileUtils';
+export {
+    doesPathExist,
+    isPathAFolder,
+    createFolder,
+    sanitizeFileName,
+    createFolderStructure
+} from './fileUtils';
 
 // Re-export all API utilities
-export * from './apiUtils';
+export type { RateLimiter } from './apiUtils';
+export {
+    createRateLimiter,
+    createAuthenticatedRequestOptions,
+    buildCollectionApiUrl,
+    parseApiResponse,
+    handleRequestError,
+    fetchWithRetry,
+    extractCollectionData
+} from './apiUtils';
 
 // Re-export all YAML utilities
-export * from './yamlUtils';
+export {
+    isPlainObject,
+    formatYamlValue,
+    escapeYamlString,
+    createYamlFrontmatter
+} from './yamlUtils';
