@@ -1,8 +1,4 @@
-# Welcome to the Make It Rain Wiki
-
-This wiki provides comprehensive documentation for the **Make It Rain** Obsidian plugin.
-
-Make It Rain enables you to seamlessly import your bookmarks from [Raindrop.io](https://raindrop.io) into your [Obsidian](https://obsidian.md) vault. Integrate your web clippings, articles, and references into your knowledge base with ease.
+Make It Rain enables you to seamlessly import your bookmarks from [Raindrop.io](https://raindrop.io) into your [Obsidian.md](https://obsidian.md) vault. Integrate your web clippings, articles, and references into your knowledge base with flexibility and ease.
 
 ## Documentation
 
