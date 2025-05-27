@@ -107,12 +107,12 @@ Stop context-switching and start integrating! Make It Rain brings your valuable 
 - ~~Fix YAML/JSON render issues: Improved handling of frontmatter templates.~~
 - ~~Easy Template System: Customizable templates with curly bracket syntax, defined per raindrop type.~~
 - Possible Integration with existing Obsidian or Templater template functions.
-- **UI Improvements**: Selectable raindrop collections by name or ID from multi-select or drop-down in the import modal.
+- ~~UI Improvements: Selectable raindrop collections by name or ID from multi-select or drop-down in the import modal.~~
 - **Streamlined versioning workflow**: Bi-directional synchronization with Raindrop.
 - **Enhanced highlight handling**: Improved highlight/raindrop-specific note handling and UI within Obsidian notes.
 - **Extended content scraping**: Options similar to Raindrop's archive link content copy functionality.
 - **Documentation**: Demo videos, tutorials, and use-case examples of plugin workflow and features.
-- **Quick Import feature**: Import specific raindrops by ID/Link to specific vault locations.
+- ~~Quick Import feature: Import specific raindrops by ID/Link to specific vault locations.~~
 - **Undo functionality**: Recovery options when operations don't go as planned.
 - **Saved fetch settings**: Preserve or save frequently used fetch configurations.
 - ~~Performance optimization: Further API/rate limiting improvements and better handling of large Raindrop collections.~~
