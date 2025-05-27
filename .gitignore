@@ -167,8 +167,5 @@ testvault/
 # Ignore build output directory
 build/
 
-# Ignore scripts directory
-scripts/
-
 # Ignore Cursor specific folder
 .cursor/
