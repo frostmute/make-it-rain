@@ -9,6 +9,8 @@ This guide covers all the configuration options available in the Make It Rain pl
 3. Find "Make It Rain" in your list of installed plugins
 4. Click the **Settings** button
 
+<!-- TODO: Update screenshot of Settings page to reflect v1.7.1 UI (stacked inputs, help icons, reset buttons) -->
+
 ## API Configuration
 
 ### Raindrop.io API Token
@@ -19,6 +21,7 @@ This is the most important setting required for the plugin to function.
 - **Description**: Your personal access token from Raindrop.io
 - **How to get it**: See the [Installation Guide](installation.md#getting-a-raindropio-api-token)
 - **Verification**: Use the "Verify Token" button to test if your token is valid
+- **Help**: A `(?)` help icon next to this setting in the plugin provides a direct link to this documentation section for convenience.
 
 ## General Settings
 
@@ -37,6 +40,7 @@ This is the most important setting required for the plugin to function.
 - **Variables**: You can use any variable available in the [template system](template-system.md#available-variables)
 - **Example**: `{{created:YYYY-MM-DD}}-{{title}}` would create files like "2025-05-16-Article Title.md"
 - **Note**: During the fetch process, a linting process will be performed to ensure that the filename is formatted correctly and does not contain any invalid characters, using the default Obsidian filename linting rules. This means that any invalid characters will be removed, changing the filename if necessary.
+- **Help**: A `(?)` help icon next to this setting in the plugin provides a direct link to this documentation section.
 
 ### Show Ribbon Icon
 
@@ -59,18 +63,18 @@ The template system allows you to customize how your Raindrop bookmarks are form
 ### Enable Template System
 
 - **Setting**: Enable Template System
-- **Description**: Toggles the template system on/off
-- **Default**: Disabled (for backward compatibility)
+- **Description**: Toggles the template system on/off. When enabled, the template editor sections below become active. The settings UI stacks descriptions above template text areas for easier editing.
+- **Default**: Enabled
 
 ### Default Template
 
-When the template system is enabled, you'll see a text editor for customizing the default template.
+When the template system is enabled, you'll see a text editor for customizing the default template. You can easily revert to the original default template using the **"Reset to Default"** button next to the template editor in the settings.
 
 For detailed information on the template system, including syntax, available variables, and examples, see the [Template System documentation](template-system.md).
 
 ### Content Type Templates
 
-You can create specific templates for different types of content:
+You can create specific templates for different types of content. Each specific content-type template can also be individually reset to its original default using its own **"Reset"** button next to its editor in the settings.
 
 - Link templates
 - Article templates
@@ -78,8 +82,6 @@ You can create specific templates for different types of content:
 - Video templates
 - Document templates
 - Audio templates
-
-Each content type can have its own custom template, or fall back to the default template if none is specified.
 
 ## Configuration Tips
 

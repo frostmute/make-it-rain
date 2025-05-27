@@ -22,6 +22,14 @@ Import your Raindrop.io bookmarks into your Obsidian vault with ease.
 
 ## What's New
 
+### v1.7.1 (YYYY-MM-DD) <!-- TODO: Update Date -->
+- **Enhanced Fetch Modal & Collection Selection**: Easily select collections from a dynamic, filterable list populated from your Raindrop.io account, in addition to manual ID/name entry.
+- **Improved Template Editing**: Reset your main and content-type specific templates to their defaults with new "Reset to Default" buttons in the settings.
+- **Better UI Layout**: Input fields in modals and template editing areas are now stacked below their descriptions for more space and better readability.
+- **Contextual Help Links**: Look for new `(?)` help icons next to complex settings, linking directly to documentation.
+- **Quick Import Enhancements**: The "Quick Import Raindrop by URL/ID" command now more reliably parses item IDs and provides clearer instructions.
+- **CI Build Fix**: Resolved a build failure related to ignored scripts.
+
 ### v1.7.0 (2025-05-06)
 
 - **All-New Template System**: Major new feature! Gain complete control over note creation with a powerful and flexible template system.
@@ -59,15 +67,15 @@ Turn your Obsidian vault into a true extension of your digital brain with Make I
 - **✨ All-New Template System (v1.7.0): Take Full Control!**
     - **Tailor-Made Notes:** Don't just import bookmarks, transform them! Craft the perfect note structure for every type of content (articles, videos, images, and more).
     - **Pre-filled & Customizable:** Get started instantly with smart default templates for all Raindrop types, or build your own from scratch.
-    - **Easy Configuration:** A dedicated settings panel lets you enable/disable the system, tweak the global default template, and manage templates for specific content types with simple toggles.
+    - **Easy Configuration:** A dedicated settings panel lets you enable/disable the system, tweak the global default template, manage templates for specific content types with simple toggles, and **reset templates to their defaults.**
     - **On-the-Fly Adjustments:** Need to use the default template for a specific import? Override your saved settings directly from the fetch modal.
     - **Smart Variables:** Utilize pre-calculated variables like `formattedCreatedDate`, `domain`, and `formattedTags` for effortless and consistent note formatting.
 
 - **🎯 Powerful & Granular Importing:**
-    - **One-Click Fetch:** Easily import your Raindrops whenever you need them via the Obsidian Command Palette.
-    - **Precision Filtering:**
-        - By **Collection:** Specify multiple Raindrop.io Collection IDs or Names (even nested ones!).
-        - By **Tags:** Use AND/OR logic to find items with all or any of your specified tags.
+    - **Flexible Fetching:** Easily import your Raindrops via the Obsidian Command Palette using the main "Fetch Raindrops" command for bulk imports or the "Quick Import Raindrop by URL/ID" command for single items.
+    - **Precision Filtering (Main Fetch):**
+        - By **Collection:** Specify multiple Raindrop.io Collection IDs or Names. **New in 1.7.1: Select collections from a dynamic, filterable list populated directly from your Raindrop.io account!**
+        - By **Tags:** Use AND/OR logic to find items with all or any of your specified tags. Contextual help `(?)` available for match type.
         - By **Content Type:** Import only links, articles, images, videos, documents, or audio files.
     - **Selective Sync:** Choose to fetch only new items since your last import, or update existing notes if the Raindrop item has changed.
 
@@ -81,11 +89,14 @@ Turn your Obsidian vault into a true extension of your digital brain with Make I
     - **Smart API Handling:** Built-in rate limiting (120 requests/minute) and automatic retries ensure smooth and reliable fetching, even with large libraries.
     - **Safe by Default:** Prevents accidental overwriting of existing notes (with options to update).
     - **Detailed Logging:** Clear console logs for easy troubleshooting if issues arise.
+    - **Automated CI Checks:** Ensures build stability with every change.
 
 - **🔧 Highly Configurable:**
-    - Securely store your Raindrop.io API token.
+    - Securely store your Raindrop.io API token (Contextual help `(?)` available).
     - Set a default vault location for new notes (overrideable per-fetch).
-    - Customize filename templates, ribbon icon visibility, and the frontmatter field name for banner images.
+    - Customize filename templates (Contextual help `(?)` available), ribbon icon visibility, and the frontmatter field name for banner images.
+    - **Enhanced Template Management:** Easily reset default and content-type specific templates to their original settings.
+    - **Improved UI Layout:** Settings and modal inputs are now stacked for better readability.
 
 Stop context-switching and start integrating! Make It Rain brings your valuable web clippings, research, and inspiration directly into your Obsidian workspace, formatted exactly how you want them.
 
@@ -130,13 +141,12 @@ Community Plugins store.
 
 # Configuration
 
-![Settings Dialog](https://github.com/frostmute/make-it-rain/blob/main/assets/makeitrain-settings-v150.png)
-
 Before the first use, configure the plugin via Obsidian's settings panel
 (`Settings` -> `Community Plugins` -> `Make It Rain` -> `Options` (cog icon)).
+Contextual help links `(?)` are available for some settings, guiding you directly to the relevant documentation.
 
 1. **Raindrop.io API Token (Required):**
-    - You must provide a "Test Token" from Raindrop.io.
+    - You must provide a "Test Token" from Raindrop.io. (Help `(?)` link available in settings)
     - To generate one:
         1. Go to your [Raindrop.io Apps settings page]
            (https://app.raindrop.io/settings/integrations).
@@ -153,7 +163,7 @@ Before the first use, configure the plugin via Obsidian's settings panel
       flexibility for many different use cases.
 3. **File Name Template:**
     - Define the filename structure when the "Use Raindrop Title for File Name" option
-      is enabled in the fetch modal.
+      is enabled in the fetch modal. (Help `(?)` link available in settings)
     - Uses Handlebars-like syntax: `{{placeholder}}`.
     - Available placeholders:
         - `{{title}}`: The Raindrop bookmark title.
@@ -169,7 +179,10 @@ Before the first use, configure the plugin via Obsidian's settings panel
 
 # Usage
 
-![Import Modal](https://github.com/frostmute/make-it-rain/blob/main/assets/makeitrain-modal-v150.png)
+
+Make It Rain offers two primary commands to import your Raindrops:
+
+### 1. Fetch Raindrops (Filtered Bulk Import)
 
 1. Open the Obsidian **Command Palette** (`Ctrl+P` or `Cmd+P`).
 2. Search for and select the command: **"Fetch Raindrops"**.
@@ -177,10 +190,9 @@ Before the first use, configure the plugin via Obsidian's settings panel
     - **Fetch Criteria:**
         - **Vault Folder (Optional):** Override the default save location for this
           specific fetch.
-        - **Collections:** Enter comma-separated Raindrop.io Collection *IDs or Names*
-          to fetch from specific collections.
+        - **Collections:** Enter comma-separated Raindrop.io Collection *IDs or Names*, or **select from the dynamic list of your collections** populated directly from your Raindrop.io account.
         - **Filter by Tags:** Enter comma-separated Raindrop.io tag names. Choose your
-          tag matching mode (AND/OR).
+          tag matching mode (AND/OR). A help `(?)` link is available for "Tag Match Type".
         - **Include Subcollections:** If filtering by Collections, toggle this on to also
           fetch from any collections nested within the specified ones.
         - **Filter by Type:** Select the type of raindrops to fetch (All Types, Links,
@@ -197,6 +209,20 @@ Before the first use, configure the plugin via Obsidian's settings panel
 4. Click the **"Fetch Raindrops"** button in the modal.
 5. The plugin will display notices for progress and a final summary. Check the Obsidian
    Developer Console for detailed logs.
+
+### 2. Quick Import Raindrop by URL/ID (Single Item Import)
+
+New in v1.7.1 (and improved!), this command allows you to quickly import a single Raindrop item if you know its URL or unique numeric ID.
+
+1. Open the Obsidian **Command Palette**.
+2. Search for and select the command: **"Quick Import Raindrop by URL/ID"**.
+3. A modal will appear:
+    - **Raindrop URL or ID:** Paste the full URL of the Raindrop item (often found in your browser's address bar when viewing/editing the item in the Raindrop.io app, e.g., `https://app.raindrop.io/my/collection/item/123456789/edit`) or just its unique numeric ID (e.g., `123456789`). The modal provides specific instructions on how to find this.
+    - **Vault Save Location (Optional):** Override the default save folder for this specific import.
+    - **Append Tags to Notes (Optional):** Add specific tags to this imported note.
+4. Click **"Fetch & Create Note"**.
+
+This is ideal for quickly bringing in a specific item without going through the full filtered fetch.
 
 # Created Note Structure
 
