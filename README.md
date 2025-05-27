@@ -37,7 +37,7 @@ For a complete list of changes, see the [CHANGELOG.md](CHANGELOG.md).
 
 ---
 
-## Raindrop.io Import/Sync for Obsidian
+# Raindrop.io Import/Sync for Obsidian
 
 A LIGHTWEIGHT and BLAZING FAST plugin that enables you to fetch bookmarks, highlights, notes,
 and other content types from your [Raindrop.io](https://raindrop.io) collections into your
@@ -52,7 +52,7 @@ anyone else, so if I'm overlooking something, or have made an error in etiquette
 let me know. I value and appreciate all forms of feedback and it helps immensely in my
 learning process.
 
-## Features
+# Features
 
 Turn your Obsidian vault into a true extension of your digital brain with Make It Rain, the ultimate tool for integrating your Raindrop.io bookmarks. Here's why it's a game-changer for your knowledge management:
 
@@ -89,7 +89,7 @@ Turn your Obsidian vault into a true extension of your digital brain with Make I
 
 Stop context-switching and start integrating! Make It Rain brings your valuable web clippings, research, and inspiration directly into your Obsidian workspace, formatted exactly how you want them.
 
-### In the pipe for future releases
+## In the pipe for future releases
 
 - **Enhanced Testing & Reliability**: Comprehensive unit tests for core utility functions.
 - ~~Better Documentation: More detailed documentation and usage examples for both users and contributors.~~
@@ -106,9 +106,9 @@ Stop context-switching and start integrating! Make It Rain brings your valuable 
 - **Saved fetch settings**: Preserve or save frequently used fetch configurations.
 - ~~Performance optimization: Further API/rate limiting improvements and better handling of large Raindrop collections.~~
 
-## Installation
+# Installation
 
-### Manual Installation
+## Manual Installation
 
 (Only option at the moment; you are welcome to inspect the source if you have any
 doubts about safety. After I get the plugin's features mostly intact and fully
@@ -123,24 +123,12 @@ functioning I will submit a request for inclusion in the Community Plugin Repo.)
 6. Go to `Settings` -> `Community Plugins`, find "Make It Rain", and enable it.
 7. Configure the required API Token in the plugin settings (see Configuration section).
 
-### Using BRAT
-
-1. Install the [BRAT (Beta Reviewer's Auto-update Tester)]
-   (https://github.com/TfTHacker/obsidian42-brat) plugin from the Community
-   Plugins browser in Obsidian.
-2. Enable BRAT in Obsidian's settings.
-3. In BRAT's settings, click "Add Beta plugin" and enter this GitHub repository URL:
-   `https://github.com/frostmute/make-it-rain`
-4. Choose an available pre-release version
-5. Enable the "Make It Rain" plugin under `Settings` -> `Community Plugins`.
-6. Configure the required API Token in the plugin settings.
-
-### Community Plugins Store
+## Community Plugins Store
 
 *(Once accepted)* This plugin aims to be available directly in the Obsidian
 Community Plugins store.
 
-## Configuration
+# Configuration
 
 ![Settings Dialog](https://github.com/frostmute/make-it-rain/blob/main/assets/makeitrain-settings-v150.png)
 
@@ -179,7 +167,7 @@ Before the first use, configure the plugin via Obsidian's settings panel
     - Customize the frontmatter field name used for the banner image (default is `banner`).
       Useful if you use plugins that expect a different field name.
 
-## Usage
+# Usage
 
 ![Import Modal](https://github.com/frostmute/make-it-rain/blob/main/assets/makeitrain-modal-v150.png)
 
@@ -210,7 +198,7 @@ Before the first use, configure the plugin via Obsidian's settings panel
 5. The plugin will display notices for progress and a final summary. Check the Obsidian
    Developer Console for detailed logs.
 
-## Created Note Structure
+# Created Note Structure
 
 ![Make It Rain Imported Raindrop Example](https://github.com/frostmute/make-it-rain/blob/main/assets/Screenshot_20250526_013205.png)
 
@@ -283,7 +271,7 @@ Another line of my note.
 If the **Template System is disabled**, a more basic fallback structure is used.
 See [Note Structure Documentation](https://frostmute.github.io/make-it-rain/note-structure) for details on both.
 
-## Documentation
+# Documentation
 
 Comprehensive documentation for the Make It Rain plugin is available on our **[GitHub Pages Site](https://frostmute.github.io/make-it-rain/)**.
 
@@ -311,10 +299,10 @@ Ensure you have correctly copied your Raindrop.io Test Token and pasted it into 
 For any issues, open the Developer Console (`Ctrl+Shift+I` or `Cmd+Option+I` ->
 `Console` tab) for detailed error messages and plugin logs.
 
-## Contributing
+# Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-## License
+# License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
