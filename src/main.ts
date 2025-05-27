@@ -631,6 +631,8 @@ interface IRaindropToObsidian {
     fetchRaindrops(options: ModalFetchOptions): Promise<void>;
     saveSettings(): Promise<void>;
     updateRibbonIcon(): void;
+    fetchAllUserCollections(): Promise<RaindropCollection[]>; // New method
+    fetchSingleRaindrop(itemId: number, vaultPath?: string, appendTags?: string): Promise<void>; // New method for quick import
 }
 
 class RaindropFetchModal extends Modal {
@@ -676,18 +678,98 @@ class RaindropFetchModal extends Modal {
                 text.inputEl.style.width = '100%';
             });
 
+        let collectionsTextComponent: TextComponent;
         new Setting(contentEl)
             .setName('Filter by Collections')
-            .setDesc('Comma-separated Raindrop Collection IDs or Names. Leave blank for all (unless tags specified).')
+            .setDesc('Comma-separated Raindrop Collection IDs or Names. Click a collection below to add its name. If typing names manually, use IDs for duplicate collection names to ensure accuracy.')
             .addText((text: TextComponent) => {
-                text.setPlaceholder('e.g., 12345, My Work, 67890')
+                collectionsTextComponent = text; // Store reference to update it later
+                text.setPlaceholder('e.g., 12345, My Work, Work > Articles')
                     .setValue(this.collections)
                     .onChange((value: string) => {
                         this.collections = value;
                     });
                 text.inputEl.style.width = '100%';
             });
-        
+
+        // --- UI for Selectable Collections ---
+        const collectionsContainer = contentEl.createDiv({ cls: 'make-it-rain-collections-container' });
+        collectionsContainer.style.maxHeight = '150px'; // Make it scrollable
+        collectionsContainer.style.overflowY = 'auto';
+        collectionsContainer.style.border = '1px solid var(--background-modifier-border)';
+        collectionsContainer.style.borderRadius = 'var(--radius-m)';
+        collectionsContainer.style.padding = '10px';
+        collectionsContainer.style.marginTop = '5px';
+        collectionsContainer.style.marginBottom = '10px';
+
+        const loadingCollectionsEl = collectionsContainer.createEl('p', { text: 'Loading your collections...', cls: 'make-it-rain-loading-collections' });
+
+        this.plugin.fetchAllUserCollections().then(fetchedCollections => {
+            loadingCollectionsEl.remove(); // Remove loading message
+            if (fetchedCollections && fetchedCollections.length > 0) {
+                const listEl = collectionsContainer.createEl('ul', {cls: 'make-it-rain-collection-list'});
+                listEl.style.listStyleType = 'none';
+                listEl.style.paddingLeft = '0';
+                listEl.style.margin = '0';
+
+                // Helper to build display paths and map collections by ID
+                const collectionMap = new Map<number, RaindropCollection>();
+                fetchedCollections.forEach(col => collectionMap.set(col._id, col));
+
+                const getDisplayPath = (collection: RaindropCollection): string => {
+                    const pathSegments: string[] = [];
+                    let current: RaindropCollection | undefined = collection;
+                    while (current) {
+                        pathSegments.unshift(current.title);
+                        const parentId: number | undefined = current.parent?.$id;
+                        current = parentId ? collectionMap.get(parentId) : undefined;
+                    }
+                    return pathSegments.join(' > ');
+                };
+
+                const collectionsWithDisplayPaths = fetchedCollections.map(collection => ({
+                    ...collection,
+                    displayPath: getDisplayPath(collection)
+                }));
+
+                collectionsWithDisplayPaths.sort((a,b) => a.displayPath.localeCompare(b.displayPath));
+
+                collectionsWithDisplayPaths.forEach(collection => {
+                    const listItemEl = listEl.createEl('li', { 
+                        text: `${collection.displayPath} (ID: ${collection._id})`,
+                        cls: 'make-it-rain-collection-item'
+                    });
+                    listItemEl.style.padding = '5px';
+                    listItemEl.style.cursor = 'pointer';
+                    listItemEl.style.borderBottom = '1px solid var(--background-modifier-border-hover)';
+                    listItemEl.onmouseover = () => listItemEl.style.backgroundColor = 'var(--background-modifier-hover)';
+                    listItemEl.onmouseout = () => listItemEl.style.backgroundColor = 'transparent';
+                    
+                    listItemEl.addEventListener('click', () => {
+                        const currentInputValue = collectionsTextComponent.getValue().trim();
+                        const collectionNameToAdd = collection.title; // Using name for user-friendliness
+                        
+                        if (currentInputValue === '') {
+                            collectionsTextComponent.setValue(collectionNameToAdd);
+                        } else {
+                            // Avoid adding if already present (simple check by name)
+                            const existingInputs = currentInputValue.split(',').map(s => s.trim());
+                            if (!existingInputs.includes(collectionNameToAdd)) {
+                                collectionsTextComponent.setValue(currentInputValue + ', ' + collectionNameToAdd);
+                            }
+                        }
+                        this.collections = collectionsTextComponent.getValue(); // Update internal state
+                    });
+                });
+            } else {
+                collectionsContainer.createEl('p', { text: 'No collections found, or failed to load them. Please check API token or try again.', cls: 'make-it-rain-collections-error'});
+            }
+        }).catch(error => {
+            loadingCollectionsEl.remove();
+            collectionsContainer.createEl('p', { text: 'Error loading collections. See console for details.', cls: 'make-it-rain-collections-error'});
+            console.error("Failed to load collections into modal:", error);
+            });
+
         new Setting(contentEl)
             .setName('Include Subcollections')
             .setDesc('If filtering by Collections, also fetch from their subcollections.')
@@ -722,7 +804,7 @@ class RaindropFetchModal extends Modal {
                         this.tagMatchType = value;
                     });
             });
-        
+
         new Setting(contentEl)
             .setName('Filter by Content Type')
             .setDesc('Select the type of Raindrops to fetch.')
@@ -740,16 +822,44 @@ class RaindropFetchModal extends Modal {
         // --- Note Options Section ---
         contentEl.createEl('h3', { text: '📝 Note Options' });
         
-        new Setting(contentEl)
+        const appendTagsSetting = new Setting(contentEl)
             .setName('Append Tags to Notes')
-            .setDesc('Comma-separated tags to add to the frontmatter of each created note.')
-            .addText((text: TextComponent) => {
-                text.setPlaceholder('e.g., #imported, #raindrop')
+            .setDesc('Comma-separated tags to add to the frontmatter of each created note.');
+        
+        const appendTagsDescEl = appendTagsSetting.descEl.createEl('p', {
+            cls: 'make-it-rain-input-hint',
+            text: 'Tip: Start tags with #. Spaces will be converted to underscores during processing.'
+        });
+        appendTagsDescEl.style.fontSize = 'var(--font-ui-smaller)';
+        appendTagsDescEl.style.color = 'var(--text-muted)';
+        appendTagsDescEl.style.marginTop = '4px';
+
+        appendTagsSetting.addText((text: TextComponent) => {
+            text.setPlaceholder('e.g., #imported, #raindrop, my tag')
                     .setValue(this.appendTagsToNotes)
-                    .onChange((value: string) => {
-                        this.appendTagsToNotes = value;
-                    });
-                text.inputEl.style.width = '100%';
+                .onChange((value: string) => {
+                    this.appendTagsToNotes = value;
+                    const tags = value.split(',').map(t => t.trim()).filter(t => t !== '');
+                    let hintText = 'Tip: Start tags with #. Spaces will be converted to underscores.';
+                    let hasIssues = false;
+                    if (tags.length > 0) {
+                        const issues = [];
+                        if (tags.some(t => !t.startsWith('#'))) {
+                            issues.push("some tags don't start with #");
+                            hasIssues = true;
+                        }
+                        if (tags.some(t => t.includes(' ') && t.includes('#'))) { // Only warn about spaces if it looks like a tag already
+                             issues.push("tags with # shouldn't contain spaces (use hyphens or underscores)");
+                             hasIssues = true;
+                        }
+                        if (hasIssues) {
+                            hintText = `Heads up: ${issues.join('; ')}.`;
+                        }
+                    }
+                    appendTagsDescEl.textContent = hintText;
+                    appendTagsDescEl.style.color = hasIssues ? 'var(--text-warning)' : 'var(--text-muted)';
+                });
+            text.inputEl.style.width = '100%';
             });
 
         new Setting(contentEl)
@@ -794,7 +904,7 @@ class RaindropFetchModal extends Modal {
                         }
                     });
             });
-        
+
         // --- Template Options Section ---
         if (this.plugin.settings.isTemplateSystemEnabled) {
             contentEl.createEl('h3', { text: '📄 Template Overrides (Optional)' });
@@ -834,31 +944,128 @@ class RaindropFetchModal extends Modal {
                 cls: 'setting-item-description'
             });
         }
-        
+
         contentEl.createEl('hr');
 
         // --- Action Buttons ---
         const buttonsEl = contentEl.createDiv({ cls: 'modal-button-container' });
         new ButtonComponent(buttonsEl)
             .setButtonText('Fetch Raindrops')
+                    .setCta()
+                    .onClick(async () => {
+                        const options: ModalFetchOptions = {
+                    vaultPath: this.vaultPath || undefined, // Use undefined if empty to signify default
+                            collections: this.collections,
+                            apiFilterTags: this.apiFilterTags,
+                            includeSubcollections: this.includeSubcollections,
+                            appendTagsToNotes: this.appendTagsToNotes,
+                            useRaindropTitleForFileName: this.useRaindropTitleForFileName,
+                            tagMatchType: this.tagMatchType,
+                            filterType: this.filterType,
+                            fetchOnlyNew: this.fetchOnlyNew,
+                            updateExisting: this.updateExisting,
+                            useDefaultTemplate: this.useDefaultTemplate,
+                            overrideTemplates: this.overrideTemplates
+                        };
+                        this.close();
+                        await this.plugin.fetchRaindrops(options);
+                    });
+
+        new ButtonComponent(buttonsEl)
+            .setButtonText('Cancel')
+                    .onClick(() => { this.close(); });
+    }
+
+    onClose() {
+        const { contentEl } = this;
+        contentEl.empty();
+    }
+}
+
+// New Modal for Quick Import
+class QuickImportModal extends Modal {
+    plugin: IRaindropToObsidian;
+    itemUrlOrId: string = '';
+    vaultPath: string;
+    appendTagsToNotes: string = ''; // Added appendTagsToNotes
+
+    constructor(app: App, plugin: IRaindropToObsidian) {
+        super(app);
+        this.plugin = plugin;
+        this.vaultPath = this.plugin.settings.defaultFolder; // Default to plugin settings
+    }
+
+    onOpen() {
+        const { contentEl } = this;
+        contentEl.empty();
+        contentEl.addClass('make-it-rain-modal');
+
+        contentEl.createEl('h2', { text: 'Quick Import Raindrop' });
+
+        new Setting(contentEl)
+            .setName('Raindrop URL or ID')
+            .setDesc('Enter the full Raindrop.io item URL or just its numeric ID.')
+            .addText((text: TextComponent) => {
+                text.setPlaceholder('e.g., https://raindrop.io/my/common/item-12345678 or 12345678')
+                    .setValue(this.itemUrlOrId)
+                    .onChange((value: string) => {
+                        this.itemUrlOrId = value.trim();
+                    });
+                text.inputEl.style.width = '100%';
+            });
+
+        new Setting(contentEl)
+            .setName('Vault Save Location (Optional)')
+            .setDesc('Override default save folder. Leave blank for plugin default.')
+            .addText((text: TextComponent) => {
+                text.setPlaceholder(this.plugin.settings.defaultFolder || 'Vault Root')
+                    .setValue(this.vaultPath)
+                    .onChange((value: string) => {
+                        this.vaultPath = value.trim();
+                    });
+                text.inputEl.style.width = '100%';
+            });
+        
+        // Added Append Tags to Notes for Quick Import Modal
+        new Setting(contentEl)
+            .setName('Append Tags to Notes (Optional)')
+            .setDesc('Comma-separated tags to add to the frontmatter of the created note.')
+            .addText((text: TextComponent) => {
+                text.setPlaceholder('e.g., #quickimport, #todo')
+                    .setValue(this.appendTagsToNotes)
+                    .onChange((value: string) => {
+                        this.appendTagsToNotes = value.trim();
+                    });
+                text.inputEl.style.width = '100%';
+            });
+
+
+        const buttonsEl = contentEl.createDiv({ cls: 'modal-button-container' });
+        new ButtonComponent(buttonsEl)
+            .setButtonText('Fetch & Create Note')
             .setCta()
             .onClick(async () => {
-                const options: ModalFetchOptions = {
-                    vaultPath: this.vaultPath || undefined, // Use undefined if empty to signify default
-                    collections: this.collections,
-                    apiFilterTags: this.apiFilterTags,
-                    includeSubcollections: this.includeSubcollections,
-                    appendTagsToNotes: this.appendTagsToNotes,
-                    useRaindropTitleForFileName: this.useRaindropTitleForFileName,
-                    tagMatchType: this.tagMatchType,
-                    filterType: this.filterType,
-                    fetchOnlyNew: this.fetchOnlyNew,
-                    updateExisting: this.updateExisting,
-                    useDefaultTemplate: this.useDefaultTemplate,
-                    overrideTemplates: this.overrideTemplates
-                };
+                if (!this.itemUrlOrId) {
+                    new Notice('Please enter a Raindrop URL or ID.', 5000);
+                    return;
+                }
+
+                let itemId: number | null = null;
+                const numericIdMatch = this.itemUrlOrId.match(/(\\d{8,})/); // Basic regex for 8+ digits (typical Raindrop ID)
+                
+                if (/^\\d+$/.test(this.itemUrlOrId)) { // If it's just numbers
+                    itemId = parseInt(this.itemUrlOrId, 10);
+                } else if (numericIdMatch && numericIdMatch[1]) {
+                    itemId = parseInt(numericIdMatch[1], 10);
+                }
+
+                if (!itemId) {
+                    new Notice('Could not parse a valid Raindrop ID from the input.', 7000);
+                    return;
+                }
+
                 this.close();
-                await this.plugin.fetchRaindrops(options);
+                await this.plugin.fetchSingleRaindrop(itemId, this.vaultPath || undefined, this.appendTagsToNotes || undefined);
             });
 
         new ButtonComponent(buttonsEl)
@@ -889,9 +1096,17 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
 
         this.addCommand({
             id: 'fetch-raindrops',
-            name: 'Fetch Raindrops',
+            name: 'Fetch Raindrops (Filtered)',
             callback: async () => {
                 new RaindropFetchModal(this.app, this).open();
+            }
+        });
+
+        this.addCommand({ // New command for Quick Import
+            id: 'quick-import-raindrop',
+            name: 'Quick Import Raindrop by URL/ID',
+            callback: async () => {
+                new QuickImportModal(this.app, this).open();
             }
         });
 
@@ -1449,9 +1664,9 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                         new Notice(`No raindrops found matching type '${options.filterType}'.`, 5000);
                         loadingNotice.hide();
                         return;
-                    }
-                } else {
-                    loadingNotice.setMessage(`Found ${allData.length} raindrops. Processing...`); // Update notice message
+                }
+            } else {
+                loadingNotice.setMessage(`Found ${allData.length} raindrops. Processing...`); // Update notice message
                 }
 
                 // The loadingNotice will be hidden in processRaindrops
@@ -1600,7 +1815,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     individualNoteTargetFolderPath = normalizePath(`${baseTargetFolderPath}/${collectionSubPath}`);
                 }
             }
-
+            
             // Ensure target directory exists before attempting to write
             // individualNoteTargetFolderPath is already normalized
             if (individualNoteTargetFolderPath && !(await app.vault.adapter.exists(individualNoteTargetFolderPath))) {
@@ -1954,6 +2169,176 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             return current && current[prop] !== undefined ? current[prop] : undefined;
         }, obj);
     }
+
+    // New method to fetch all user collections
+    async fetchAllUserCollections(): Promise<RaindropCollection[]> {
+        if (!this.settings.apiToken) {
+            console.warn('API token not set. Cannot fetch user collections.');
+            new Notice('API token not set. Cannot fetch collections for modal.', 5000);
+            return [];
+        }
+        const baseApiUrl = 'https://api.raindrop.io/rest/v1';
+        const fetchOptions: RequestInit = {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${this.settings.apiToken}`
+            }
+        };
+        let allCollections: RaindropCollection[] = [];
+
+        try {
+            // Fetch root collections
+            const rootResponse = await fetchWithRetry(
+                this.app,
+                `${baseApiUrl}/collections`,
+                fetchOptions,
+                this.rateLimiter
+            );
+            const rootData = rootResponse as CollectionResponse;
+            if (rootData?.result && rootData?.items) {
+                allCollections = allCollections.concat(rootData.items);
+            } else if (!rootData?.result) {
+                console.warn('Failed to fetch root collections or result was false:', rootData);
+            }
+
+            // Fetch nested collections
+            const nestedResponse = await fetchWithRetry(
+                this.app,
+                `${baseApiUrl}/collections/childrens`,
+                fetchOptions,
+                this.rateLimiter
+            );
+            const nestedData = nestedResponse as CollectionResponse;
+            if (nestedData?.result && nestedData?.items) {
+                allCollections = allCollections.concat(nestedData.items);
+            } else if (!nestedData?.result) {
+                console.warn('Failed to fetch nested collections or result was false:', nestedData);
+            }
+            
+            // Filter out potential duplicates if any endpoint returns overlapping data (e.g. by _id)
+            // and also filter out system collections like Trash (-99) or Unsorted (-1) as they are not typically user-selectable targets
+            const uniqueCollections = Array.from(new Map(allCollections.map(col => [col._id, col])).values())
+                                          .filter(col => col._id !== SystemCollections.TRASH && col._id !== SystemCollections.UNSORTED);
+            
+            if (allCollections.length > 0 && uniqueCollections.length === 0 && (rootData?.items?.length || nestedData?.items?.length)) {
+                // This might happen if only system collections were returned
+                 console.log('Only system collections (Trash/Unsorted) were found.');
+            } else if (allCollections.length === 0) {
+                console.warn('No collections were fetched from either endpoint.');
+            }
+            
+            return uniqueCollections;
+
+        } catch (error) {
+            console.error('Error fetching all user collections for modal:', error);
+            new Notice('Failed to load your Raindrop.io collections for selection.', 7000);
+            return []; // Return empty on error, modal will handle displaying a message
+        }
+    }
+
+    // Method to fetch and process a single Raindrop item
+    async fetchSingleRaindrop(itemId: number, vaultPath?: string, appendTags?: string): Promise<void> {
+        if (!this.settings.apiToken) {
+            new Notice('Please configure your Raindrop.io API token in the plugin settings.', 10000);
+            return;
+        }
+        if (!itemId) {
+            new Notice('Invalid Item ID provided for Quick Import.', 5000);
+            return;
+        }
+
+        const loadingNotice = new Notice(`Fetching Raindrop item ID: ${itemId}...`, 0);
+        const baseApiUrl = 'https://api.raindrop.io/rest/v1';
+        const fetchOptions: RequestInit = {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${this.settings.apiToken}` }
+        };
+
+        try {
+            const response = await fetchWithRetry(
+                this.app,
+                `${baseApiUrl}/raindrop/${itemId}`,
+                fetchOptions,
+                this.rateLimiter
+            );
+            
+            // The API for a single raindrop returns { result: boolean, item: RaindropItem }
+            // So we need to adapt this structure.
+            const data = response as { result: boolean, item?: RaindropItem, items?: RaindropItem[] }; // More flexible typing for safety
+
+            let raindropItem: RaindropItem | undefined;
+
+            if (data.result && data.item) {
+                raindropItem = data.item;
+            } else if (data.result && data.items && data.items.length > 0) {
+                // Some endpoints might wrap single items in an array, handle defensively
+                raindropItem = data.items[0];
+                 console.warn(`Single raindrop fetch for ID ${itemId} returned an items array. Using the first item.`);
+            }
+            
+            if (!raindropItem) {
+                loadingNotice.hide();
+                const errorMsg = data.result === false ? (data as any).errorMessage || 'API indicated failure.' : 'Item not found or invalid response.';
+                new Notice(`Failed to fetch Raindrop item ${itemId}: ${errorMsg}`, 7000);
+                console.error(`Failed to fetch Raindrop item ${itemId}:`, data);
+                return;
+            }
+
+            // Prepare options similar to ModalFetchOptions, but simplified for single item
+            // We'll use the plugin's default settings for most things
+            const singleItemOptions: ModalFetchOptions = {
+                vaultPath: vaultPath, // User-specified or plugin default
+                collections: '', // Not applicable for single item by ID
+                apiFilterTags: '', // Not applicable
+                includeSubcollections: false, // Not applicable
+                appendTagsToNotes: appendTags || '', // User-specified for quick import
+                useRaindropTitleForFileName: this.settings.fileNameTemplate !== '{{id}}', // Infer from settings
+                tagMatchType: 'all', // Default, not critical here
+                filterType: 'all',   // Default, not critical here
+                fetchOnlyNew: false, // For quick import, typically we want to create or update
+                updateExisting: true, // Default to true for quick import to allow updates
+                useDefaultTemplate: false, // Respect template settings
+                overrideTemplates: false   // Respect template settings
+            };
+
+            // Need to fetch collection hierarchy for path generation if not already available
+            // For simplicity in quick import, we can fetch all collections if the item has a collection ID.
+            // This ensures collectionPath and title are available for the template.
+            let collectionsData: CollectionResponse | undefined = undefined;
+            let collectionIdToNameMap = new Map<number, string>();
+
+            if (raindropItem.collection?.$id) {
+                 loadingNotice.setMessage(`Fetching collection info for item ${itemId}...`);
+                const allUserCollections = await this.fetchAllUserCollections();
+                if (allUserCollections.length > 0) {
+                    collectionsData = { result: true, items: allUserCollections };
+                    allUserCollections.forEach(col => collectionIdToNameMap.set(col._id, col.title));
+                }
+            }
+            
+            // Use a simplified call to processRaindrops, or adapt processRaindrop
+            // For now, let's call processRaindrops with an array of one
+            await this.processRaindrops(
+                [raindropItem],
+                singleItemOptions.vaultPath,
+                singleItemOptions.appendTagsToNotes,
+                singleItemOptions.useRaindropTitleForFileName,
+                loadingNotice, // Pass the notice
+                singleItemOptions,
+                collectionsData, // Pass fetched collections data for path context
+                [], // resolvedCollectionIds not directly applicable
+                collectionIdToNameMap // Pass map for titles
+            );
+            // The processRaindrops method will hide the notice upon completion.
+
+        } catch (error) {
+            loadingNotice.hide();
+            let errorMessage = 'An unknown error occurred during quick import';
+            if (error instanceof Error) errorMessage = error.message;
+            new Notice(`Error during Quick Import of item ${itemId}: ${errorMessage}`, 10000);
+            console.error(`Error quick importing Raindrop ID ${itemId}:`, error);
+        }
+    }
 }
 
 class RaindropToObsidianSettingTab extends PluginSettingTab {
@@ -1984,7 +2369,7 @@ class RaindropToObsidianSettingTab extends PluginSettingTab {
                     });
                 text.inputEl.type = 'password'; // Mask the token
                 text.inputEl.style.width = '100%';
-             })
+            })
             .addButton((button: ButtonComponent) => {
                 button.setButtonText("Verify Token")
                     .setIcon("checkmark")
@@ -1993,7 +2378,7 @@ class RaindropToObsidianSettingTab extends PluginSettingTab {
                         await this.verifyApiToken();
                     });
             });
-        
+
         // --- General Import Settings Section ---
         containerEl.createEl('h2', { text: '⚙️ General Import Settings' });
         new Setting(containerEl)
@@ -2021,7 +2406,7 @@ class RaindropToObsidianSettingTab extends PluginSettingTab {
                     });
                 text.inputEl.style.width = '100%';
             });
-        
+
         new Setting(containerEl)
             .setName('Banner Frontmatter Field Name')
             .setDesc('Customize the frontmatter field name for the banner/cover image (default: banner).')
@@ -2047,7 +2432,7 @@ class RaindropToObsidianSettingTab extends PluginSettingTab {
                         this.plugin.updateRibbonIcon(); // Update icon visibility immediately
                     });
             });
-        
+
         containerEl.createEl('hr');
 
         // --- Template System Section ---
@@ -2122,7 +2507,7 @@ class RaindropToObsidianSettingTab extends PluginSettingTab {
                  containerEl.createEl('hr');
             }
         }
-        
+
         // --- About/Footer Section ---
         containerEl.createEl('hr');
         const footer = containerEl.createDiv({ cls: 'setting-footer' });

@@ -5,7 +5,7 @@ The Make It Rain plugin includes a powerful template system that gives you compl
 ## Table of Contents
 
 - [Enabling & Managing Templates](#enabling--managing-templates)
-  - [Enabling the Template System](#enabling-the-template-system)
+- [Enabling the Template System](#enabling-the-template-system)
   - [Default Template](#default-template)
   - [Content-Type Specific Templates](#content-type-specific-templates)
   - [Modal Fetch Options for Templates](#modal-fetch-options-for-templates)
@@ -142,7 +142,7 @@ Example:
 ```handlebars
 tags:
 {{#each tags}}
-  - {{this}}
+- {{this}}
 {{/each}}
 ```
 
