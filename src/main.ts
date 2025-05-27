@@ -669,6 +669,7 @@ class RaindropFetchModal extends Modal {
         new Setting(contentEl)
             .setName('Vault Save Location')
             .setDesc('Override default save folder for this fetch. Leave blank for default.')
+            .setClass('setting-item-stacked') // Added class
             .addText((text: TextComponent) => {
                 text.setPlaceholder(this.plugin.settings.defaultFolder || 'Vault Root')
                     .setValue(this.vaultPath)
@@ -682,6 +683,7 @@ class RaindropFetchModal extends Modal {
         new Setting(contentEl)
             .setName('Filter by Collections')
             .setDesc('Comma-separated Raindrop Collection IDs or Names. Click a collection below to add its name. If typing names manually, use IDs for duplicate collection names to ensure accuracy.')
+            .setClass('setting-item-stacked') // Added class
             .addText((text: TextComponent) => {
                 collectionsTextComponent = text; // Store reference to update it later
                 text.setPlaceholder('e.g., 12345, My Work, Work > Articles')
@@ -783,6 +785,7 @@ class RaindropFetchModal extends Modal {
         new Setting(contentEl)
             .setName('Filter by Tags')
             .setDesc('Comma-separated Raindrop tag names.')
+            .setClass('setting-item-stacked') // Added class
             .addText((text: TextComponent) => {
                 text.setPlaceholder('e.g., obsidian, productivity, to-read')
                     .setValue(this.apiFilterTags)
@@ -792,7 +795,7 @@ class RaindropFetchModal extends Modal {
                 text.inputEl.style.width = '100%';
             });
 
-        new Setting(contentEl)
+        const tagMatchSetting = new Setting(contentEl)
             .setName('Tag Match Type')
             .setDesc("Choose 'ALL' for items with all specified tags, 'ANY' for items with any.")
             .addDropdown(dropdown => {
@@ -804,6 +807,14 @@ class RaindropFetchModal extends Modal {
                         this.tagMatchType = value;
                     });
             });
+        
+        const tagMatchHelpLink = tagMatchSetting.nameEl.createEl('a', {
+            href: 'https://frostmute.github.io/make-it-rain/usage#tag-match-type', // Placeholder URL
+            text: ' (?)',
+            cls: 'make-it-rain-help-link',
+            title: 'Documentation for Tag Match Type'
+        });
+        tagMatchHelpLink.setAttr('target', '_blank');
 
         new Setting(contentEl)
             .setName('Filter by Content Type')
@@ -824,7 +835,8 @@ class RaindropFetchModal extends Modal {
         
         const appendTagsSetting = new Setting(contentEl)
             .setName('Append Tags to Notes')
-            .setDesc('Comma-separated tags to add to the frontmatter of each created note.');
+            .setDesc('Comma-separated tags to add to the frontmatter of each created note.')
+            .setClass('setting-item-stacked'); // Added class
         
         const appendTagsDescEl = appendTagsSetting.descEl.createEl('p', {
             cls: 'make-it-rain-input-hint',
@@ -1004,9 +1016,14 @@ class QuickImportModal extends Modal {
 
         new Setting(contentEl)
             .setName('Raindrop URL or ID')
-            .setDesc('Enter the full Raindrop.io item URL or just its numeric ID.')
+            .setDesc(
+                'How to find: In the Raindrop.io app, click "Edit" on the specific item (or look for a similar action that opens the item in a detailed/edit view). ' +
+                'The URL in your browser\'s address bar should look like ".../item/[ID]/edit" or similar. ' +
+                'You can paste this full URL here, or just the numeric ID (e.g., 12345678).'
+            )
+            .setClass('setting-item-stacked')
             .addText((text: TextComponent) => {
-                text.setPlaceholder('e.g., https://raindrop.io/my/common/item-12345678 or 12345678')
+                text.setPlaceholder('e.g., https://.../item/12345678/edit or 12345678')
                     .setValue(this.itemUrlOrId)
                     .onChange((value: string) => {
                         this.itemUrlOrId = value.trim();
@@ -1051,16 +1068,20 @@ class QuickImportModal extends Modal {
                 }
 
                 let itemId: number | null = null;
-                const numericIdMatch = this.itemUrlOrId.match(/(\\d{8,})/); // Basic regex for 8+ digits (typical Raindrop ID)
                 
-                if (/^\\d+$/.test(this.itemUrlOrId)) { // If it's just numbers
+                // First, check if the input is purely numeric and at least 8 digits long
+                if (/^\d{8,}$/.test(this.itemUrlOrId)) { 
                     itemId = parseInt(this.itemUrlOrId, 10);
-                } else if (numericIdMatch && numericIdMatch[1]) {
-                    itemId = parseInt(numericIdMatch[1], 10);
+                } else {
+                    // If not purely numeric, try to extract an 8+ digit ID from a URL or other string
+                    const urlPatternMatch = this.itemUrlOrId.match(/(\d{8,})/); // Corrected regex
+                    if (urlPatternMatch && urlPatternMatch[1]) {
+                        itemId = parseInt(urlPatternMatch[1], 10);
+                    }
                 }
 
                 if (!itemId) {
-                    new Notice('Could not parse a valid Raindrop ID from the input.', 7000);
+                    new Notice('Could not parse a valid Raindrop ID (at least 8 digits) from the input.', 7000);
                     return;
                 }
 
@@ -2357,7 +2378,7 @@ class RaindropToObsidianSettingTab extends PluginSettingTab {
 
         // --- API Configuration Section ---
         containerEl.createEl('h2', { text: '💧 Raindrop.io API Configuration' });
-        new Setting(containerEl)
+        const apiTokenSetting = new Setting(containerEl)
             .setName('Raindrop.io API Token')
             .setDesc('Create a "Test Token" from your Raindrop.io Apps settings.')
             .addText((text: TextComponent) => {
@@ -2378,6 +2399,14 @@ class RaindropToObsidianSettingTab extends PluginSettingTab {
                         await this.verifyApiToken();
                     });
             });
+        
+        const apiTokenHelpLink = apiTokenSetting.nameEl.createEl('a', {
+            href: 'https://frostmute.github.io/make-it-rain/configuration#api-token',
+            text: ' (?)',
+            cls: 'make-it-rain-help-link',
+            title: 'How to get your API Token'
+        });
+        apiTokenHelpLink.setAttr('target', '_blank');
 
         // --- General Import Settings Section ---
         containerEl.createEl('h2', { text: '⚙️ General Import Settings' });
@@ -2394,7 +2423,7 @@ class RaindropToObsidianSettingTab extends PluginSettingTab {
                 text.inputEl.style.width = '100%';
             });
 
-        new Setting(containerEl)
+        const fileNameTemplateSetting = new Setting(containerEl)
             .setName('Filename Template')
             .setDesc('Define the filename for notes when "Use Raindrop Title" is enabled. Placeholders: {{title}}, {{id}}, {{collectionTitle}}, {{date}} (YYYY-MM-DD).')
             .addText((text: TextComponent) => {
@@ -2406,6 +2435,14 @@ class RaindropToObsidianSettingTab extends PluginSettingTab {
                     });
                 text.inputEl.style.width = '100%';
             });
+        
+        const fileNameTemplateHelpLink = fileNameTemplateSetting.nameEl.createEl('a', {
+            href: 'https://frostmute.github.io/make-it-rain/configuration#filename-template',
+            text: ' (?)',
+            cls: 'make-it-rain-help-link',
+            title: 'Documentation for Filename Template'
+        });
+        fileNameTemplateHelpLink.setAttr('target', '_blank');
 
         new Setting(containerEl)
             .setName('Banner Frontmatter Field Name')
@@ -2453,6 +2490,7 @@ class RaindropToObsidianSettingTab extends PluginSettingTab {
             containerEl.createEl('h3', { text: 'Default Template' });
             new Setting(containerEl)
                 .setDesc('This template is used if no content-type specific template is active or defined below.')
+                .setClass('setting-item-stacked') // Added class
                 .addTextArea((text) => {
                     text.setPlaceholder('Enter your default Handlebars template here...')
                         .setValue(this.plugin.settings.defaultTemplate)
@@ -2463,6 +2501,18 @@ class RaindropToObsidianSettingTab extends PluginSettingTab {
                     text.inputEl.rows = 15;
                     text.inputEl.style.width = '100%';
                     text.inputEl.style.fontFamily = 'monospace';
+                })
+                .addButton((button) => {
+                    button
+                        .setButtonText("Reset to Default")
+                        .setIcon("undo") // Using 'undo' icon
+                        .setTooltip("Reset this template to its original default value")
+                        .onClick(async () => {
+                            this.plugin.settings.defaultTemplate = DEFAULT_SETTINGS.defaultTemplate;
+                            await this.plugin.saveSettings();
+                            this.display(); // Refresh the settings tab
+                            new Notice("Default template has been reset.");
+                        });
                 });
 
             containerEl.createEl('h3', { text: 'Content-Type Specific Templates' });
@@ -2492,6 +2542,7 @@ class RaindropToObsidianSettingTab extends PluginSettingTab {
                 if (this.plugin.settings.contentTypeTemplateToggles[typeKey]) {
                     new Setting(containerEl)
                         .setDesc(`Template for "${type}" content. Leave empty to use the default template.`)
+                        .setClass('setting-item-stacked') // Added class
                         .addTextArea((text) => {
                             text.setPlaceholder(`Enter template for ${type} items...`)
                                 .setValue(this.plugin.settings.contentTypeTemplates[typeKey])
@@ -2502,6 +2553,23 @@ class RaindropToObsidianSettingTab extends PluginSettingTab {
                             text.inputEl.rows = 10;
                             text.inputEl.style.width = '100%';
                             text.inputEl.style.fontFamily = 'monospace';
+                        })
+                        .addButton((button) => { // Add Reset Button for specific type
+                            button
+                                .setButtonText("Reset") 
+                                .setIcon("undo")
+                                .setTooltip(`Reset ${type} template to its original default`)
+                                .onClick(async () => {
+                                    // Ensure DEFAULT_SETTINGS.contentTypeTemplates[typeKey] exists before assigning
+                                    if (DEFAULT_SETTINGS.contentTypeTemplates[typeKey]) {
+                                        this.plugin.settings.contentTypeTemplates[typeKey] = DEFAULT_SETTINGS.contentTypeTemplates[typeKey];
+                                        await this.plugin.saveSettings();
+                                        this.display(); // Refresh the settings tab
+                                        new Notice(`${type.charAt(0).toUpperCase() + type.slice(1)} template has been reset.`);
+                                    } else {
+                                        new Notice(`Error: Default template for ${type} not found.`, 7000);
+                                    }
+                                });
                         });
                 }
                  containerEl.createEl('hr');
