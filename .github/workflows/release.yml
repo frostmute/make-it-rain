@@ -95,4 +95,26 @@ jobs:
             manifest.json
             styles.css
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build with Jekyll
+        uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./docs
+          destination: ./_site
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ inputs.version }}
+          name: Release v${{ inputs.version }}
+          body_path: ./release-notes-${{ inputs.version }}.md # Assumes your version-bump script created this file, or you create it before the workflow
+          draft: false
+          prerelease: false
+          files: |
+            build/main.js
+            manifest.json
+            styles.css
+        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
