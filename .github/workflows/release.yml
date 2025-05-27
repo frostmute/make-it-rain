@@ -73,7 +73,8 @@ jobs:
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git add package.json build/manifest.json versions.json
+          git add package.json versions.json
+          git add -f build/manifest.json
           # Add CHANGELOG.md if you update it manually or automatically before this step
           # git add CHANGELOG.md
           git commit -m "chore: release ${{ inputs.version }}"
