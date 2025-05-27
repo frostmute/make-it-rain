@@ -54,49 +54,48 @@ learning process.
 
 ## Features
 
-- **On-Demand Fetching:** Import Raindrops using a Command Palette action.
-- **Flexible Filtering:** Control which bookmarks to fetch per session via an interactive modal:
-  - Filter by specific Raindrop.io Collection IDs or Names (comma-separated).
-    Leave blank to fetch from all collections (unless tags below are specified).
-  - Filter by specific Raindrop.io Tags with two matching modes:
-    - AND logic: Find items with ALL specified tags
-    - OR logic: Find items with ANY of the specified tags
-  - Optionally include items from subcollections when filtering by Collection ID or Name.
-  - **New:** Filter by the type of raindrop (Link, Article, Image, Video, Document, Audio).
-- **Reliable API Handling:**
-  - Smart rate limiting (120 requests/minute)
-  - Automatic retry on temporary failures
-  - Detailed logging for troubleshooting
-- **Comprehensive Note Generation:** Created notes include:
-  - **YAML Frontmatter:** Includes Raindrop `id`, `title`, `description` (from Raindrop
-    excerpt), `source` (original URL), `type`, `created`, `last_update`, collection
-    details (`id`, `title`, `path`, `parent_id` if applicable), `tags` (combining
-    Raindrop tags and any appended tags), and a customizable banner field (using the
-    Raindrop cover image URL).
-  - **Note Body:** Cover image (if available), H1 Title, H2 section for your Raindrop
-    Note/Annotation, the Raindrop Excerpt (if not multiline and included in frontmatter),
-    and a list of Highlights (including any notes on highlights).
-- **Configurable Filenames:**
-  - Choose between using the Raindrop title (processed via template) or the Raindrop ID
-    for filenames.
-  - Customize the filename format with placeholders: `{{title}}`, `{{id}}`,
-    `{{collectionTitle}}`, `{{date}}`.
-- **Tag Management:** Automatically append custom tags to the frontmatter of every
-  imported note.
-- **Safe Import:** Prevents overwriting by checking if a note with the target filename
-  already exists. **New:** Added options to either skip existing files or update them
-  based on Raindrop ID and `last_update` timestamp.
-- **Handles Pagination:** Reliably fetches all matching bookmarks from Raindrop.io,
-  respecting API rate limits.
-- **Persistent Settings:** Configure and save your API key, default note save location,
-  filename template, ribbon icon visibility, and banner frontmatter field name.
+Turn your Obsidian vault into a true extension of your digital brain with Make It Rain, the ultimate tool for integrating your Raindrop.io bookmarks. Here's why it's a game-changer for your knowledge management:
+
+- **✨ All-New Template System (v1.7.0): Take Full Control!**
+    - **Tailor-Made Notes:** Don't just import bookmarks, transform them! Craft the perfect note structure for every type of content (articles, videos, images, and more).
+    - **Pre-filled & Customizable:** Get started instantly with smart default templates for all Raindrop types, or build your own from scratch.
+    - **Easy Configuration:** A dedicated settings panel lets you enable/disable the system, tweak the global default template, and manage templates for specific content types with simple toggles.
+    - **On-the-Fly Adjustments:** Need to use the default template for a specific import? Override your saved settings directly from the fetch modal.
+    - **Smart Variables:** Utilize pre-calculated variables like `formattedCreatedDate`, `domain`, and `formattedTags` for effortless and consistent note formatting.
+
+- **🎯 Powerful & Granular Importing:**
+    - **One-Click Fetch:** Easily import your Raindrops whenever you need them via the Obsidian Command Palette.
+    - **Precision Filtering:**
+        - By **Collection:** Specify multiple Raindrop.io Collection IDs or Names (even nested ones!).
+        - By **Tags:** Use AND/OR logic to find items with all or any of your specified tags.
+        - By **Content Type:** Import only links, articles, images, videos, documents, or audio files.
+    - **Selective Sync:** Choose to fetch only new items since your last import, or update existing notes if the Raindrop item has changed.
+
+- **🗂️ Seamless Obsidian Integration:**
+    - **Automatic Folder Structure:** Replicates your Raindrop.io collection hierarchy within your Obsidian vault.
+    - **Rich YAML Frontmatter:** Every note is enriched with comprehensive metadata: Raindrop ID, title, source URL, type, creation/update dates, full collection path, tags, and a customizable banner image field.
+    - **Intelligent Filenaming:** Use the Raindrop title (customizable with a template: `{{title}}`, `{{id}}`, `{{collectionTitle}}`, `{{date}}`) or the unique Raindrop ID for filenames.
+    - **Tag Augmentation:** Automatically append your own custom tags to every imported note.
+
+- **⚙️ Robust & Reliable:**
+    - **Smart API Handling:** Built-in rate limiting (120 requests/minute) and automatic retries ensure smooth and reliable fetching, even with large libraries.
+    - **Safe by Default:** Prevents accidental overwriting of existing notes (with options to update).
+    - **Detailed Logging:** Clear console logs for easy troubleshooting if issues arise.
+
+- **🔧 Highly Configurable:**
+    - Securely store your Raindrop.io API token.
+    - Set a default vault location for new notes (overrideable per-fetch).
+    - Customize filename templates, ribbon icon visibility, and the frontmatter field name for banner images.
+
+Stop context-switching and start integrating! Make It Rain brings your valuable web clippings, research, and inspiration directly into your Obsidian workspace, formatted exactly how you want them.
 
 ### In the pipe for future releases
 
 - **Enhanced Testing & Reliability**: Comprehensive unit tests for core utility functions.
-- **Better Documentation**: More detailed documentation and usage examples for both users and contributors.
-- **Fix YAML/JSON render issues**: Improved handling of frontmatter templates.
-- **Easy Template System**: Customizable templates with curly bracket syntax, defined per raindrop type. Integration with existing Obsidian or Templater template functions.
+- ~~Better Documentation: More detailed documentation and usage examples for both users and contributors.~~
+- ~~Fix YAML/JSON render issues: Improved handling of frontmatter templates.~~
+- ~~Easy Template System: Customizable templates with curly bracket syntax, defined per raindrop type.~~
+- Possible Integration with existing Obsidian or Templater template functions.
 - **UI Improvements**: Selectable raindrop collections by name or ID from multi-select or drop-down in the import modal.
 - **Streamlined versioning workflow**: Bi-directional synchronization with Raindrop.
 - **Enhanced highlight handling**: Improved highlight/raindrop-specific note handling and UI within Obsidian notes.
@@ -105,7 +104,7 @@ learning process.
 - **Quick Import feature**: Import specific raindrops by ID/Link to specific vault locations.
 - **Undo functionality**: Recovery options when operations don't go as planned.
 - **Saved fetch settings**: Preserve or save frequently used fetch configurations.
-- **Performance optimization**: Further API/rate limiting improvements and better handling of large Raindrop collections.
+- ~~Performance optimization: Further API/rate limiting improvements and better handling of large Raindrop collections.~~
 
 ## Installation
 
