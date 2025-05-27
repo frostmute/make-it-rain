@@ -25,4 +25,50 @@ jobs:
         run: npm install
 
       - name: Run build script
-        run: npm run build 
+        run: npm run build
+
+      - name: Update version in package.json
+        run: |
+          VERSION=1.7.1
+          echo "Updating version to $VERSION in package.json"
+
+          # Update package.json (in root)
+          node -e "
+            const fs = require('fs');
+            const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            packageJson.version = process.argv[1];
+            fs.writeFileSync('package.json', JSON.stringify(packageJson, null, 2));
+          " $VERSION
+
+          echo "Running build process..."
+          # ---- YOUR BUILD COMMAND GOES HERE ----
+          # Example: npm run build
+          # ------------------------------------
+
+          # Now that the build is complete, build/manifest.json should exist
+
+          echo "Updating manifest.json (in build directory) if necessary and versions.json (in root)"
+
+          # Update manifest.json (in build directory) - check if your build process already does this!
+          # If your build script (e.g., esbuild.config.mjs) already uses the version from package.json
+          # to create manifest.json, this specific write operation might be skippable or might
+          # just confirm the version.
+          node -e "
+            const fs = require('fs');
+            const manifestPath = 'build/manifest.json'; // Define path
+            if (!fs.existsSync(manifestPath)) {
+              console.error('Error: build/manifest.json not found after build! Skipping manifest and versions.json update.');
+              process.exit(1); // Exit with error
+            }
+            const manifestJson = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+            manifestJson.version = process.argv[1]; // Ensure version is set
+            fs.writeFileSync(manifestPath, JSON.stringify(manifestJson, null, '\\t'));
+
+            // Update versions.json (in root)
+            // This step reads minAppVersion from the *build* manifest
+            const versionsJson = JSON.parse(fs.readFileSync('versions.json', 'utf8'));
+            versionsJson[process.argv[1]] = manifestJson.minAppVersion; // manifestJson is already loaded
+            fs.writeFileSync('versions.json', JSON.stringify(versionsJson, null, '\\t'));
+          " $VERSION
+
+          echo "Version update process completed." 
