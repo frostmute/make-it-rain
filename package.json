@@ -1,6 +1,6 @@
 {
   "name": "make-it-rain",
-  "version": "1.0.0",
+  "version": "1.7.0",
   "description": "Raindrop.io Integration for Obsidian",
   "main": "main.js",
   "scripts": {
