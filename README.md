@@ -22,21 +22,12 @@ Import your Raindrop.io bookmarks into your Obsidian vault with ease.
 
 ## What's New
 
-### Improved (v1.6.0)
+### v1.7.0 (2025-05-06)
 
-- **Major Code Refactoring**: Implemented functional programming patterns for better maintainability and performance.
-- **Enhanced Modularity**: Separated code into dedicated utility modules for file operations and API interactions.
-- **Improved Error Handling**: More robust error recovery and user feedback during API operations.
-- **Better Rate Limiting**: Refined rate limiting strategy with more intelligent retry logic for API requests.
-- **TypeScript Improvements**: Fixed type definitions and eliminated compiler warnings for more reliable operation.
-
-### Fixed (v1.5.1)
-
-- Fixed collection hierarchy to properly maintain nested folder structure when no filter options are selected.
-- Improved rate limiting logic with more conservative limits and longer delays between retries.
-- Added small delays between consecutive API calls to reduce rate limit issues.
-- Added user-visible notices during rate limit waiting periods.
-- Fixed JSON parsing issues with API responses.
+- **Pre-calculated Template Variables**: Introduced `formattedCreatedDate`, `formattedUpdatedDate`, `renderedType`, `domain`, `formattedTags` for easier template customization.
+- **Default Templates Updated**: All built-in templates now use new variables and structure.
+- **Improved Fallback Note Generation**: Better formatting for notes created when the template system is disabled.
+- **Fixes**: Addressed type filtering in the modal, ensured correct replication of collection hierarchy as folders, resolved a frontmatter rendering issue, and fixed template helper rendering and fallback note body formatting.
 
 For a complete list of changes, see the [CHANGELOG.md](CHANGELOG.md).
 
@@ -287,24 +278,18 @@ Another line of my note.
   `banner: https://example.com/image.jpg`).
 
 If the **Template System is disabled**, a more basic fallback structure is used.
-See [Note Structure Documentation](docs/note-structure.md) for details on both.
+See [Note Structure Documentation](https://frostmute.github.io/make-it-rain/note-structure) for details on both.
 
 ## Documentation
 
-Comprehensive documentation for the Make It Rain plugin is available in multiple
-formats:
+Comprehensive documentation for the Make It Rain plugin is available on our **[GitHub Pages Site](https://frostmute.github.io/make-it-rain/)**.
 
-- **[GitHub Wiki](https://github.com/frostmute/make-it-rain/wiki)**: Detailed guides,
-  tutorials, and examples
-- **[Developer Documentation]
-  (https://github.com/frostmute/make-it-rain/wiki/Developer-Guide)**:
-  Information for developers interested in contributing to the project
-- **[API Documentation]
-  (https://github.com/frostmute/make-it-rain/wiki/API-Reference)**:
-  Documentation for the Raindrop.io API integration
-- **[Code Documentation]
-  (https://github.com/frostmute/make-it-rain/wiki/Code-Structure)**:
-  Overview of the codebase structure and architecture
+This site includes:
+- Detailed guides and tutorials
+- Usage examples
+- Information for developers interested in contributing
+- API Reference for the Raindrop.io integration
+- An overview of the codebase structure and architecture
 
 In-code documentation is also available via JSDoc comments throughout the codebase,
 particularly in the utility modules:
