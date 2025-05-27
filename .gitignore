@@ -164,8 +164,6 @@ make-it-rain-backup-*.tar.gz
 
 testvault/
 
-# Ignore build output directory
-build/
 
 # Ignore Cursor specific folder
 .cursor/
