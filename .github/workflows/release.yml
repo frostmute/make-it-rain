@@ -24,15 +24,18 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Run build script
+        run: npm run build
+
       - name: List files for debugging
-        run: ls -la
+        run: ls -la build/
 
       - name: Update version in files
         run: |
           VERSION=${{ inputs.version }}
           echo "Updating version to $VERSION"
           
-          # Update package.json
+          # Update package.json (in root)
           node -e "
             const fs = require('fs');
             const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
@@ -40,19 +43,20 @@ jobs:
             fs.writeFileSync('package.json', JSON.stringify(packageJson, null, 2));
           " $VERSION
 
-          # Update manifest.json
+          # Update manifest.json (in build directory)
           node -e "
             const fs = require('fs');
-            const manifestJson = JSON.parse(fs.readFileSync('manifest.json', 'utf8'));
+            const manifestJson = JSON.parse(fs.readFileSync('build/manifest.json', 'utf8'));
             manifestJson.version = process.argv[1];
-            fs.writeFileSync('manifest.json', JSON.stringify(manifestJson, null, '\t'));
+            fs.writeFileSync('build/manifest.json', JSON.stringify(manifestJson, null, '\t'));
           " $VERSION
 
-          # Update versions.json
+          # Update versions.json (in root)
+          # This step reads minAppVersion from the *build* manifest
           node -e "
             const fs = require('fs');
             const versionsJson = JSON.parse(fs.readFileSync('versions.json', 'utf8'));
-            const manifestJson = JSON.parse(fs.readFileSync('manifest.json', 'utf8'));
+            const manifestJson = JSON.parse(fs.readFileSync('build/manifest.json', 'utf8'));
             versionsJson[process.argv[1]] = manifestJson.minAppVersion;
             fs.writeFileSync('versions.json', JSON.stringify(versionsJson, null, '\t'));
           " $VERSION
@@ -69,7 +73,7 @@ jobs:
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git add package.json manifest.json versions.json
+          git add package.json build/manifest.json versions.json
           # Add CHANGELOG.md if you update it manually or automatically before this step
           # git add CHANGELOG.md
           git commit -m "chore: release ${{ inputs.version }}"
@@ -80,9 +84,6 @@ jobs:
           TAG_NAME=v${{ inputs.version }}
           git tag $TAG_NAME
           git push origin $TAG_NAME
-
-      - name: Run build script
-        run: npm run build
 
       - name: Create GitHub Release
         id: create_release
@@ -95,7 +96,7 @@ jobs:
           prerelease: false
           files: |
             build/main.js
-            manifest.json
-            styles.css
+            build/manifest.json
+            build/styles.css
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
