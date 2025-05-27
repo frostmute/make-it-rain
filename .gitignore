@@ -166,3 +166,6 @@ testvault/
 
 # Ignore build output directory
 build/
+
+# Ignore scripts directory
+scripts/
