@@ -7,7 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.7.0] - 2025-05-06
+## [1.7.1] - 2025-05-27
+
+### Added
+- **Fetch Modal**: Collections can now be selected from a dynamic, filterable list populated from the user's Raindrop.io account, in addition to manual ID/name entry.
+- Contextual help links (`(?)`) next to complex settings in the Settings page (API Token, Filename Template) and Fetch Modal (Tag Match Type) linking to documentation.
+- "Reset to Default" buttons in the Settings page for the main Default Template and for each content-type specific template.
+
+### Changed
+- Improved layout for input fields in Modals (Quick Import, Fetch Raindrops) and template text areas in Settings page, stacking them below descriptions for better readability and editing space.
+- Enhanced user guidance in Quick Import modal with clearer instructions on how to find Raindrop item URLs/IDs.
+
+### Fixed
+- Corrected an issue in the Quick Import modal where Raindrop item IDs were not being parsed correctly from URLs or direct numeric input.
+- Resolved a CI build failure by ensuring the `scripts` directory (containing `esbuild.config.mjs`) is included in the Git repository and not ignored by `.gitignore`.
+
+## [1.7.0] - 2025-05-26
 
 ### Added
 
