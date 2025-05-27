@@ -22,7 +22,7 @@ Import your Raindrop.io bookmarks into your Obsidian vault with ease.
 
 ## What's New
 
-### v1.7.1 (YYYY-MM-DD) <!-- TODO: Update Date -->
+### v1.7.1 (2024-05-27)
 - **Enhanced Fetch Modal & Collection Selection**: Easily select collections from a dynamic, filterable list populated from your Raindrop.io account, in addition to manual ID/name entry.
 - **Improved Template Editing**: Reset your main and content-type specific templates to their defaults with new "Reset to Default" buttons in the settings.
 - **Better UI Layout**: Input fields in modals and template editing areas are now stacked below their descriptions for more space and better readability.
@@ -30,7 +30,7 @@ Import your Raindrop.io bookmarks into your Obsidian vault with ease.
 - **Quick Import Enhancements**: The "Quick Import Raindrop by URL/ID" command now more reliably parses item IDs and provides clearer instructions.
 - **CI Build Fix**: Resolved a build failure related to ignored scripts.
 
-### v1.7.0 (2025-05-06)
+### v1.7.0 (2025-05-26)
 
 - **All-New Template System**: Major new feature! Gain complete control over note creation with a powerful and flexible template system.
     - Includes a default template and pre-filled, customizable templates for each Raindrop type (Link, Article, Image, Video, Document, Audio).
