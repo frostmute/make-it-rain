@@ -1,4 +1,4 @@
-# Make It Rain
+![Make It Rain Hero](https://github.com/frostmute/make-it-rain/blob/main/assets/1748151599078.webp)
 
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/frostmute/make-it-rain)](https://github.com/frostmute/make-it-rain/releases/latest)
 ![License](https://img.shields.io/github/license/frostmute/make-it-rain)
@@ -35,7 +35,7 @@ Import your Raindrop.io bookmarks into your Obsidian vault with ease.
 
 For a complete list of changes, see the [CHANGELOG.md](CHANGELOG.md).
 
-![Plugin Header Image](https://i.ibb.co/HTx7TnbN/makeitrain.png)
+---
 
 ## Raindrop.io Import/Sync for Obsidian
 
@@ -213,7 +213,7 @@ Before the first use, configure the plugin via Obsidian's settings panel
 
 ## Created Note Structure
 
-![Imported Note Example](https://github.com/frostmute/make-it-rain/blob/main/assets/makeitrain-note-output.png)
+![Make It Rain Imported Raindrop Example](https://github.com/frostmute/make-it-rain/blob/main/assets/Screenshot_20250526_013205.png)
 
 Each successfully imported Raindrop bookmark generates a new Markdown note. When the **Template System** is enabled (default), the structure is defined by the active template. The built-in default template produces a note that looks like this example:
 
