@@ -24,8 +24,12 @@ Import your Raindrop.io bookmarks into your Obsidian vault with ease.
 
 ### v1.7.0 (2025-05-06)
 
-- **Pre-calculated Template Variables**: Introduced `formattedCreatedDate`, `formattedUpdatedDate`, `renderedType`, `domain`, `formattedTags` for easier template customization.
-- **Default Templates Updated**: All built-in templates now use new variables and structure.
+- **All-New Template System**: Major new feature! Gain complete control over note creation with a powerful and flexible template system.
+    - Includes a default template and pre-filled, customizable templates for each Raindrop type (Link, Article, Image, Video, Document, Audio).
+    - Configure templates via Settings: enable/disable the system, edit the default, and manage content-type specific templates with individual toggles.
+    - Override global template settings per-fetch using new modal options.
+- **Pre-calculated Template Variables**: Added `formattedCreatedDate`, `formattedUpdatedDate`, `renderedType`, `domain`, `formattedTags` for easier template customization.
+- **Default Templates Updated**: All built-in templates now use the new variables, a flattened collection data structure, and consistent field names.
 - **Improved Fallback Note Generation**: Better formatting for notes created when the template system is disabled.
 - **Fixes**: Addressed type filtering in the modal, ensured correct replication of collection hierarchy as folders, resolved a frontmatter rendering issue, and fixed template helper rendering and fallback note body formatting.
 
