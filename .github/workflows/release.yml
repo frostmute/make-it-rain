@@ -6,6 +6,14 @@ on:
       version:
         description: 'New version number (e.g., 1.0.0)'
         required: true
+      skip_version_bump:
+        description: 'Skip version bumping (if already done manually)'
+        type: boolean
+        default: false
+      force:
+        description: 'Force overwrite existing release'
+        type: boolean
+        default: false
 
 jobs:
   release:
@@ -16,12 +24,32 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Need full history for tags
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
+
+      - name: Check current version
+        id: check_version
+        run: |
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          INPUT_VERSION="${{ inputs.version }}"
+          echo "current=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "input=$INPUT_VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $CURRENT_VERSION"
+          echo "Input version: $INPUT_VERSION"
+          
+          if [ "$CURRENT_VERSION" = "$INPUT_VERSION" ]; then
+            echo "versions_match=true" >> $GITHUB_OUTPUT
+            echo "✓ Versions already match - will skip version bump"
+          else
+            echo "versions_match=false" >> $GITHUB_OUTPUT
+            echo "✗ Versions differ - will update files"
+          fi
 
       - name: Install dependencies
         run: npm install
@@ -33,6 +61,7 @@ jobs:
         run: ls -la build/
 
       - name: Update version in files
+        if: steps.check_version.outputs.versions_match == 'false' && inputs.skip_version_bump == false
         run: |
           VERSION=${{ inputs.version }}
           echo "Updating version to $VERSION"
@@ -54,7 +83,6 @@ jobs:
           " $VERSION
 
           # Update versions.json (in root)
-          # This step reads minAppVersion from the *build* manifest
           node -e "
             const fs = require('fs');
             const versionsJson = JSON.parse(fs.readFileSync('versions.json', 'utf8'));
@@ -64,25 +92,36 @@ jobs:
           " $VERSION
 
           echo "Version updated successfully."
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # Note: Automated CHANGELOG update is more complex and not included here.
-      # You may need to update CHANGELOG.md manually before triggering this workflow
-      # or implement a separate step/tool for this.
 
       - name: Commit version changes
+        if: steps.check_version.outputs.versions_match == 'false' && inputs.skip_version_bump == false
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add package.json versions.json
           git add -f build/manifest.json
-          # Add CHANGELOG.md if you update it manually or automatically before this step
-          # git add CHANGELOG.md
-          git commit -m "chore: release ${{ inputs.version }}"
-          git push origin main
+          # Check if there are changes to commit
+          if git diff --staged --quiet; then
+            echo "No changes to commit - skipping"
+          else
+            git commit -m "chore: release ${{ inputs.version }}"
+            git push origin main
+          fi
+
+      - name: Check if tag exists
+        id: check_tag
+        run: |
+          TAG_NAME=v${{ inputs.version }}
+          if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Tag $TAG_NAME already exists"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Tag $TAG_NAME does not exist - will create"
+          fi
 
       - name: Create Git Tag
+        if: steps.check_tag.outputs.exists == 'false'
         run: |
           TAG_NAME=v${{ inputs.version }}
           git tag $TAG_NAME
@@ -95,6 +134,29 @@ jobs:
           cd ..
           echo "Created make-it-rain.zip with contents:"
           unzip -l make-it-rain.zip
+
+      - name: Check if release exists
+        id: check_release
+        run: |
+          TAG_NAME=v${{ inputs.version }}
+          if gh release view "$TAG_NAME" --repo ${{ github.repository }} >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Release $TAG_NAME already exists"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Release $TAG_NAME does not exist - will create"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Delete existing release (if force enabled)
+        if: steps.check_release.outputs.exists == 'true' && inputs.force == true
+        run: |
+          TAG_NAME=v${{ inputs.version }}
+          gh release delete "$TAG_NAME" --repo ${{ github.repository }} --yes
+          echo "Deleted existing release $TAG_NAME"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create GitHub Release
         id: create_release
@@ -111,4 +173,13 @@ jobs:
             build/manifest.json
             build/styles.css
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload assets to existing release (if not recreated)
+        if: steps.check_release.outputs.exists == 'true' && inputs.force == false
+        run: |
+          TAG_NAME=v${{ inputs.version }}
+          echo "Uploading assets to existing release $TAG_NAME"
+          gh release upload "$TAG_NAME" make-it-rain.zip build/main.js build/manifest.json build/styles.css --repo ${{ github.repository }} --clobber
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
