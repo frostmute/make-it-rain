@@ -88,16 +88,25 @@ jobs:
           git tag $TAG_NAME
           git push origin $TAG_NAME
 
+      - name: Create Plugin Zip
+        run: |
+          cd build
+          zip -r ../make-it-rain.zip main.js manifest.json styles.css
+          cd ..
+          echo "Created make-it-rain.zip with contents:"
+          unzip -l make-it-rain.zip
+
       - name: Create GitHub Release
         id: create_release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ inputs.version }}
           name: Release v${{ inputs.version }}
-          body_path: ./release-notes-${{ inputs.version }}.md # Assumes your version-bump script created this file, or you create it before the workflow
+          body_path: ./release-notes-${{ inputs.version }}.md
           draft: false
           prerelease: false
           files: |
+            make-it-rain.zip
             build/main.js
             build/manifest.json
             build/styles.css

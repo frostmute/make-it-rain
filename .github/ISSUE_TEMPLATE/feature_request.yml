@@ -1,0 +1,40 @@
+---
+name: Feature Request
+description: Suggest an idea for this plugin
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea to improve Make It Rain? We'd love to hear it!
+  
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem are you trying to solve?
+      placeholder: I'm always frustrated when...
+    validations:
+      required: true
+  
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the solution you'd like to see
+      placeholder: It would be great if...
+    validations:
+      required: true
+  
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Have you thought of other ways to solve this?
+      placeholder: I tried working around this by...
+  
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Anything else that might help us understand your request?

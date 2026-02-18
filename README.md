@@ -125,14 +125,18 @@ Stop context-switching and start integrating! Make It Rain brings your valuable 
 doubts about safety. After I get the plugin's features mostly intact and fully
 functioning I will submit a request for inclusion in the Community Plugin Repo.)
 
-1. Download `main.js`, `manifest.json`, and `styles.css` from the latest
+1. Download **make-it-rain.zip** from the latest
    [RELEASE](https://github.com/frostmute/make-it-rain/releases/latest) on GitHub.
-2. In your Obsidian vault, navigate to the `.obsidian/plugins/` directory.
-3. Create a new folder named `make-it-rain`.
-4. Copy the downloaded `main.js`, `manifest.json`, and `styles.css` into this new folder.
-5. Restart Obsidian.
-6. Go to `Settings` -> `Community Plugins`, find "Make It Rain", and enable it.
-7. Configure the required API Token in the plugin settings (see Configuration section).
+   
+   > ⚠️ **Note:** Do NOT download the "Source code (zip)" — download `make-it-rain.zip` 
+   > which contains the compiled plugin files.
+2. Extract the zip file. You should see `main.js`, `manifest.json`, and `styles.css`.
+3. In your Obsidian vault, navigate to the `.obsidian/plugins/` directory.
+4. Create a new folder named `make-it-rain`.
+5. Copy `main.js`, `manifest.json`, and `styles.css` into this new folder.
+6. Restart Obsidian.
+7. Go to `Settings` -> `Community Plugins`, find "Make It Rain", and enable it.
+8. Configure the required API Token in the plugin settings (see Configuration section).
 
 ## Community Plugins Store
 
