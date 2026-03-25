@@ -57,9 +57,9 @@ Unlike the main documentation in `docs/`, these files don't need to be maintaine
 
 ## Related Documentation
 
-- [Developer Guide](../developer-guide.md) - Main developer documentation
-- [Testing Guide](../testing-guide.md) - How to write and run tests
-- [Troubleshooting](../TROUBLESHOOTING.md) - Common issues and solutions
+- [Developer Guide](../developer-guide/index.md) - Main developer documentation
+- [Testing Guide](../developer-guide/testing-guide.md) - How to write and run tests
+- [Troubleshooting](../user-guide/troubleshooting.md) - Common issues and solutions
 
 ---
 

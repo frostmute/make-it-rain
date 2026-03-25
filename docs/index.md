@@ -2,12 +2,23 @@ Make It Rain enables you to seamlessly import your bookmarks from [Raindrop.io](
 
 ## Documentation
 
-- [Installation Guide](installation.md) - How to install the plugin and set up your Raindrop.io API token
-- [Configuration Guide](configuration.md) - Configure the plugin settings to match your workflow
-- [Usage Guide](usage.md) - Learn how to use the plugin to fetch and organize your raindrops
-- [Note Structure](note-structure.md) - Understand how notes are structured and organized
-- [Template System](template-system.md) - Customize your note format with the powerful template system
-- [Troubleshooting](troubleshooting.md) - Solutions for common issues
+### 📚 User Guide
+
+- **[User Guide](user-guide/README.md)** - Complete user documentation
+- [Installation Guide](user-guide/installation.md) - How to install the plugin and set up your Raindrop.io API token
+- [Configuration Guide](user-guide/configuration.md) - Configure the plugin settings to match your workflow
+- [Usage Guide](user-guide/usage.md) - Learn how to use the plugin to fetch and organize your raindrops
+- [Note Structure](user-guide/note-structure.md) - Understand how notes are structured and organized
+- [Template System](user-guide/template-system.md) - Customize your note format with the powerful template system
+- [Troubleshooting](user-guide/troubleshooting.md) - Solutions for common issues
+- [FAQ](user-guide/faq.md) - Frequently asked questions
+
+### 🛠️ Developer Guide
+
+- **[Developer Guide](developer-guide/index.md)** - Contributing and development
+- [API Reference](developer-guide/api-reference.md) - API documentation
+- [Testing Guide](developer-guide/testing-guide.md) - How to run and write tests
+- [Build Verification](developer-guide/BUILD_VERIFICATION.md) - Verifying builds
 
 ## Key Features
 
@@ -25,17 +36,17 @@ Make It Rain enables you to seamlessly import your bookmarks from [Raindrop.io](
 
 If you're new to Make It Rain, we recommend following these steps:
 
-1. Follow the [Installation Guide](installation.md) to set up the plugin
-2. Review the [Configuration Guide](configuration.md) to customize your settings
-3. Learn how to use the plugin with the [Usage Guide](usage.md)
-4. Explore the [Template System](template-system.md) to customize your notes
+1. Follow the [Installation Guide](user-guide/installation.md) to set up the plugin
+2. Review the [Configuration Guide](user-guide/configuration.md) to customize your settings
+3. Learn how to use the plugin with the [Usage Guide](user-guide/usage.md)
+4. Explore the [Template System](user-guide/template-system.md) to customize your notes
 
 ---
 
 ## Contributing and Support
 
 - If you encounter any issues or have feature requests, please visit the [GitHub Repository Issues](https://github.com/frostmute/make-it-rain/issues) page.
-- Contributions to the code or documentation are welcome! See the [Contributing](contributing.md) page for details.
+- Contributions to the code or documentation are welcome! See the [Developer Guide](developer-guide/index.md) for details.
 
 ---
 

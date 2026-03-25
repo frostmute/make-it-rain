@@ -478,9 +478,9 @@ Create `CONTRIBUTING.md` in root or `docs/developer-guide/`:
 Thank you for your interest in contributing!
 
 ## Quick Links
-- [Developer Guide](docs/developer-guide.md)
-- [Testing Guide](docs/testing-guide.md)
-- [API Reference](docs/api-reference.md)
+- [Developer Guide](../developer-guide/index.md)
+- [Testing Guide](../developer-guide/testing-guide.md)
+- [API Reference](../developer-guide/api-reference.md)
 
 ## Getting Started
 1. Fork the repository
@@ -491,7 +491,7 @@ Thank you for your interest in contributing!
 6. Run tests again
 7. Submit a pull request
 
-See [Developer Guide](docs/developer-guide.md) for detailed instructions.
+See [Developer Guide](../developer-guide/index.md) for detailed instructions.
 ```
 
 ### 3. Update README.md

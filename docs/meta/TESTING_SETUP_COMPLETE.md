@@ -353,8 +353,8 @@ npm run test:coverage
 
 ## 📚 Resources
 
-- **Quick Start**: [TESTING_QUICK_START.md](TESTING_QUICK_START.md)
-- **Full Guide**: [docs/testing-guide.md](docs/testing-guide.md)
+- **Quick Start**: [TESTING_QUICK_START.md](../../TESTING_QUICK_START.md)
+- **Full Guide**: [docs/testing-guide.md](../developer-guide/testing-guide.md)
 - **Test Examples**: [tests/](tests/)
 - **Mock Data**: [tests/mocks/raindropData.ts](tests/mocks/raindropData.ts)
 
@@ -425,8 +425,8 @@ When adding new features:
 
 If you encounter issues:
 
-1. Check [tests/README.md](tests/README.md)
-2. Review [docs/testing-guide.md](docs/testing-guide.md)
+1. Check [tests/README.md](../../tests/README.md)
+2. Review [docs/testing-guide.md](../developer-guide/testing-guide.md)
 3. Look at existing tests for examples
 4. Open an issue on GitHub
 

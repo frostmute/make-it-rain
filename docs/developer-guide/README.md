@@ -6,7 +6,7 @@ Welcome to the Make It Rain developer documentation! This directory contains all
 
 ### Getting Started
 
-- **[Developer Guide](../developer-guide.md)** - Main developer documentation
+- **[Developer Guide](index.md)** - Main developer documentation
   - Project structure
   - Development setup
   - Contribution guidelines
@@ -15,7 +15,7 @@ Welcome to the Make It Rain developer documentation! This directory contains all
 
 ### Testing
 
-- **[Testing Guide](../testing-guide.md)** - Comprehensive testing documentation
+- **[Testing Guide](testing-guide.md)** - Comprehensive testing documentation
   - Running tests
   - Writing tests
   - Test structure
@@ -31,7 +31,7 @@ Welcome to the Make It Rain developer documentation! This directory contains all
 
 ### API Documentation
 
-- **[API Reference](../api-reference.md)** - API documentation
+- **[API Reference](api-reference.md)** - API documentation
   - Raindrop.io API integration
   - Obsidian API usage
   - Plugin interfaces
@@ -43,7 +43,7 @@ Welcome to the Make It Rain developer documentation! This directory contains all
 
 1. Clone the repository
 2. Install dependencies: `npm install`
-3. Read the [Developer Guide](../developer-guide.md)
+3. Read the [Developer Guide](index.md)
 4. Run tests: `npm test`
 5. Build: `npm run build`
 
@@ -73,11 +73,11 @@ npm run test:coverage
 
 | Task | Command | Documentation |
 |------|---------|---------------|
-| Run tests | `npm test` | [Testing Guide](../testing-guide.md) |
+| Run tests | `npm test` | [Testing Guide](testing-guide.md) |
 | Build plugin | `npm run build` | [BUILD_VERIFICATION.md](BUILD_VERIFICATION.md) |
-| Watch mode | `npm run dev` | [Developer Guide](../developer-guide.md) |
-| Coverage | `npm run test:coverage` | [Testing Guide](../testing-guide.md) |
-| Lint markdown | `npm run lint:md` | [Developer Guide](../developer-guide.md) |
+| Watch mode | `npm run dev` | [Developer Guide](index.md) |
+| Coverage | `npm run test:coverage` | [Testing Guide](testing-guide.md) |
+| Lint markdown | `npm run lint:md` | [Developer Guide](index.md) |
 
 ## Documentation Standards
 
@@ -113,7 +113,7 @@ make-it-rain/
 
 Before contributing, please:
 
-1. Read the [Developer Guide](../developer-guide.md)
+1. Read the [Developer Guide](index.md)
 2. Check existing [issues](https://github.com/frostmute/make-it-rain/issues)
 3. Write tests for new features
 4. Follow the coding style
@@ -123,7 +123,7 @@ Before contributing, please:
 
 - **Issues**: [GitHub Issues](https://github.com/frostmute/make-it-rain/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/frostmute/make-it-rain/discussions)
-- **Troubleshooting**: [docs/TROUBLESHOOTING.md](../TROUBLESHOOTING.md)
+- **Troubleshooting**: [docs/user-guide/troubleshooting.md](../user-guide/troubleshooting.md)
 
 ## Additional Resources
 
@@ -145,4 +145,4 @@ For temporary/meta documentation, see [docs/meta/](../meta/):
 
 ---
 
-**Ready to contribute?** Start with the [Developer Guide](../developer-guide.md)!
+**Ready to contribute?** Start with the [Developer Guide](index.md)!
