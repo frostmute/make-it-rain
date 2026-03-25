@@ -1,212 +1,478 @@
 # Troubleshooting Guide
 
-This guide helps you diagnose and resolve common issues with the Make It Rain plugin.
+Common issues and solutions for the Make It Rain plugin development.
 
-## API Connection Issues
+## Table of Contents
 
-### Invalid API Token
+- [Line Ending Issues (CRLF vs LF)](#line-ending-issues-crlf-vs-lf)
+- [Build Issues](#build-issues)
+- [Test Issues](#test-issues)
+- [Git Issues](#git-issues)
+
+---
+
+## Line Ending Issues (CRLF vs LF)
+
+### Symptoms
+
+When running bash scripts (like `cleanup.sh`), you see errors like:
+
+```
+cleanup.sh: line 2: $'\r': command not found
+bash: syntax error near unexpected token
+```
+
+### Cause
+
+The script files have Windows-style line endings (CRLF: `\r\n`) instead of Unix-style line endings (LF: `\n`). This happens when:
+
+- Files are created on Windows
+- Git is configured to auto-convert line endings
+- Editor is set to use CRLF
+
+### Quick Fix
+
+**Option 1: Using sed (recommended)**
+
+```bash
+sed -i 's/\r$//' cleanup.sh
+```
+
+**Option 2: Using dos2unix (if available)**
+
+```bash
+dos2unix cleanup.sh
+```
+
+**Option 3: Using Git**
+
+```bash
+# Convert line endings for a single file
+git add --renormalize cleanup.sh
+
+# Or for all files
+git add --renormalize .
+```
+
+### Verify the Fix
+
+Check that line endings are corrected:
+
+```bash
+file cleanup.sh
+```
+
+Should show:
+```
+cleanup.sh: Bourne-Again shell script, Unicode text, UTF-8 text executable
+```
+
+NOT:
+```
+cleanup.sh: ... with CRLF line terminators  ❌
+```
+
+### Permanent Solution
+
+Add `.gitattributes` to force LF line endings:
+
+```bash
+cat > .gitattributes << 'EOF'
+# Auto detect text files and normalize line endings
+* text=auto
+
+# Force LF for shell scripts
+*.sh text eol=lf
+
+# Force LF for common text files
+*.ts text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.webp binary
+*.gif binary
+EOF
+```
+
+Then renormalize the repository:
+
+```bash
+git add --renormalize .
+git commit -m "chore: normalize line endings"
+```
+
+### Configure Git Globally
+
+**For WSL/Linux/macOS:**
+
+```bash
+git config --global core.autocrlf input
+```
+
+This converts CRLF to LF on commit, but doesn't convert on checkout.
+
+**For Windows (if not using WSL):**
+
+```bash
+git config --global core.autocrlf true
+```
+
+This converts LF to CRLF on checkout, and CRLF to LF on commit.
+
+### Configure Your Editor
+
+**VS Code:**
+
+Add to `.vscode/settings.json`:
+
+```json
+{
+  "files.eol": "\n"
+}
+```
+
+Or set globally: File → Preferences → Settings → search for "eol" → set to `\n`
+
+**Other Editors:**
+
+- **Sublime Text**: View → Line Endings → Unix
+- **Atom**: Settings → Line Ending Selector → LF
+- **Vim**: `:set ff=unix`
+- **Nano**: Should use LF by default on Unix systems
+
+---
+
+## Build Issues
+
+### Error: Cannot find module 'obsidian'
+
+**Cause:** Dependencies not installed or corrupted.
+
+**Solution:**
+
+```bash
+rm -rf node_modules package-lock.json
+npm install
+```
+
+### Error: Build fails with TypeScript errors
+
+**Cause:** TypeScript version mismatch or configuration issue.
+
+**Solution:**
+
+```bash
+# Check TypeScript version
+npx tsc --version
+
+# Rebuild
+npm run build
+```
+
+### Error: esbuild not found
+
+**Cause:** Dev dependencies not installed.
+
+**Solution:**
+
+```bash
+npm install --save-dev esbuild
+npm run build
+```
+
+---
+
+## Test Issues
+
+### Tests won't run
 
 **Symptoms:**
 
-- Error message: "Invalid API token" or "Unauthorized"
-- Unable to fetch any raindrops
-- Token verification fails
+```
+jest: command not found
+```
 
-**Solutions:**
+**Solution:**
 
-1. Double-check your API token for typos or extra spaces
-2. Generate a new token from [Raindrop.io Integrations](https://app.raindrop.io/settings/integrations)
-3. Ensure you're using the Test Token, not the App ID or Secret
-4. Verify your Raindrop.io account is active and in good standing
+```bash
+# Install dependencies
+npm install
 
-### Rate Limiting
+# Clear cache and retry
+npm test -- --clearCache
+npm test
+```
 
-**Symptoms:**
-
-- Error message: "Rate limit exceeded"
-- Fetching stops midway
-- Multiple "Waiting for rate limit" notices
-
-**Solutions:**
-
-1. The plugin automatically handles rate limits with waiting periods
-2. For large collections, break imports into smaller batches
-3. Wait a few minutes before trying again
-4. If persistent, try fetching during off-peak hours
-
-### Network Connectivity
+### Module resolution errors
 
 **Symptoms:**
 
-- Error message: "Network error" or "Failed to fetch"
-- Inconsistent connection to Raindrop.io API
+```
+Cannot find module '../../../src/utils/fileUtils'
+```
 
-**Solutions:**
+**Solution:**
 
-1. Check your internet connection
-2. Verify that Raindrop.io is accessible in your browser
-3. If using a VPN or firewall, ensure it allows connections to Raindrop.io
-4. Try again later if Raindrop.io might be experiencing downtime
+1. Check `jest.config.js` module mapper
+2. Verify file paths are correct
+3. Clear Jest cache:
 
-## Note Generation Issues
+```bash
+npm test -- --clearCache
+```
 
-### Filename Conflicts
+### Mock not working
 
-**Symptoms:**
+**Solution:**
 
-- Error message about duplicate filenames
-- Some notes not being created
+```typescript
+// Always clear mocks in beforeEach
+beforeEach(() => {
+    jest.clearAllMocks();
+});
 
-**Solutions:**
+// Verify mock is configured
+mockFunction.mockReturnValue('value');
+expect(mockFunction()).toBe('value');
+```
 
-1. Enable "Use Raindrop ID for File Name" in the fetch modal
-2. Modify your filename template to include unique identifiers (e.g., `{{id}}-{{title}}`)
-3. Use the "Update Existing Notes" option to overwrite existing files
+---
 
-### Missing Content
+## Git Issues
 
-**Symptoms:**
+### Large files in repository
 
-- Notes created but missing expected content
-- Incomplete information in notes
+**Cause:** Accidentally committed `node_modules/` or `coverage/`.
 
-**Solutions:**
+**Solution:**
 
-1. Check if the content exists in Raindrop.io (some raindrops may have limited data)
-2. Verify your template is correctly formatted (if using the template system)
-3. Try updating the notes to refresh the content
-4. For highlights, ensure they exist in the original raindrop
+```bash
+# Remove from Git but keep locally
+git rm -r --cached node_modules coverage
 
-### Malformed Frontmatter
+# Ensure .gitignore is correct
+echo "node_modules/" >> .gitignore
+echo "coverage/" >> .gitignore
 
-**Symptoms:**
+# Commit the changes
+git add .gitignore
+git commit -m "chore: remove large files from git"
+```
 
-- Obsidian shows errors in note properties
-- YAML parsing errors
+### Accidental commit to main
 
-**Solutions:**
+**Solution:**
 
-1. Check for special characters in your raindrop titles or tags that might break YAML
-2. If using custom templates, ensure proper YAML formatting
-3. Try recreating the affected notes with simpler content
+```bash
+# Undo the last commit (keep changes)
+git reset --soft HEAD~1
 
-## Collection and Folder Issues
+# Create a new branch
+git checkout -b feature-branch
 
-### Missing Collections
+# Commit on the new branch
+git commit -m "feat: your feature"
+```
 
-**Symptoms:**
+### Merge conflicts
 
-- Some collections don't appear in the folder structure
-- Unable to filter by certain collections
+**Solution:**
 
-**Solutions:**
+```bash
+# Update your branch with latest main
+git checkout your-branch
+git fetch origin
+git rebase origin/main
 
-1. Verify the collections exist in your Raindrop.io account
-2. Check for typos in collection names/IDs in the filter
-3. Ensure you have access to the collections (especially for shared collections)
-4. Try using collection IDs instead of names for more reliable filtering
+# Resolve conflicts in your editor
+# Then:
+git add .
+git rebase --continue
+```
 
-### Incorrect Folder Hierarchy
+---
 
-**Symptoms:**
+## WSL-Specific Issues
 
-- Folders not nested correctly
-- Flat structure instead of hierarchical
+### Permission denied errors
 
-**Solutions:**
+**Cause:** File permissions not set correctly.
 
-1. Ensure "Include Subcollections" is enabled in the fetch modal
-2. Verify your collection hierarchy in Raindrop.io
-3. Try fetching from a specific parent collection rather than "All Collections"
+**Solution:**
 
-## Template System Issues
+```bash
+# Make scripts executable
+chmod +x cleanup.sh
+chmod +x scripts/*.mjs
 
-### Templates Not Applied
+# Verify
+ls -l cleanup.sh
+```
 
-**Symptoms:**
+### "wsl: The wsl2.localhostForwarding setting has no effect"
 
-- Notes don't follow your custom template format
-- Default formatting is used instead
+**This is just a warning and can be safely ignored.** It doesn't affect functionality.
 
-**Solutions:**
+To disable the warning, add to `~/.wslconfig`:
 
-1. Verify that "Enable Template System" is turned on in settings
-2. Check that you've saved your template changes
-3. Ensure you've selected the correct template in the fetch modal
-4. Verify template syntax for errors
+```ini
+[wsl2]
+localhostForwarding=false
+```
 
-### Template Syntax Errors
+### Files created in WSL not visible in Windows
 
-**Symptoms:**
+**Cause:** Using different filesystem locations.
 
-- Error messages about template processing
-- Malformed content in notes
+**Solution:**
 
-**Solutions:**
+Work in `/mnt/c/Users/YourName/Projects/` for cross-compatibility, or use the Windows filesystem path.
 
-1. Check your template for syntax errors (missing brackets, etc.)
-2. Verify variable names match those in the [documentation](template-system.md#available-variables)
-3. Test with the default template first, then gradually add customizations
-4. For complex templates, break them down into smaller parts to identify issues
+---
+
+## NPM Issues
+
+### Package-lock.json conflicts
+
+**Solution:**
+
+```bash
+# Delete lock file and reinstall
+rm package-lock.json
+npm install
+```
+
+### Outdated dependencies
+
+**Check for updates:**
+
+```bash
+npm outdated
+```
+
+**Update all dependencies:**
+
+```bash
+npm update
+```
+
+**Update to latest (breaking changes possible):**
+
+```bash
+npx npm-check-updates -u
+npm install
+```
+
+---
+
+## Documentation Build Issues
+
+### Jekyll build fails
+
+**Cause:** GitHub Pages configuration issue.
+
+**Solution:**
+
+1. Check `docs/_config.yml` is valid YAML
+2. Ensure all required frontmatter is present
+3. Check GitHub Actions logs for specific errors
+
+### Links broken after reorganization
+
+**Solution:**
+
+```bash
+# Find all markdown links
+grep -r "](docs/" . --include="*.md"
+
+# Update broken links
+# Consider adding redirects in docs/_config.yml
+```
+
+---
 
 ## Performance Issues
 
-### Slow Fetching
+### Slow tests
 
-**Symptoms:**
+**Solution:**
 
-- Fetching takes a very long time
-- Plugin seems unresponsive
+```bash
+# Run specific tests
+npm test -- fileUtils.test.ts
 
-**Solutions:**
+# Run in parallel (if not already)
+npm test -- --maxWorkers=4
 
-1. This is normal for large collections due to API rate limiting
-2. Use more specific filters to reduce the number of raindrops fetched
-3. Break large imports into smaller batches
-4. Be patient - the plugin is designed to work within Raindrop.io's rate limits
+# Run only changed tests
+npm test -- --onlyChanged
+```
 
-### Obsidian Freezing
+### Slow builds
 
-**Symptoms:**
+**Solution:**
 
-- Obsidian becomes unresponsive during fetching
-- High CPU usage
+```bash
+# Use watch mode for development
+npm run dev
 
-**Solutions:**
+# Clear build cache
+rm -rf build/
+npm run build
+```
 
-1. Fetch smaller batches of raindrops
-2. Close other resource-intensive plugins during fetching
-3. Restart Obsidian and try again
-4. Update to the latest version of the plugin and Obsidian
+---
 
-## Plugin Update Issues
+## Getting Help
 
-### Plugin Not Working After Update
+If you encounter an issue not listed here:
 
-**Symptoms:**
-
-- Features stop working after updating
-- Error messages after update
-
-**Solutions:**
-
-1. Restart Obsidian completely
-2. Check for compatibility issues with your Obsidian version
-3. Verify settings were preserved during update
-4. As a last resort, uninstall and reinstall the plugin
-
-## Getting More Help
-
-If you're still experiencing issues:
-
-1. Check the [GitHub repository](https://github.com/frostmute/make-it-rain) for known issues
-2. Look for similar problems in the [Issues section](https://github.com/frostmute/make-it-rain/issues)
-3. Create a new issue with:
-   - A clear description of the problem
+1. **Check existing issues:** [GitHub Issues](https://github.com/frostmute/make-it-rain/issues)
+2. **Search discussions:** [GitHub Discussions](https://github.com/frostmute/make-it-rain/discussions)
+3. **Ask for help:** Open a new issue with:
+   - Error message (full output)
    - Steps to reproduce
-   - Your Obsidian version
-   - Your plugin version
-   - Any error messages (exact text)
-   - Screenshots if applicable
+   - Environment info (OS, Node version, etc.)
+   - What you've tried
 
-The developer is active and responsive to bug reports and feature requests.
+### Useful Debug Commands
+
+```bash
+# Check Node/NPM versions
+node --version
+npm --version
+
+# Check Git config
+git config --list
+
+# Check file line endings
+file cleanup.sh
+
+# Verify build output
+ls -lh build/
+
+# Check test coverage
+npm run test:coverage
+```
+
+---
+
+## Quick Reference
+
+| Issue | Quick Fix |
+|-------|-----------|
+| CRLF errors | `sed -i 's/\r$//' cleanup.sh` |
+| Build fails | `rm -rf node_modules && npm install && npm run build` |
+| Tests fail | `npm test -- --clearCache && npm test` |
+| Permission denied | `chmod +x cleanup.sh` |
+| Merge conflicts | `git rebase origin/main` |
+
+---
+
+**Still stuck?** Don't hesitate to open an issue on GitHub! 🚀

@@ -255,7 +255,7 @@ EOF" "Create integration test README"
         echo "  3. Test suite: npm test"
         echo "  4. Commit changes: git add -A && git commit -m 'chore: cleanup repository structure'"
         echo ""
-        echo "See CLEANUP_PLAN.md for additional optional cleanup steps."
+        echo "See docs/meta/CLEANUP_PLAN.md for additional optional cleanup steps."
     else
         print_warning "DRY RUN complete - no changes were made"
         echo ""
