@@ -1,0 +1,81 @@
+# .gitattributes - Line ending configuration for Make It Rain
+# =============================================================
+# This file ensures consistent line endings across different operating systems
+# and prevents CRLF issues in shell scripts and source files.
+
+# Auto detect text files and normalize line endings to LF
+* text=auto eol=lf
+
+# Shell scripts MUST use LF (Unix line endings)
+*.sh text eol=lf
+
+# Source code files - always use LF
+*.ts text eol=lf
+*.js text eol=lf
+*.mjs text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+
+# Configuration files - always use LF
+*.yml text eol=lf
+*.yaml text eol=lf
+*.xml text eol=lf
+*.toml text eol=lf
+*.ini text eol=lf
+*.cfg text eol=lf
+*.conf text eol=lf
+
+# Documentation and text files
+*.txt text eol=lf
+README text eol=lf
+LICENSE text eol=lf
+CHANGELOG text eol=lf
+
+# CSS and web files
+*.css text eol=lf
+*.scss text eol=lf
+*.html text eol=lf
+*.svg text eol=lf
+
+# Git files
+.gitignore text eol=lf
+.gitattributes text eol=lf
+.gitmodules text eol=lf
+
+# Binary files - do not modify
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.bmp binary
+*.tiff binary
+*.pdf binary
+*.zip binary
+*.tar binary
+*.gz binary
+*.tgz binary
+*.rar binary
+*.7z binary
+*.exe binary
+*.dll binary
+*.so binary
+*.dylib binary
+
+# Font files
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.eot binary
+
+# Archives
+*.node binary
+*.jar binary
+*.war binary
+
+# Linguist settings (optional - for GitHub language detection)
+docs/** linguist-documentation
+tests/** linguist-vendored=false
+*.md linguist-detectable
