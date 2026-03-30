@@ -1,53 +1,199 @@
-Make It Rain enables you to seamlessly import your bookmarks from [Raindrop.io](https://raindrop.io) into your [Obsidian.md](https://obsidian.md) vault. Integrate your web clippings, articles, and references into your knowledge base with flexibility and ease.
+# Make It Rain - Documentation
 
-## Documentation
+> **Seamlessly import your [Raindrop.io](https://raindrop.io) bookmarks into [Obsidian.md](https://obsidian.md/)**
 
-### 📚 User Guide
-
-- **[User Guide](user-guide/README.md)** - Complete user documentation
-- [Installation Guide](user-guide/installation.md) - How to install the plugin and set up your Raindrop.io API token
-- [Configuration Guide](user-guide/configuration.md) - Configure the plugin settings to match your workflow
-- [Usage Guide](user-guide/usage.md) - Learn how to use the plugin to fetch and organize your raindrops
-- [Note Structure](user-guide/note-structure.md) - Understand how notes are structured and organized
-- [Template System](user-guide/template-system.md) - Customize your note format with the powerful template system
-- [Troubleshooting](user-guide/troubleshooting.md) - Solutions for common issues
-- [FAQ](user-guide/faq.md) - Frequently asked questions
-
-### 🛠️ Developer Guide
-
-- **[Developer Guide](developer-guide/index.md)** - Contributing and development
-- [API Reference](developer-guide/api-reference.md) - API documentation
-- [Testing Guide](developer-guide/testing-guide.md) - How to run and write tests
-- [Build Verification](developer-guide/BUILD_VERIFICATION.md) - Verifying builds
-
-## Key Features
-
-- **On-Demand Fetching:** Import your Raindrops anytime via a Command Palette action or ribbon icon.
-- **Flexible Filtering:** Filter imports by Collection, Tags (AND/OR logic), and Content Type (Link, Article, Image, etc.).
-- **Collection Hierarchy:** Automatically creates folder structures in your vault based on your Raindrop collections.
-- **Smart Rate Limiting:** Handles API limits gracefully with automatic retries and detailed notifications.
-- **Comprehensive Note Generation:** Creates Markdown notes with rich YAML frontmatter and formatted content.
-- **Powerful Template System:** Customize how your notes are formatted with Handlebars-like templates.
-- **Content Type Templates:** Create different templates for different types of content (articles, images, videos, etc.).
-- **Flexible Import Options:** Choose to fetch only new items or update existing notes.
-- **Customizable Filenames & Tags:** Define your note filenames and automatically append custom Obsidian tags.
-
-## Getting Started
-
-If you're new to Make It Rain, we recommend following these steps:
-
-1. Follow the [Installation Guide](user-guide/installation.md) to set up the plugin
-2. Review the [Configuration Guide](user-guide/configuration.md) to customize your settings
-3. Learn how to use the plugin with the [Usage Guide](user-guide/usage.md)
-4. Explore the [Template System](user-guide/template-system.md) to customize your notes
+Welcome to Make It Rain! This documentation will help you get the most out of the plugin, whether you're a first-time user or an advanced contributor.
 
 ---
 
-## Contributing and Support
+## 🚀 Start Here
 
-- If you encounter any issues or have feature requests, please visit the [GitHub Repository Issues](https://github.com/frostmute/make-it-rain/issues) page.
-- Contributions to the code or documentation are welcome! See the [Developer Guide](developer-guide/index.md) for details.
+**New to Make It Rain?** Begin with these essential guides:
+
+1. **[Installation Guide](user-guide/installation.md)** - Get the plugin up and running
+2. **[Quick Start Configuration](user-guide/configuration.md)** - Set up your API token in 2 minutes
+3. **[Your First Import](user-guide/usage.md)** - Import your first bookmarks
 
 ---
 
-Thank you for using Make It Rain! We hope it helps you integrate your web content into Obsidian seamlessly.
+## ✨ Key Features at a Glance
+
+### 🎯 Flexible Filtering & Importing
+- **Bulk Import**: Fetch multiple bookmarks with advanced filtering by collections, tags, and content types
+- **Quick Import**: Import individual items by URL or ID
+- **Selective Sync**: Only fetch new items or update existing notes
+- **Smart Filtering**: Combine collections, tags (AND/OR logic), and content types
+
+### 🗂️ Smart Organization
+- **Automatic Folder Hierarchy**: Replicates your Raindrop collection structure in Obsidian
+- **Rich Metadata**: Comprehensive YAML frontmatter with all important details
+- **Customizable Filenames**: Use template variables to create meaningful note names
+- **Tag Integration**: Automatically append custom Obsidian tags to imported notes
+
+### 🎨 Powerful Customization
+- **Template System**: Full control over note format with Handlebars-like syntax
+- **Content-Type Templates**: Different formats for articles, images, videos, and more
+- **Banner Images**: Display cover images from your bookmarks
+- **Flexible Formatting**: Customize every aspect of your imported notes
+
+### ⚙️ Robust & Reliable
+- **Smart Rate Limiting**: Gracefully handles API limits with automatic retries
+- **Safe by Default**: Prevents accidental overwrites of existing notes
+- **Detailed Logging**: Full transparency for troubleshooting
+- **Stable Builds**: Automated CI/CD ensures reliability
+
+---
+
+## 📚 Documentation Guide
+
+### For Users
+
+**Getting Started**
+- [📥 Installation Guide](user-guide/installation.md) - Install and get your API token
+- [⚙️ Configuration Guide](user-guide/configuration.md) - Set up the plugin to your liking
+- [📖 User Guide](user-guide/README.md) - Complete user documentation
+
+**Using the Plugin**
+- [🔄 Usage Guide](user-guide/usage.md) - Learn how to import and organize bookmarks
+- [📂 Collections](user-guide/collections.md) - Working with your Raindrop collections
+- [🏷️ Tags](user-guide/tags.md) - Tag filtering and management
+- [📋 Note Structure](user-guide/note-structure.md) - Understanding the note format
+
+**Customization**
+- [🎨 Template System](user-guide/template-system.md) - Customize how notes are formatted
+- [🖼️ Template Gallery](user-guide/template-gallery.md) - Pre-built templates and examples
+
+**Help & Resources**
+- [🆘 Troubleshooting](user-guide/troubleshooting.md) - Fix common issues
+- [❓ FAQ](user-guide/faq.md) - Frequently asked questions
+- [⚠️ Known Issues](user-guide/known-issues.md) - Current limitations and workarounds
+
+### For Developers
+
+**Contributing**
+- [👨‍💻 Developer Guide](developer-guide/README.md) - Set up your development environment
+- [🏗️ Architecture Overview](developer-guide/index.md) - Understand the codebase
+- [📝 Contributing Guide](../CONTRIBUTING.md) - Contribution workflow and standards
+
+**Technical Resources**
+- [🔌 API Reference](developer-guide/api-reference.md) - API documentation
+- [✅ Testing Guide](developer-guide/testing-guide.md) - Writing and running tests
+- [🔨 Build Verification](developer-guide/BUILD_VERIFICATION.md) - Verifying builds
+
+---
+
+## 🎯 Common Tasks
+
+### First Time Setup
+```
+Installation → API Configuration → Test Import → Explore Settings
+```
+[Follow the Getting Started Guide →](user-guide/installation.md)
+
+### Daily Workflow
+```
+Add bookmarks in Raindrop.io → Run "Fetch Raindrops" → Organize in Obsidian
+```
+[Learn about importing →](user-guide/usage.md)
+
+### Custom Templates
+```
+Explore examples → Customize template → Test with small batch → Import full collection
+```
+[Template customization guide →](user-guide/template-system.md)
+
+### Contributing Code
+```
+Fork repository → Set up dev environment → Create feature branch → Write tests → Submit PR
+```
+[Contributing guide →](../CONTRIBUTING.md)
+
+---
+
+## 🤔 Quick Reference
+
+| I want to... | See... |
+|---|---|
+| **Install the plugin** | [Installation Guide](user-guide/installation.md) |
+| **Set up my API token** | [Configuration Guide](user-guide/configuration.md) |
+| **Import all my bookmarks** | [Usage Guide](user-guide/usage.md) |
+| **Customize note format** | [Template System](user-guide/template-system.md) |
+| **Filter by collection** | [Collections Guide](user-guide/collections.md) |
+| **Filter by tags** | [Tags Guide](user-guide/tags.md) |
+| **Fix import errors** | [Troubleshooting](user-guide/troubleshooting.md) |
+| **Set up development** | [Developer Guide](developer-guide/README.md) |
+| **Write tests** | [Testing Guide](developer-guide/testing-guide.md) |
+| **Contribute code** | [Contributing Guide](../CONTRIBUTING.md) |
+
+---
+
+## 📖 Documentation Structure
+
+```
+docs/
+├── index.md                 ← You are here!
+├── user-guide/              ← User documentation
+│   ├── README.md
+│   ├── installation.md
+│   ├── configuration.md
+│   ├── usage.md
+│   ├── collections.md
+│   ├── tags.md
+│   ├── note-structure.md
+│   ├── template-system.md
+│   ├── template-gallery.md
+│   ├── troubleshooting.md
+│   ├── faq.md
+│   └── known-issues.md
+├── developer-guide/         ← Developer documentation
+│   ├── README.md
+│   ├── index.md
+│   ├── api-reference.md
+│   ├── testing-guide.md
+│   └── BUILD_VERIFICATION.md
+└── release-notes/           ← Version history
+```
+
+---
+
+## 💡 Getting Help
+
+**Can't find what you're looking for?**
+
+1. **Quick answers**: Check the [FAQ](user-guide/faq.md)
+2. **Common issues**: Review [Troubleshooting](user-guide/troubleshooting.md)
+3. **Known limitations**: See [Known Issues](user-guide/known-issues.md)
+4. **Community**: Visit [GitHub Discussions](https://github.com/frostmute/make-it-rain/discussions)
+5. **Report bugs**: [Open an issue on GitHub](https://github.com/frostmute/make-it-rain/issues)
+
+---
+
+## 🔗 Resources
+
+- **GitHub Repository**: [frostmute/make-it-rain](https://github.com/frostmute/make-it-rain)
+- **Raindrop.io**: [raindrop.io](https://raindrop.io)
+- **Obsidian**: [obsidian.md](https://obsidian.md)
+- **Changelog**: [View all releases](../CHANGELOG.md)
+
+---
+
+## 🎓 Learning Paths
+
+### Path 1: Just Getting Started
+→ [Installation](user-guide/installation.md) → [Configuration](user-guide/configuration.md) → [Usage](user-guide/usage.md)
+
+### Path 2: Power User
+→ [Template System](user-guide/template-system.md) → [Template Gallery](user-guide/template-gallery.md) → [Advanced Filtering](user-guide/usage.md)
+
+### Path 3: Contributing Developer
+→ [Developer Guide](developer-guide/README.md) → [Contributing](../CONTRIBUTING.md) → [Testing](developer-guide/testing-guide.md)
+
+---
+
+<div align="center">
+
+**Ready to get started?** [→ Install Make It Rain](user-guide/installation.md)
+
+For updates and news, follow the [Changelog](../CHANGELOG.md)
+
+</div>
