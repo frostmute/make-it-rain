@@ -23,7 +23,7 @@
   "author": "frostmute",
   "license": "MIT",
   "devDependencies": {
-    "@types/jest": "^29.5.12",
+    "@types/jest": "^29.5.14",
     "@types/node": "^20.11.24",
     "@typescript-eslint/eslint-plugin": "^7.1.0",
     "@typescript-eslint/parser": "^7.1.0",
@@ -34,7 +34,7 @@
     "markdownlint": "^0.38.0",
     "markdownlint-cli": "^0.45.0",
     "obsidian": "latest",
-    "ts-jest": "^29.1.2",
+    "ts-jest": "^29.4.9",
     "tslib": "^2.6.2",
     "typescript": "5.3.3"
   },
