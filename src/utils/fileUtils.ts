@@ -72,7 +72,7 @@ export async function createFolder(app: App, path: string): Promise<boolean> {
  * @returns A sanitized file name safe for file systems
  */
 export function sanitizeFileName(fileName: string): string {
-    const invalidChars = /[/\\:*?"<>|#%&{}$!@'`+=]/g;
+    const invalidChars = /[\x00-\x1F\x7F\u200B-\u200D\uFEFF/\\:*?"<>|#%&{}$!@'`+=]/g;
     const replacement = '';
     
     // Use meaningful variable names with auxiliary verbs

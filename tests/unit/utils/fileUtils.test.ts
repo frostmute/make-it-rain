@@ -165,6 +165,14 @@ describe('fileUtils', () => {
             expect(result).toBe('Unnamed_Raindrop');
         });
 
+        it('should handle invisible and control characters', () => {
+            expect(sanitizeFileName('\0')).toBe('Unnamed_Raindrop');
+            expect(sanitizeFileName('\x08')).toBe('Unnamed_Raindrop');
+            expect(sanitizeFileName('\u200B')).toBe('Unnamed_Raindrop');
+            expect(sanitizeFileName('hello\0world')).toBe('helloworld');
+            expect(sanitizeFileName('  \0  ')).toBe('Unnamed_Raindrop');
+        });
+
         it('should return default name if sanitization results in empty string', () => {
             const result = sanitizeFileName('///:::***');
 
@@ -251,10 +259,10 @@ describe('fileUtils', () => {
 
         it('should create partial structure if some folders exist', async () => {
             // First folder exists, others don't
-            mockApp.vault.adapter.exists
-                .mockResolvedValueOnce(true)  // 'a' exists
-                .mockResolvedValueOnce(false) // 'a/b' doesn't exist
-                .mockResolvedValueOnce(false); // 'a/b/c' doesn't exist
+            mockApp.vault.adapter.exists.mockImplementation(async (path) => {
+                if (path === 'a') return true;
+                return false;
+            });
 
             mockApp.vault.adapter.stat.mockResolvedValue({ type: 'folder' });
             mockApp.vault.createFolder.mockResolvedValue(undefined);
