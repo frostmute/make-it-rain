@@ -44,6 +44,7 @@ We are committed to providing a welcoming and inspiring community for all. We pl
 ### Reporting Violations
 
 If you witness or experience behavior that violates this code of conduct, please report it by:
+
 1. Contacting the maintainers directly via email
 2. Opening a private issue (if available)
 3. Reaching out in a GitHub discussion
@@ -57,6 +58,7 @@ All reports will be reviewed and handled appropriately.
 ### Prerequisites
 
 Before contributing, ensure you have:
+
 - **Node.js** 16+ and npm installed
 - **Git** for version control
 - **GitHub account** for pull requests
@@ -97,6 +99,7 @@ Make It Rain welcomes all types of contributions:
 ### 🐛 Bug Reports
 
 **Found a bug?** Help us fix it:
+
 - Search [existing issues](https://github.com/frostmute/make-it-rain/issues) first
 - Provide reproduction steps
 - Include error messages and logs
@@ -106,6 +109,7 @@ Make It Rain welcomes all types of contributions:
 ### ✨ Feature Requests
 
 **Have an idea?** We'd love to hear it:
+
 - Check [discussions](https://github.com/frostmute/make-it-rain/discussions) for similar ideas
 - Explain the use case
 - Describe expected behavior
@@ -115,6 +119,7 @@ Make It Rain welcomes all types of contributions:
 ### 🔧 Code Contributions
 
 **Want to code?** Great options:
+
 - Fix bugs from the issues list
 - Implement requested features
 - Improve error handling
@@ -124,6 +129,7 @@ Make It Rain welcomes all types of contributions:
 ### 📚 Documentation
 
 **Help with docs?** These are always needed:
+
 - Fix typos and grammar
 - Clarify confusing sections
 - Add examples and use cases
@@ -133,6 +139,7 @@ Make It Rain welcomes all types of contributions:
 ### ✅ Testing
 
 **Write tests?** Essential work:
+
 - Increase test coverage
 - Add integration tests
 - Improve test documentation
@@ -142,6 +149,7 @@ Make It Rain welcomes all types of contributions:
 ### 🎨 UI/UX Improvements
 
 **Design eye?** Consider:
+
 - Improving UI clarity
 - Better error messages
 - Enhanced user guidance
@@ -185,6 +193,7 @@ git checkout -b feature/your-feature-name
 ```
 
 **Branch naming convention:**
+
 - `feature/description` - New features
 - `bugfix/description` - Bug fixes
 - `docs/description` - Documentation updates
@@ -201,6 +210,7 @@ git checkout -b feature/your-feature-name
 ```
 
 **Good practices:**
+
 - Make small, logical commits
 - Don't mix unrelated changes
 - Write descriptive commit messages
@@ -246,6 +256,7 @@ git push origin feature/your-feature-name
 4. **Submit**: Click "Create pull request"
 
 **PR checklist:**
+
 - [ ] Descriptive title
 - [ ] Link to related issues
 - [ ] Summary of changes
@@ -264,6 +275,7 @@ git push origin feature/your-feature-name
 ### Step 9: Merge
 
 Once approved:
+
 - Maintainer will merge your PR
 - Your changes go live!
 - Thank you for contributing! 🎉
@@ -357,6 +369,7 @@ Relates to #789
 Follow these guidelines:
 
 **Type Annotations**
+
 ```typescript
 // ✅ Always annotate parameters and returns
 function processItem(item: Item, options: ProcessOptions): Promise<void>
@@ -366,6 +379,7 @@ function processItem(item, options)
 ```
 
 **Naming**
+
 ```typescript
 // Classes: PascalCase
 class RaindropProcessor { }
@@ -381,6 +395,7 @@ const isLoading = false
 ```
 
 **Error Handling**
+
 ```typescript
 // ✅ Always handle errors
 try {
@@ -396,6 +411,7 @@ const result = await apiCall() // No error handling
 ```
 
 **Comments**
+
 ```typescript
 // ✅ Explain why, not what
 // Retry with exponential backoff to handle rate limiting
@@ -418,6 +434,7 @@ const delay = Math.pow(2, retryCount) * 1000
 ### Documentation
 
 **JSDoc for public APIs:**
+
 ```typescript
 /**
  * Fetches items from the Raindrop API
@@ -465,6 +482,7 @@ export type { Options }
 ### For Bug Fixes
 
 Every bug fix must include:
+
 - [ ] Test that reproduces the bug
 - [ ] Fix implementation
 - [ ] Test that verifies the fix
@@ -472,6 +490,7 @@ Every bug fix must include:
 ### For New Features
 
 Every feature must include:
+
 - [ ] Unit tests for core logic
 - [ ] Integration tests for workflows
 - [ ] Documentation and examples
@@ -532,6 +551,7 @@ describe("Feature Name", () => {
 ### Before Submitting
 
 1. **Test locally**
+
    ```bash
    npm test
    npm run build
@@ -709,6 +729,7 @@ docs/
 ### Asking Good Questions
 
 **Do:**
+
 - Provide context and background
 - Include error messages and logs
 - Share reproducible steps
@@ -716,6 +737,7 @@ docs/
 - Be respectful and patient
 
 **Don't:**
+
 - Ask the same question multiple times
 - Use demanding language
 - Share sensitive information
@@ -732,6 +754,7 @@ By contributing, you agree that your contributions will be licensed under the MI
 ## 🎉 Recognition
 
 Contributors are recognized in:
+
 - Project README
 - Release notes
 - GitHub contributors page
@@ -749,7 +772,7 @@ We appreciate all contributions, from code to documentation to bug reports!
 
 ---
 
-## 🙏 Thank You!
+## 🙏 Thank You
 
 Your contributions make Make It Rain better for everyone. We truly appreciate your help!
 

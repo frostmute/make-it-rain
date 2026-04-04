@@ -1720,7 +1720,8 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         options: ModalFetchOptions,
         collectionsData?: CollectionResponse,
         resolvedCollectionIds: number[] = [],
-        collectionIdToNameMap: Map<number, string> = new Map<number, string>()
+        collectionIdToNameMap: Map<number, string> = new Map<number, string>(),
+        verifiedFolderPaths: Set<string> = new Set<string>()
     ): Promise<void> {
         const { app } = this;
         const settingsFMTags = appendTagsToNotes.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag !== '');
@@ -1771,7 +1772,8 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                                 processed,
                                 total,
                                 collectionHierarchy,
-                                collectionIdToNameMap
+                                collectionIdToNameMap,
+                                verifiedFolderPaths
                             );
 
                             if (result.success) {
@@ -1821,7 +1823,8 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         processed: number,
         total: number,
         collectionHierarchy: Map<number, { title: string, parentId?: number }>,
-        collectionIdToNameMap: Map<number, string>
+        collectionIdToNameMap: Map<number, string>,
+        verifiedFolderPaths: Set<string>
     ): Promise<{ success: boolean; type: 'created' | 'updated' | 'skipped' }> {
         try {
             const { app } = this;
@@ -1845,8 +1848,11 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             
             // Ensure target directory exists before attempting to write
             // individualNoteTargetFolderPath is already normalized
-            if (individualNoteTargetFolderPath && !(await app.vault.adapter.exists(individualNoteTargetFolderPath))) {
-                await createFolderStructure(app, individualNoteTargetFolderPath);
+            if (individualNoteTargetFolderPath && !verifiedFolderPaths.has(individualNoteTargetFolderPath)) {
+                if (!(await app.vault.adapter.exists(individualNoteTargetFolderPath))) {
+                    await createFolderStructure(app, individualNoteTargetFolderPath);
+                }
+                verifiedFolderPaths.add(individualNoteTargetFolderPath);
             }
             
             // Use normalizePath for the final file path
