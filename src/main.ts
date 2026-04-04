@@ -18,7 +18,7 @@
 
 import { App, Notice, Plugin, PluginSettingTab, Setting, Modal, TextComponent, ButtonComponent, ToggleComponent, PluginManifest, TFile, TAbstractFile, normalizePath } from 'obsidian';
 import { request, RequestUrlParam } from 'obsidian';
-import { MakeItRainSettings, RaindropType, CONTENT_TYPES, ModalFetchOptions } from './types';
+import { MakeItRainSettings, RaindropType, CONTENT_TYPES, ModalFetchOptions, RaindropItem, RaindropResponse, RaindropCollection, CollectionResponse, IRaindropToObsidian } from './types';
 
 // Import utility functions from consolidated index
 // These utilities follow functional programming patterns and handle file operations and API interactions
@@ -71,39 +71,6 @@ const SystemCollections = {
 type SystemCollectionId = typeof SystemCollections[keyof typeof SystemCollections];
 
 // Raindrop.io API Types - following official documentation structure
-interface RaindropItem {
-    readonly _id: number;
-    readonly title: string;
-    readonly excerpt?: string;
-    readonly note?: string;
-    readonly link: string;
-    readonly cover?: string;
-    // Timestamps in ISO 8601 format as per API docs
-    readonly created: string; // YYYY-MM-DDTHH:MM:SSZ
-    readonly lastUpdate: string; // YYYY-MM-DDTHH:MM:SSZ
-    readonly tags?: readonly string[];
-    readonly collection?: {
-        readonly $id: number;
-        readonly title: string;
-    };
-    readonly highlights?: ReadonlyArray<{
-        readonly text: string;
-        readonly note?: string;
-        readonly color?: string;
-        readonly created: string;
-    }>;
-    readonly type: RaindropType;
-    // Additional fields that might be returned but not documented
-    readonly [key: string]: any;
-}
-
-interface RaindropResponse {
-    readonly result: boolean;
-    readonly items: readonly RaindropItem[];
-    readonly count?: number;
-    readonly collectionId?: number;
-}
-
 // Add a constant for filter types, extending the RaindropTypes with 'all' option
 const FilterTypes = {
     ...RaindropTypes,
@@ -113,34 +80,6 @@ const FilterTypes = {
 type FilterType = typeof FilterTypes[keyof typeof FilterTypes];
 
 // Add new interface for Collection info
-interface RaindropCollection {
-    readonly _id: number;
-    readonly title: string;
-    readonly parent?: {
-        readonly $id: number;
-    };
-    readonly access?: {
-        readonly level: number;
-        readonly draggable: boolean;
-    };
-    readonly color?: string; // HEX color
-    readonly count?: number; // Count of raindrops
-    readonly cover?: readonly string[];
-    readonly created?: string; // YYYY-MM-DDTHH:MM:SSZ
-    readonly expanded?: boolean; // Whether sub-collections are expanded
-    readonly lastUpdate?: string; // YYYY-MM-DDTHH:MM:SSZ
-    readonly public?: boolean; // Whether publicly accessible
-    readonly sort?: number; // Order (descending)
-    readonly view?: 'list' | 'simple' | 'grid' | 'masonry';
-    // Additional fields that might be returned but not documented
-    readonly [key: string]: any;
-}
-
-interface CollectionResponse {
-    readonly result: boolean;
-    readonly items: readonly RaindropCollection[];
-}
-
 /**
  * Regex constants for tag sanitization to avoid redundant compilation in loops
  */
@@ -632,15 +571,6 @@ async function fetchCollectionInfo(app: App, collectionId: string, apiToken: str
 // Function moved inside the RaindropToObsidian class
 
 // Forward declare the plugin class for the modal
-interface IRaindropToObsidian {
-    settings: MakeItRainSettings;
-    fetchRaindrops(options: ModalFetchOptions): Promise<void>;
-    saveSettings(): Promise<void>;
-    updateRibbonIcon(): void;
-    fetchAllUserCollections(): Promise<RaindropCollection[]>; // New method
-    fetchSingleRaindrop(itemId: number, vaultPath?: string, appendTags?: string): Promise<void>; // New method for quick import
-}
-
 class RaindropFetchModal extends Modal {
     plugin: IRaindropToObsidian;
     vaultPath: string;

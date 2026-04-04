@@ -110,4 +110,6 @@ export interface IRaindropToObsidian {
     fetchRaindrops(options: ModalFetchOptions): Promise<void>;
     saveSettings(): Promise<void>;
     updateRibbonIcon(): void;
+    fetchAllUserCollections(): Promise<RaindropCollection[]>;
+    fetchSingleRaindrop(itemId: number, vaultPath?: string, appendTags?: string): Promise<void>;
 } 
