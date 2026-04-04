@@ -141,6 +141,12 @@ interface CollectionResponse {
     readonly items: readonly RaindropCollection[];
 }
 
+/**
+ * Regex constants for tag sanitization to avoid redundant compilation in loops
+ */
+const TAG_SPACE_REGEX = / /g;
+const TAG_INVALID_CHARS_REGEX = /[#?"*<>:|]/g;
+
 // Helper function to get the full path segments from the root collection down to the given ID
 const getFullPathSegments = (collectionId: number, hierarchy: Map<number, { title: string, parentId?: number }>, idToNameMap: Map<number, string>): string[] => {
     const segments: string[] = [];
@@ -1937,8 +1943,10 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     }
                     
                     frontmatter += `tags:\n`;
-                    const finalTags = (tags || []).map((tag: string) => `  - ${tag.trim().replace(/ /g, '_').replace(/[#?"*<>:|]/g, '')}`).join('\n');
-                    frontmatter += `${finalTags}\n`;
+                    const finalTags = (tags || []).map((tag: string) => `  - ${tag.trim().replace(TAG_SPACE_REGEX, '_').replace(TAG_INVALID_CHARS_REGEX, '')}`).join('\n');
+                    if (finalTags) {
+                        frontmatter += `${finalTags}\n`;
+                    }
                     
                     if (cover) {
                         frontmatter += `${this.settings.bannerFieldName}: ${cover}\n`;
