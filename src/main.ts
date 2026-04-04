@@ -1918,7 +1918,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                         if (excerpt.includes('\n')) {
                             descriptionYaml = `description: |\n${excerpt.split('\n').map((line: string) => `  ${line}`).join('\n')}`;
                         } else {
-                            descriptionYaml = `description: "${excerpt.replace(/"/g, '\"')}"`;
+                            descriptionYaml = `description: "${excerpt.replace(/"/g, '\\"')}"`;
                         }
                     } else {
                         descriptionYaml = `description: ""`;
@@ -1926,7 +1926,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
 
                     let frontmatter = `---\n`;
                     frontmatter += `id: ${id}\n`;
-                    frontmatter += `title: "${title.replace(/"/g, '\"')}"\n`;
+                    frontmatter += `title: "${title.replace(/"/g, '\\"')}"\n`;
                     frontmatter += `${descriptionYaml}\n`;
                     frontmatter += `source: ${link}\n`;
                     frontmatter += `type: ${type}\n`;
