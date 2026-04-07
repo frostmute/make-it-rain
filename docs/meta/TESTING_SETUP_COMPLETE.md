@@ -61,6 +61,7 @@ This document summarizes the comprehensive testing infrastructure that has been 
 ### Mock Data
 
 **raindropData.ts** (355 lines)
+
 - Mock Raindrop items (article, video, link, image, document, audio)
 - Mock collections with hierarchies
 - Mock API responses (success and error cases)
@@ -88,6 +89,7 @@ This document summarizes the comprehensive testing infrastructure that has been 
 ### CI/CD Updates
 
 **Updated `.github/workflows/ci.yml`**
+
 - Added test execution step
 - Added coverage report generation
 - Added Codecov integration (optional)
@@ -122,6 +124,7 @@ npm install
 ```
 
 This installs:
+
 - jest@29.7.0
 - ts-jest@29.1.2
 - @types/jest@29.5.12
@@ -259,6 +262,7 @@ The CI pipeline will:
 6. Verify build artifacts
 
 **The build will fail if:**
+
 - Any test fails
 - Coverage drops below 50%
 - Build errors occur
@@ -268,18 +272,21 @@ The CI pipeline will:
 ### Immediate (Recommended)
 
 1. **Install Dependencies & Run Tests**
+
    ```bash
    npm install
    npm test
    ```
 
 2. **Review Coverage Report**
+
    ```bash
    npm run test:coverage
    open coverage/lcov-report/index.html
    ```
 
 3. **Try Watch Mode**
+
    ```bash
    npm run test:watch
    ```
@@ -388,6 +395,7 @@ npm test
 ### Import Errors
 
 Check that:
+
 - Paths are correct relative to test file
 - Module is exported from source file
 - `jest.config.js` module mapper is configured

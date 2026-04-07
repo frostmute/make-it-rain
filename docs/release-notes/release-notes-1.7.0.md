@@ -8,18 +8,18 @@
 ### Changed
 
 - **Template Data Structure**:
-    - Flattened `collection` data in templates. Instead of `{{collection.id}}`, use `{{collectionId}}`, `{{collectionTitle}}`, `{{collectionPath}}`, and `{{collectionParentId}}` (if available).
-    - Standardized the `lastupdate` variable (previously `last_update` or `lastUpdate` in some places) across all templates, `DEFAULT_SETTINGS`, and internal logic.
+  - Flattened `collection` data in templates. Instead of `{{collection.id}}`, use `{{collectionId}}`, `{{collectionTitle}}`, `{{collectionPath}}`, and `{{collectionParentId}}` (if available).
+  - Standardized the `lastupdate` variable (previously `last_update` or `lastUpdate` in some places) across all templates, `DEFAULT_SETTINGS`, and internal logic.
 - **Default Templates Updated**: All default and content-type specific templates within `DEFAULT_SETTINGS` in `src/main.ts` have been updated to:
-    - Use the flattened collection variables.
-    - Utilize the new pre-calculated display variables instead of template helper functions.
-    - Consistently use `lastupdate` and ensure `id: {{id}}` is present.
-    - Use `{{bannerFieldName}}` for the cover image in frontmatter.
-    - Include a standard 'Details' block with pre-calculated variables.
+  - Use the flattened collection variables.
+  - Utilize the new pre-calculated display variables instead of template helper functions.
+  - Consistently use `lastupdate` and ensure `id: {{id}}` is present.
+  - Use `{{bannerFieldName}}` for the cover image in frontmatter.
+  - Include a standard 'Details' block with pre-calculated variables.
 - **Fallback Note Generation**: Ensured fallback note creation logic (when templates are disabled) in `processRaindrop` uses `lastupdate` and correct newline character `\n` formatting for the note body.
 - **README.md "Created Note Structure"**:
-    - Replaced the Handlebars template source code example with an example of the *rendered Markdown output* that a user would see in their Obsidian note using the default template. This provides a clearer, more user-friendly illustration of the plugin's output.
-    - Previously, also addressed Markdown linting issues (line lengths) and briefly switched template code block highlighting from `markdown` to `handlebars`.
+  - Replaced the Handlebars template source code example with an example of the *rendered Markdown output* that a user would see in their Obsidian note using the default template. This provides a clearer, more user-friendly illustration of the plugin's output.
+  - Previously, also addressed Markdown linting issues (line lengths) and briefly switched template code block highlighting from `markdown` to `handlebars`.
 - **Dependencies**: Corrected `package.json` by removing an erroneous `@types/obsidian` devDependency. The primary `obsidian` devDependency remains for type checking.
 
 ### Fixed
@@ -34,4 +34,4 @@
 
 - Updated `docs/template-system.md`: Added `id: {{id}}` to the default template example and ensured consistency with flattened collection variables, `lastupdate`, and pre-calculated variables.
 - Updated `docs/template-gallery.md`: Added `id: {{id}}` to relevant template examples and ensured overall consistency with current template variables and structure.
-- Verified `docs/templates.md` (variable lists) and `docs/note-structure.md` (fallback structure) are consistent with the latest changes. 
+- Verified `docs/templates.md` (variable lists) and `docs/note-structure.md` (fallback structure) are consistent with the latest changes.

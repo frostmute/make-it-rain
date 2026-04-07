@@ -20,6 +20,7 @@ ls -lh build/
 ```
 
 You should see:
+
 ```
 -rw-r--r-- 1 user group 83K date main.js       ← Your plugin code
 -rw-r--r-- 1 user group 379 date manifest.json ← Plugin metadata
@@ -31,25 +32,30 @@ You should see:
 ### Method 3: Look for Error Messages
 
 **Successful build output:**
+
 ```
 > make-it-rain@1.7.2 build
 > tsc -noEmit -skipLibCheck && node scripts/esbuild.config.mjs production
 ```
+
 (That's it - clean and simple!)
 
 **Failed build examples:**
 
 ❌ TypeScript Error:
+
 ```
 src/main.ts:100:5 - error TS2322: Type 'string' is not assignable to type 'number'.
 ```
 
 ❌ Build Error:
+
 ```
 ✘ [ERROR] Could not resolve "obsidian"
 ```
 
 ❌ Command Not Found:
+
 ```
 bash: tsc: command not found
 ```
@@ -89,6 +95,7 @@ npm run build 2>&1 | grep -i "warning\|error"
 ### "Cannot find module 'obsidian'"
 
 **Fix:**
+
 ```bash
 rm -rf node_modules package-lock.json
 npm install
@@ -98,6 +105,7 @@ npm run build
 ### "tsc: command not found"
 
 **Fix:**
+
 ```bash
 npm install
 ```
@@ -105,6 +113,7 @@ npm install
 ### Build succeeds but main.js is 0 bytes
 
 **Fix:**
+
 ```bash
 # Check esbuild ran
 npm run build 2>&1 | grep esbuild
@@ -116,6 +125,7 @@ node scripts/esbuild.config.mjs production
 ### TypeScript errors
 
 **Fix:**
+
 ```bash
 # See detailed errors
 npx tsc
