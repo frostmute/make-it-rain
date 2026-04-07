@@ -2570,7 +2570,7 @@ class RaindropToObsidianSettingTab extends PluginSettingTab {
                 // Handle specific API error messages if available
                 const errorMessage = data.message || data.error || 'Invalid API token or connection issue.';
                 new Notice(`API Token verification failed: ${errorMessage}`, 10000);
-                console.error('API Token verification failed:', data);
+                console.error('API Token verification failed:', errorMessage);
             }
         } catch (error) {
             let errorMsg = 'An error occurred during token verification.';
