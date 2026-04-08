@@ -108,7 +108,10 @@ export async function createFolderStructure(app: App, fullPath: string): Promise
         const lastSlashIndex = fullPath.lastIndexOf('/');
         if (lastSlashIndex > 0) {
             const parentPath = fullPath.substring(0, lastSlashIndex);
-            await createFolderStructure(app, parentPath);
+            // Optimization: check if parent exists before recursing
+            if (!(await doesPathExist(app, parentPath))) {
+                await createFolderStructure(app, parentPath);
+            }
         }
         
         // Now create this folder

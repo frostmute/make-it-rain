@@ -16,7 +16,10 @@ import { Notice } from 'obsidian';
  * @returns True if the value is a plain object (not null, not an array)
  */
 export function isPlainObject(value: any): value is Record<string, any> {
-    return value !== null && typeof value === 'object' && !Array.isArray(value);
+    return value !== null &&
+           typeof value === 'object' &&
+           !Array.isArray(value) &&
+           Object.prototype.toString.call(value) === '[object Object]';
 }
 
 /**
@@ -26,9 +29,17 @@ export function isPlainObject(value: any): value is Record<string, any> {
  * @param indentLevel - Current indentation level (for nested structures)
  * @returns Properly formatted and escaped YAML string
  */
-export function formatYamlValue(value: any, indentLevel: number = 0): string {
+export function formatYamlValue(value: any, indentLevel: number = 0, seen: Set<any> = new Set()): string {
     const indent = '  '.repeat(indentLevel);
     
+    // Handle circular references
+    if (value !== null && typeof value === 'object') {
+        if (seen.has(value)) {
+            return '"[Circular]"';
+        }
+        seen.add(value);
+    }
+
     // Handle null/undefined
     if (value === null || value === undefined) {
         return 'null';
@@ -62,7 +73,8 @@ export function formatYamlValue(value: any, indentLevel: number = 0): string {
             value.includes('>') ||
             value.includes('`') ||
             value.trim() === '' ||
-            /^[0-9]/.test(value) || // Starts with number
+            /^\d+$/.test(value) || // Entirely digits
+            (/^\d/.test(value) && !/^\d{4}-\d{2}-\d{2}$/.test(value)) || // Starts with number and not a date (YYYY-MM-DD)
             /^true$|^false$|^yes$|^no$|^on$|^off$/i.test(value) // Looks like a boolean
         ) {
             // If the string contains newlines, use the block scalar syntax
@@ -93,7 +105,7 @@ export function formatYamlValue(value: any, indentLevel: number = 0): string {
         
         let result = '\n';
         for (const item of value) {
-            result += `${indent}- ${formatYamlValue(item, indentLevel + 1)}\n`;
+            result += `${indent}- ${formatYamlValue(item, indentLevel + 1, seen)}\n`;
         }
         return result.trimEnd();
     }
@@ -106,13 +118,14 @@ export function formatYamlValue(value: any, indentLevel: number = 0): string {
         }
         
         let result = '\n';
+        const nextIndent = '  '.repeat(indentLevel + 1);
         for (const key of keys) {
-            const formattedValue = formatYamlValue(value[key], indentLevel + 1);
+            const formattedValue = formatYamlValue(value[key], indentLevel + 1, seen);
             // If the formatted value starts with a newline, it's a complex value
             if (formattedValue.startsWith('\n')) {
-                result += `${indent}${key}:${formattedValue}\n`;
+                result += `${nextIndent}${key}:${formattedValue}\n`;
             } else {
-                result += `${indent}${key}: ${formattedValue}\n`;
+                result += `${nextIndent}${key}: ${formattedValue}\n`;
             }
         }
         return result.trimEnd();
