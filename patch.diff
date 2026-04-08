@@ -1,0 +1,37 @@
+<<<<<<< SEARCH
+export function isPlainObject(value: any): value is Record<string, any> {
+  return (
+    value !== null &&
+    typeof value === "object" &&
+    !Array.isArray(value) &&
+    !(value instanceof Date)
+  );
+}
+
+/**
+ * Formats a JavaScript value as a YAML string with proper escaping
+ *
+ * @param value - The value to format as YAML
+ * @param indentLevel - Current indentation level (for nested structures)
+ * @returns Properly formatted and escaped YAML string
+ */
+export function formatYamlValue(value: any, indentLevel: number = 0): string {
+=======
+export function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return (
+    value !== null &&
+    typeof value === "object" &&
+    !Array.isArray(value) &&
+    !(value instanceof Date)
+  );
+}
+
+/**
+ * Formats a JavaScript value as a YAML string with proper escaping
+ *
+ * @param value - The value to format as YAML
+ * @param indentLevel - Current indentation level (for nested structures)
+ * @returns Properly formatted and escaped YAML string
+ */
+export function formatYamlValue(value: unknown, indentLevel: number = 0): string {
+>>>>>>> REPLACE
