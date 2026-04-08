@@ -110,6 +110,11 @@ export function formatYamlValue(value: any, indentLevel: number = 0, seen: Set<a
         return result.trimEnd();
     }
     
+    // Handle Dates
+    if (value instanceof Date) {
+        return value.toISOString();
+    }
+
     // Handle objects
     if (isPlainObject(value)) {
         const keys = Object.keys(value);
