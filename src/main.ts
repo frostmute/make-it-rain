@@ -1828,7 +1828,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
 
             const escapeYamlStringValue = (str: string | undefined | null): string => {
                 if (str === undefined || str === null) return '';
-                return str.replace(/"/g, '\\"'); // Escape double quotes for YAML
+                return str.replace(/\\/g, '\\\\').replace(/"/g, '\\"'); // Escape double quotes for YAML
             };
 
             const generatedFilename = this.generateFileName(raindrop, options.useRaindropTitleForFileName);
@@ -1918,7 +1918,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                         if (excerpt.includes('\n')) {
                             descriptionYaml = `description: |\n${excerpt.split('\n').map((line: string) => `  ${line}`).join('\n')}`;
                         } else {
-                            descriptionYaml = `description: "${excerpt.replace(/"/g, '\\"')}"`;
+                            descriptionYaml = `description: "${excerpt.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
                         }
                     } else {
                         descriptionYaml = `description: ""`;
@@ -1926,7 +1926,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
 
                     let frontmatter = `---\n`;
                     frontmatter += `id: ${id}\n`;
-                    frontmatter += `title: "${title.replace(/"/g, '\\"')}"\n`;
+                    frontmatter += `title: "${title.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"\n`;
                     frontmatter += `${descriptionYaml}\n`;
                     frontmatter += `source: ${link}\n`;
                     frontmatter += `type: ${type}\n`;
@@ -2146,7 +2146,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 }
                 
                 // Otherwise use quoted string with escaping
-                return `"${value.replace(/"/g, '\\"')}"`;
+                return `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
             }
             return value;
         }
