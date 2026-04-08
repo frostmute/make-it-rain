@@ -1449,7 +1449,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
 
                     const tagsArray = options.apiFilterTags.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag !== '');
 
-                    for (const tag of tagsArray) {
+                    await Promise.all(tagsArray.map(async (tag: string) => {
                         let hasMore = true;
                         let page = 0;
 
@@ -1478,7 +1478,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
 
                             if (!data.result) {
                                 console.error(`API Error for tag ${tag}:`, data);
-                                continue; // Skip this tag if there's an error, but continue with others
+                                break; // Stop processing pages for this tag if there's an error
                             }
 
                             console.log(`API Response for tag ${tag}:`, {
@@ -1505,7 +1505,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                                 hasMore = false;
                             }
                         }
-                    }
+                    }));
 
                     // Convert the Map values back to an array for processing
                     allData = Array.from(uniqueItems.values());
