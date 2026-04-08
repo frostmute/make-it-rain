@@ -1,9 +1,9 @@
-import { Notice } from 'obsidian';
+import { Notice } from "obsidian";
 
 /**
  * YAML Utilities for Make It Rain
  * ==============================
- * 
+ *
  * This module provides utilities for safely creating YAML frontmatter in Markdown files.
  * These functions handle proper escaping and formatting of various data types to ensure
  * valid YAML is generated regardless of input content.
@@ -11,7 +11,7 @@ import { Notice } from 'obsidian';
 
 /**
  * Type guard to check if a value is a plain object
- * 
+ *
  * @param value - Value to check
  * @returns True if the value is a plain object (not null, not an array)
  */
@@ -21,7 +21,7 @@ export function isPlainObject(value: any): value is Record<string, any> {
 
 /**
  * Formats a JavaScript value as a YAML string with proper escaping
- * 
+ *
  * @param value - The value to format as YAML
  * @param indentLevel - Current indentation level (for nested structures)
  * @returns Properly formatted and escaped YAML string
@@ -101,6 +101,10 @@ export function formatYamlValue(value: any, indentLevel: number = 0, seen: Set<a
         }
         seen.delete(value);
         return result.trimEnd();
+      }
+
+      // Otherwise use quoted string with escaping
+      return `"${escapeYamlString(value)}"`;
     }
     
     // Handle objects
@@ -127,56 +131,69 @@ export function formatYamlValue(value: any, indentLevel: number = 0, seen: Set<a
         seen.delete(value);
         return result.trimEnd();
     }
-    
-    // Fallback for any other types
-    try {
-        return JSON.stringify(value);
-    } catch (error) {
-        console.error("Error formatting YAML value:", error);
-        return `"Error formatting value"`;
+
+    let result = "\n";
+    for (const key of keys) {
+      const formattedValue = formatYamlValue(value[key], indentLevel + 1);
+      // If the formatted value starts with a newline, it's a complex value
+      if (formattedValue.startsWith("\n")) {
+        result += `${indent}${key}:${formattedValue}\n`;
+      } else {
+        result += `${indent}${key}: ${formattedValue}\n`;
+      }
     }
+    return result.trimEnd();
+  }
+
+  // Fallback for any other types
+  try {
+    return JSON.stringify(value);
+  } catch (error) {
+    console.error("Error formatting YAML value:", error);
+    return `"Error formatting value"`;
+  }
 }
 
 /**
  * Escapes special characters in a string for YAML
- * 
+ *
  * @param str - String to escape
  * @returns Escaped string safe for YAML
  */
 export function escapeYamlString(str: string): string {
-    return str
-        .replace(/\\/g, '\\\\') // Escape backslashes first
-        .replace(/"/g, '\\"')   // Escape double quotes
-        .replace(/\t/g, '\\t')  // Escape tabs
-        .replace(/\r/g, '\\r'); // Escape carriage returns
-    // Note: We don't escape newlines because they're handled separately
+  return str
+    .replace(/\\/g, "\\\\") // Escape backslashes first
+    .replace(/"/g, '\\"') // Escape double quotes
+    .replace(/\t/g, "\\t") // Escape tabs
+    .replace(/\r/g, "\\r"); // Escape carriage returns
+  // Note: We don't escape newlines because they're handled separately
 }
 
 /**
  * Creates a YAML frontmatter section for a Markdown file
- * 
+ *
  * @param data - Object containing the frontmatter data
  * @returns Formatted YAML frontmatter as a string
  */
 export function createYamlFrontmatter(data: Record<string, any>): string {
-    try {
-        let frontmatter = '---\n';
-        
-        for (const [key, value] of Object.entries(data)) {
-            const formattedValue = formatYamlValue(value);
-            // If the formatted value starts with a newline, it's a complex value
-            if (formattedValue.startsWith('\n')) {
-                frontmatter += `${key}:${formattedValue}\n`;
-            } else {
-                frontmatter += `${key}: ${formattedValue}\n`;
-            }
-        }
-        
-        frontmatter += '---\n\n';
-        return frontmatter;
-    } catch (error) {
-        console.error("Error creating YAML frontmatter:", error);
-        new Notice("Error creating note frontmatter. Check console for details.");
-        return '---\ntitle: "Error creating frontmatter"\n---\n\n';
+  try {
+    let frontmatter = "---\n";
+
+    for (const [key, value] of Object.entries(data)) {
+      const formattedValue = formatYamlValue(value);
+      // If the formatted value starts with a newline, it's a complex value
+      if (formattedValue.startsWith("\n")) {
+        frontmatter += `${key}:${formattedValue}\n`;
+      } else {
+        frontmatter += `${key}: ${formattedValue}\n`;
+      }
     }
+
+    frontmatter += "---\n\n";
+    return frontmatter;
+  } catch (error) {
+    console.error("Error creating YAML frontmatter:", error);
+    new Notice("Error creating note frontmatter. Check console for details.");
+    return '---\ntitle: "Error creating frontmatter"\n---\n\n';
+  }
 }

@@ -207,8 +207,9 @@ export async function fetchWithRetry(
     }
     
     // Try up to maxRetries times
-    for (let attemptNumber = 0; attemptNumber < maxRetries; attemptNumber++) {
-        const isLastAttempt = attemptNumber === maxRetries - 1;
+    let attemptNumber = 0;
+    while (true) {
+        const isLastAttempt = attemptNumber >= maxRetries - 1;
         
         try {
             // Check rate limit before making request
@@ -227,16 +228,14 @@ export async function fetchWithRetry(
             
         } catch (error) {
             // Handle rate limiting and retry logic
-            if (!await handleRequestError(error, rateLimiter, attemptNumber, maxRetries, delayBetweenRetries) && isLastAttempt) {
-                // If it's the last attempt and error handling didn't resolve it, rethrow
+            const shouldRetry = await handleRequestError(error, rateLimiter, attemptNumber, maxRetries, delayBetweenRetries);
+            if (!shouldRetry || isLastAttempt) {
+                // If it's the last attempt or error handling didn't resolve it, rethrow
                 throw error;
             }
+            attemptNumber++;
         }
     }
-    
-    // This should never be reached because the last iteration will either
-    // return a successful response or throw an error
-    throw new Error('Request failed after maximum retry attempts');
 }
 
 /**

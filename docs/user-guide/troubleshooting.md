@@ -63,11 +63,13 @@ file cleanup.sh
 ```
 
 Should show:
+
 ```
 cleanup.sh: Bourne-Again shell script, Unicode text, UTF-8 text executable
 ```
 
 NOT:
+
 ```
 cleanup.sh: ... with CRLF line terminators  ❌
 ```

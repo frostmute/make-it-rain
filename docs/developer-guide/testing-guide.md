@@ -50,6 +50,7 @@ npm install
 ```
 
 This will install:
+
 - `jest`: Testing framework
 - `ts-jest`: TypeScript support for Jest
 - `@types/jest`: TypeScript definitions
@@ -99,6 +100,7 @@ npm run test:watch
 ```
 
 This is useful during development. Jest will:
+
 - Only run tests related to changed files
 - Provide an interactive menu for filtering tests
 - Show test results in real-time
@@ -112,6 +114,7 @@ npm run test:coverage
 ```
 
 This creates:
+
 - Terminal summary of coverage
 - HTML report in `coverage/lcov-report/index.html`
 - LCOV file for CI tools
@@ -629,6 +632,7 @@ it('should validate inputs', () => {
 ### GitHub Actions
 
 Tests run automatically on:
+
 - Push to `main` branch
 - Pull requests
 - Manual workflow dispatch

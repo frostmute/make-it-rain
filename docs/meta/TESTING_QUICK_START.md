@@ -69,4 +69,3 @@ describe('myFunction', () => {
 ## CI Status
 
 Tests run automatically on every push and PR. Check the Actions tab on GitHub!
-
