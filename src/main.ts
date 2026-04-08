@@ -1676,55 +1676,57 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         const total = raindrops.length;
 
         try {
-            // Group raindrops by collection
-            const raindropsByCollection: { [key: string]: RaindropItem[] } = {};
-            for (const raindrop of raindrops) {
-                const collectionId = raindrop.collection?.$id?.toString() || 'uncategorized';
-                if (!raindropsByCollection[collectionId]) {
-                    raindropsByCollection[collectionId] = [];
-                }
-                raindropsByCollection[collectionId].push(raindrop);
-            }
+            // Flatten raindrops for concurrent processing
+            const allRaindropsToProcess = raindrops;
 
-            // Process each collection
-            for (const [collectionId, collectionRaindrops] of Object.entries(raindropsByCollection)) {
-                try {
-                    // Process collection raindrops
-                    for (const raindrop of collectionRaindrops) {
-                        try {
-                            // Process individual raindrop
-                            const result = await this.processRaindrop(
-                                raindrop,
-                                baseTargetFolderPath,
-                                settingsFMTags,
-                                options,
-                                loadingNotice,
-                                processed,
-                                total,
-                                collectionHierarchy,
-                                collectionIdToNameMap,
-                                verifiedFolderPaths
-                            );
+            // Worker pool for concurrency limiting
+            const CONCURRENCY_LIMIT = 10;
+            let currentIndex = 0;
 
-                            if (result.success) {
-                                if (result.type === 'created') createdCount++;
-                                else if (result.type === 'updated') updatedCount++;
-                                else if (result.type === 'skipped') skippedCount++;
-                            } else {
-                                errorCount++;
-                            }
-                            processed++;
+            const worker = async () => {
+                while (currentIndex < allRaindropsToProcess.length) {
+                    const index = currentIndex++;
+                    const raindrop = allRaindropsToProcess[index];
 
-                        } catch (error) {
+                    try {
+                        // Process individual raindrop
+                        const result = await this.processRaindrop(
+                            raindrop,
+                            baseTargetFolderPath,
+                            settingsFMTags,
+                            options,
+                            loadingNotice,
+                            processed,
+                            total,
+                            collectionHierarchy,
+                            collectionIdToNameMap,
+                            verifiedFolderPaths
+                        );
+
+                        if (result.success) {
+                            if (result.type === 'created') createdCount++;
+                            else if (result.type === 'updated') updatedCount++;
+                            else if (result.type === 'skipped') skippedCount++;
+                        } else {
                             errorCount++;
-                            processed++;
-                            console.error('Error processing raindrop:', error);
                         }
+                        processed++;
+
+                    } catch (error) {
+                        errorCount++;
+                        processed++;
+                        console.error('Error processing raindrop:', error);
                     }
-                } catch (error) {
-                    console.error(`Error processing collection ${collectionId}:`, error);
                 }
-            }
+            };
+
+            // Start workers
+            const workers = Array.from(
+                { length: Math.min(CONCURRENCY_LIMIT, allRaindropsToProcess.length) },
+                () => worker()
+            );
+
+            await Promise.all(workers);
 
             // Show final summary
             loadingNotice.hide();
@@ -1779,10 +1781,19 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             // Ensure target directory exists before attempting to write
             // individualNoteTargetFolderPath is already normalized
             if (individualNoteTargetFolderPath && !verifiedFolderPaths.has(individualNoteTargetFolderPath)) {
-                if (!(await app.vault.adapter.exists(individualNoteTargetFolderPath))) {
-                    await createFolderStructure(app, individualNoteTargetFolderPath);
+                try {
+                    if (!(await app.vault.adapter.exists(individualNoteTargetFolderPath))) {
+                        await createFolderStructure(app, individualNoteTargetFolderPath);
+                    }
+                    verifiedFolderPaths.add(individualNoteTargetFolderPath);
+                } catch (folderError) {
+                    // Ignore "Folder already exists" errors that can occur during concurrent execution
+                    const errorMsg = folderError instanceof Error ? folderError.message : String(folderError);
+                    if (!errorMsg.toLowerCase().includes('already exists') && !errorMsg.toLowerCase().includes('folder already exists')) {
+                        throw folderError;
+                    }
+                    verifiedFolderPaths.add(individualNoteTargetFolderPath);
                 }
-                verifiedFolderPaths.add(individualNoteTargetFolderPath);
             }
             
             // Use normalizePath for the final file path
