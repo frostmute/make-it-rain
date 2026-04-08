@@ -107,9 +107,9 @@ describe("fileUtils", () => {
 
       const result = await createFolder(mockApp as any, "existing/folder");
 
-        it('should throw error if path exists but is not a folder', async () => {
-            mockApp.vault.adapter.exists.mockImplementation(async (path: string) => path === 'some' || path === 'some/file.md');
-            mockApp.vault.adapter.stat.mockImplementation(async (path: string) => path === 'some' ? { type: 'folder' } : { type: 'file' });
+      expect(result).toBe(true);
+      expect(mockApp.vault.createFolder).not.toHaveBeenCalled();
+    });
 
     it("should create folder if it does not exist", async () => {
       mockApp.vault.adapter.exists.mockResolvedValue(false);
@@ -122,8 +122,8 @@ describe("fileUtils", () => {
     });
 
     it("should throw error if path exists but is not a folder", async () => {
-      mockApp.vault.adapter.exists.mockResolvedValue(true);
-      mockApp.vault.adapter.stat.mockResolvedValue({ type: "file" });
+      mockApp.vault.adapter.exists.mockImplementation(async (path: string) => path === 'some' || path === 'some/file.md');
+      mockApp.vault.adapter.stat.mockImplementation(async (path: string) => path === 'some' ? { type: 'folder' } : { type: 'file' });
 
       await expect(
         createFolder(mockApp as any, "some/file.md"),
@@ -256,13 +256,35 @@ describe("fileUtils", () => {
       expect(mockApp.vault.createFolder).toHaveBeenCalledWith("a/b/c");
     });
 
-        it('should throw error if path exists but is not a folder', async () => {
-            mockApp.vault.adapter.exists.mockImplementation(async (path: string) => path === 'some' || path === 'some/file.md');
-            mockApp.vault.adapter.stat.mockImplementation(async (path: string) => path === 'some' ? { type: 'folder' } : { type: 'file' });
+    it("should create partial structure if some folders exist", async () => {
+      // Set up mocks to handle different paths
+      mockApp.vault.adapter.exists.mockImplementation(async (path: string) => {
+        // 'a' exists, but 'a/b' and 'a/b/c' don't
+        return path === "a";
+      });
+
+      mockApp.vault.adapter.stat.mockImplementation(async (path: string) => {
+        // 'a' is a folder
+        if (path === "a") {
+          return { type: "folder" };
+        }
+        return { type: "folder" };
+      });
+
+      mockApp.vault.createFolder.mockResolvedValue(undefined);
+
+      const result = await createFolderStructure(mockApp as any, "a/b/c");
+
+      expect(result).toBe(true);
+      // Should only create non-existent folders
+      expect(mockApp.vault.createFolder).not.toHaveBeenCalledWith("a");
+      expect(mockApp.vault.createFolder).toHaveBeenCalledWith("a/b");
+      expect(mockApp.vault.createFolder).toHaveBeenCalledWith("a/b/c");
+    });
 
     it("should throw error if path exists but is not a folder", async () => {
-      mockApp.vault.adapter.exists.mockResolvedValue(true);
-      mockApp.vault.adapter.stat.mockResolvedValue({ type: "file" });
+      mockApp.vault.adapter.exists.mockImplementation(async (path: string) => path === 'some' || path === 'some/file.md');
+      mockApp.vault.adapter.stat.mockImplementation(async (path: string) => path === 'some' ? { type: 'folder' } : { type: 'file' });
 
       await expect(
         createFolderStructure(mockApp as any, "some/file.md"),

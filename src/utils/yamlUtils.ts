@@ -16,7 +16,12 @@ import { Notice } from "obsidian";
  * @returns True if the value is a plain object (not null, not an array)
  */
 export function isPlainObject(value: any): value is Record<string, any> {
-    return value !== null && typeof value === 'object' && !Array.isArray(value) && Object.prototype.toString.call(value) !== '[object Date]';
+  return (
+    value !== null &&
+    typeof value === "object" &&
+    !Array.isArray(value) &&
+    !(value instanceof Date)
+  );
 }
 
 /**
@@ -101,10 +106,6 @@ export function formatYamlValue(value: any, indentLevel: number = 0, seen: Set<a
         }
         seen.delete(value);
         return result.trimEnd();
-      }
-
-      // Otherwise use quoted string with escaping
-      return `"${escapeYamlString(value)}"`;
     }
     
     // Handle objects
@@ -132,26 +133,13 @@ export function formatYamlValue(value: any, indentLevel: number = 0, seen: Set<a
         return result.trimEnd();
     }
 
-    let result = "\n";
-    for (const key of keys) {
-      const formattedValue = formatYamlValue(value[key], indentLevel + 1);
-      // If the formatted value starts with a newline, it's a complex value
-      if (formattedValue.startsWith("\n")) {
-        result += `${indent}${key}:${formattedValue}\n`;
-      } else {
-        result += `${indent}${key}: ${formattedValue}\n`;
-      }
+    // Fallback for any other types
+    try {
+        return JSON.stringify(value);
+    } catch (error) {
+        console.error("Error formatting YAML value:", error);
+        return `"Error formatting value"`;
     }
-    return result.trimEnd();
-  }
-
-  // Fallback for any other types
-  try {
-    return JSON.stringify(value);
-  } catch (error) {
-    console.error("Error formatting YAML value:", error);
-    return `"Error formatting value"`;
-  }
 }
 
 /**
