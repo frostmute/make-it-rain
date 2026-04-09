@@ -2441,7 +2441,9 @@ class RaindropToObsidianSettingTab extends PluginSettingTab {
 
             containerEl.createEl('h3', { text: 'Content-Type Specific Templates' });
             const contentTypeDesc = containerEl.createEl('p', { cls: 'setting-item-description' });
-            contentTypeDesc.innerHTML = 'Define specific templates for different Raindrop types. If a type-specific template is enabled and filled, it will be used instead of the default template. If disabled or empty, the default template is used for that type. Visit the <a href="https://frostmute.github.io/make-it-rain/template-system/">documentation</a> for available variables.';
+            contentTypeDesc.appendText('Define specific templates for different Raindrop types. If a type-specific template is enabled and filled, it will be used instead of the default template. If disabled or empty, the default template is used for that type. Visit the ');
+            contentTypeDesc.createEl('a', { href: 'https://frostmute.github.io/make-it-rain/template-system/', text: 'documentation' });
+            contentTypeDesc.appendText(' for available variables.');
 
 
             const contentTypes = Object.values(RaindropTypes);
@@ -2503,12 +2505,26 @@ class RaindropToObsidianSettingTab extends PluginSettingTab {
         // --- About/Footer Section ---
         containerEl.createEl('hr');
         const footer = containerEl.createDiv({ cls: 'setting-footer' });
-        footer.innerHTML = `
-            <p><strong>Make It Rain v${this.plugin.manifest.version}</strong></p>
-            <p>Developed by <a href="https://github.com/frostmute" target="_blank">frostmute (Jonathan Wagner)</a>.</p>
-            <p>Found this plugin helpful? Consider <a href="https://ko-fi.com/frostmute" target="_blank">supporting its development</a>.</p>
-            <p>For help, feature requests, or to report issues, please visit the <a href="https://github.com/frostmute/make-it-rain/issues" target="_blank">GitHub repository</a>.</p>
-        `;
+        const p1 = footer.createEl('p');
+        p1.createEl('strong', { text: `Make It Rain v${this.plugin.manifest.version}` });
+
+        const p2 = footer.createEl('p');
+        p2.appendText('Developed by ');
+        const a1 = p2.createEl('a', { href: 'https://github.com/frostmute', text: 'frostmute (Jonathan Wagner)' });
+        a1.setAttr('target', '_blank');
+        p2.appendText('.');
+
+        const p3 = footer.createEl('p');
+        p3.appendText('Found this plugin helpful? Consider ');
+        const a2 = p3.createEl('a', { href: 'https://ko-fi.com/frostmute', text: 'supporting its development' });
+        a2.setAttr('target', '_blank');
+        p3.appendText('.');
+
+        const p4 = footer.createEl('p');
+        p4.appendText('For help, feature requests, or to report issues, please visit the ');
+        const a3 = p4.createEl('a', { href: 'https://github.com/frostmute/make-it-rain/issues', text: 'GitHub repository' });
+        a3.setAttr('target', '_blank');
+        p4.appendText('.');
     }
 
     async verifyApiToken(): Promise<void> {
