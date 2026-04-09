@@ -15,7 +15,7 @@ import { Notice } from "obsidian";
  * @param value - Value to check
  * @returns True if the value is a plain object (not null, not an array)
  */
-export function isPlainObject(value: any): value is Record<string, any> {
+export function isPlainObject(value: unknown): value is Record<string, unknown> {
   return (
     value !== null &&
     typeof value === "object" &&
@@ -31,7 +31,7 @@ export function isPlainObject(value: any): value is Record<string, any> {
  * @param indentLevel - Current indentation level (for nested structures)
  * @returns Properly formatted and escaped YAML string
  */
-export function formatYamlValue(value: any, indentLevel: number = 0): string {
+export function formatYamlValue(value: unknown, indentLevel: number = 0): string {
   const indent = "  ".repeat(indentLevel);
 
   // Handle null/undefined
@@ -158,7 +158,7 @@ export function escapeYamlString(str: string): string {
  * @param data - Object containing the frontmatter data
  * @returns Formatted YAML frontmatter as a string
  */
-export function createYamlFrontmatter(data: Record<string, any>): string {
+export function createYamlFrontmatter(data: Record<string, unknown>): string {
   try {
     let frontmatter = "---\n";
 
