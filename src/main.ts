@@ -1379,10 +1379,11 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             // Fetch raindrops based on the determined mode
 
             if (fetchMode === 'collections') {
-                // Fetch from specified collection IDs
-                for (const collectionId of resolvedCollectionIds) {
+                // Fetch from specified collection IDs in parallel
+                const collectionPromises = resolvedCollectionIds.map(async (collectionId) => {
                     let hasMore = true;
                     let page = 0;
+                    let collectionData: any[] = [];
 
                     // Construct the API URL with filter type and search if specified
                     const collectionApiBaseUrl = `${baseApiUrl}/raindrops/${collectionId}`;
@@ -1424,11 +1425,11 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                             console.error(`API Error for collection ${collectionId}:`, data);
                             new Notice(`Error fetching collection: ${collectionNameForNotice}. Skipping.`, 7000);
                             hasMore = false; // Stop fetching for this collection
-                            continue; // Move to the next specified collection
+                            break; // Exit the loop for this collection
                         }
 
                         if (data?.items) {
-                            allData = allData.concat(data.items);
+                            collectionData = collectionData.concat(data.items);
                             page++;
                             hasMore = data.items.length === perPage;
                             console.log(`Fetched ${data.items.length} items from collection ${collectionId}, page ${page}`);
@@ -1440,18 +1441,25 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                             hasMore = false;
                         }
                     }
-                }
+                    return collectionData;
+                });
+
+                const results = await Promise.all(collectionPromises);
+                results.forEach(items => {
+                    allData = allData.concat(items);
+                });
             } else if (fetchMode === 'tags') {
                 // Fetch based on tags (uses collectionId 0 endpoint)
                 if (options.tagMatchType === TagMatchTypes.ANY && options.apiFilterTags.length > 0) {
-                    // Implementation of OR logic for tags (fetch each tag separately)
+                    // Implementation of OR logic for tags (fetch each tag separately in parallel)
                     const uniqueItems = new Map<number, RaindropItem>();
 
                     const tagsArray = options.apiFilterTags.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag !== '');
 
-                    for (const tag of tagsArray) {
+                    const tagPromises = tagsArray.map(async (tag) => {
                         let hasMore = true;
                         let page = 0;
+                        let tagData: any[] = [];
 
                         while (hasMore) {
                             const params = new URLSearchParams({
@@ -1478,7 +1486,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
 
                             if (!data.result) {
                                 console.error(`API Error for tag ${tag}:`, data);
-                                continue; // Skip this tag if there's an error, but continue with others
+                                break; // Skip this tag if there's an error, but continue with others
                             }
 
                             console.log(`API Response for tag ${tag}:`, {
@@ -1488,12 +1496,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                             });
 
                             if (data?.items) {
-                                // Store items in Map using _id as key to automatically handle duplicates
-                                data.items.forEach(item => {
-                                    if (!uniqueItems.has(item._id)) {
-                                        uniqueItems.set(item._id, item);
-                                    }
-                                });
+                                tagData = tagData.concat(data.items);
 
                                 page++;
                                 hasMore = data.items.length === perPage; // Continue if we got a full page
@@ -1505,7 +1508,19 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                                 hasMore = false;
                             }
                         }
-                    }
+                        return tagData;
+                    });
+
+                    const results = await Promise.all(tagPromises);
+
+                    // Store items in Map using _id as key to automatically handle duplicates
+                    results.forEach(items => {
+                        items.forEach(item => {
+                            if (!uniqueItems.has(item._id)) {
+                                uniqueItems.set(item._id, item);
+                            }
+                        });
+                    });
 
                     // Convert the Map values back to an array for processing
                     allData = Array.from(uniqueItems.values());
