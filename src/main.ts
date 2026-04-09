@@ -1228,53 +1228,53 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
 
             let collectionsData: CollectionResponse | undefined = undefined;
 
-            // Always fetch all collections if options.collections is provided to build complete hierarchy
+            // Always fetch all collections to build complete hierarchy
+            loadingNotice.setMessage('Fetching collections hierarchy...');
+
+            // Fetch root collections
+            const rootCollectionsResponse = await fetchWithRetry(
+                `${baseApiUrl}/collections`,
+                fetchOptions,
+                this.rateLimiter
+            );
+            const rootCollectionsData = rootCollectionsResponse as CollectionResponse;
+
+            // Fetch nested collections
+            const nestedCollectionsResponse = await fetchWithRetry(
+                `${baseApiUrl}/collections/childrens`,
+                fetchOptions,
+                this.rateLimiter
+            );
+            const nestedCollectionsData = nestedCollectionsResponse as CollectionResponse;
+
+            // Combine root and nested collections
+            let allCollections: RaindropCollection[] = [];
+            if (rootCollectionsData?.result && rootCollectionsData?.items) {
+                allCollections = allCollections.concat(rootCollectionsData.items);
+            }
+            if (nestedCollectionsData?.result && nestedCollectionsData?.items) {
+                allCollections = allCollections.concat(nestedCollectionsData.items);
+            }
+
+            // If neither call was successful or no collections returned
+            if (allCollections.length === 0) {
+                console.error('API Error fetching collections: No collections returned from both endpoints.');
+                loadingNotice.hide();
+                new Notice('Error fetching user collections. Please check your API token and connection.', 10000);
+                return; // Stop the fetch process
+            }
+
+            // Build the hierarchy and name/ID maps from all collections
+            allCollections.forEach(col => {
+                collectionNameToIdMap.set(col.title.toLowerCase(), col._id);
+                collectionIdToNameMap.set(col._id, col.title);
+                collectionHierarchy.set(col._id, { title: col.title, parentId: col.parent?.$id });
+            });
+            collectionsData = { result: true, items: allCollections };
+
+            // Resolve input names/IDs if options.collections is provided
             if (options.collections) {
                 const collectionInputs = options.collections.split(',').map((input: string) => input.trim()).filter((input: string) => input !== '');
-
-                loadingNotice.setMessage('Fetching user collections...');
-
-                // Fetch root collections
-                const rootCollectionsResponse = await fetchWithRetry(
-                    `${baseApiUrl}/collections`,
-                    fetchOptions,
-                    this.rateLimiter
-                );
-                const rootCollectionsData = rootCollectionsResponse as CollectionResponse;
-
-                // Fetch nested collections
-                const nestedCollectionsResponse = await fetchWithRetry(
-                    `${baseApiUrl}/collections/childrens`,
-                    fetchOptions,
-                    this.rateLimiter
-                );
-                const nestedCollectionsData = nestedCollectionsResponse as CollectionResponse;
-
-                // Combine root and nested collections
-                let allCollections: RaindropCollection[] = [];
-                if (rootCollectionsData?.result && rootCollectionsData?.items) {
-                    allCollections = allCollections.concat(rootCollectionsData.items);
-                }
-                if (nestedCollectionsData?.result && nestedCollectionsData?.items) {
-                    allCollections = allCollections.concat(nestedCollectionsData.items);
-                }
-
-                // If neither call was successful or no collections returned
-                if (allCollections.length === 0) {
-                    console.error('API Error fetching collections: No collections returned from both endpoints.');
-                    loadingNotice.hide();
-                    new Notice('Error fetching user collections. Please check your API token and connection.', 10000);
-                    return; // Stop the fetch process
-                }
-
-                // Build the hierarchy and name/ID maps from all collections
-                allCollections.forEach(col => {
-                    collectionNameToIdMap.set(col.title.toLowerCase(), col._id);
-                    collectionIdToNameMap.set(col._id, col.title);
-                    collectionHierarchy.set(col._id, { title: col.title, parentId: col.parent?.$id });
-                });
-                collectionsData = { result: true, items: allCollections }; // Store combined data
-
                 const unresolvedInputs: string[] = [];
 
                 // Resolve input names/IDs to get resolvedCollectionIds
@@ -1315,52 +1315,6 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
 
                 // Ensure unique IDs in resolvedCollectionIds
                 resolvedCollectionIds = Array.from(new Set(resolvedCollectionIds));
-
-            } else {
-                // If options.collections is empty, fetch from all collections (collectionId 0)
-                // We still need to fetch collection hierarchy to organize notes properly
-                loadingNotice.setMessage('Fetching all collections...');
-
-                // Fetch root collections
-                const rootCollectionsResponse = await fetchWithRetry(
-                    `${baseApiUrl}/collections`,
-                    fetchOptions,
-                    this.rateLimiter
-                );
-                const rootCollectionsData = rootCollectionsResponse as CollectionResponse;
-
-                // Fetch nested collections
-                const nestedCollectionsResponse = await fetchWithRetry(
-                    `${baseApiUrl}/collections/childrens`,
-                    fetchOptions,
-                    this.rateLimiter
-                );
-                const nestedCollectionsData = nestedCollectionsResponse as CollectionResponse;
-
-                // Combine root and nested collections
-                let allCollections: RaindropCollection[] = [];
-                if (rootCollectionsData?.result && rootCollectionsData?.items) {
-                    allCollections = allCollections.concat(rootCollectionsData.items);
-                }
-                if (nestedCollectionsData?.result && nestedCollectionsData?.items) {
-                    allCollections = allCollections.concat(nestedCollectionsData.items);
-                }
-
-                if (allCollections.length === 0) {
-                    console.error('API Error fetching collections: No collections returned from both endpoints.');
-                    loadingNotice.hide();
-                    new Notice('Error fetching user collections. Please check your API token and connection.', 10000);
-                    return; // Stop the fetch process
-                }
-
-                // Build the hierarchy and name/ID maps from all collections
-                allCollections.forEach(col => {
-                    collectionNameToIdMap.set(col.title.toLowerCase(), col._id);
-                    collectionIdToNameMap.set(col._id, col.title);
-                    collectionHierarchy.set(col._id, { title: col.title, parentId: col.parent?.$id });
-                });
-
-                collectionsData = { result: true, items: allCollections };
             }
             // --- End Resolve Collection Names/IDs and Fetch Hierarchy ---
 

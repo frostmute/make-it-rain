@@ -122,8 +122,8 @@ describe("fileUtils", () => {
     });
 
     it("should throw error if path exists but is not a folder", async () => {
-      mockApp.vault.adapter.exists.mockResolvedValue(true);
-      mockApp.vault.adapter.stat.mockResolvedValue({ type: "file" });
+      mockApp.vault.adapter.exists.mockImplementation(async (path: string) => path === 'some' || path === 'some/file.md');
+      mockApp.vault.adapter.stat.mockImplementation(async (path: string) => path === 'some' ? { type: 'folder' } : { type: 'file' });
 
       await expect(
         createFolder(mockApp as any, "some/file.md"),
@@ -283,8 +283,8 @@ describe("fileUtils", () => {
     });
 
     it("should throw error if path exists but is not a folder", async () => {
-      mockApp.vault.adapter.exists.mockResolvedValue(true);
-      mockApp.vault.adapter.stat.mockResolvedValue({ type: "file" });
+      mockApp.vault.adapter.exists.mockImplementation(async (path: string) => path === 'some' || path === 'some/file.md');
+      mockApp.vault.adapter.stat.mockImplementation(async (path: string) => path === 'some' ? { type: 'folder' } : { type: 'file' });
 
       await expect(
         createFolderStructure(mockApp as any, "some/file.md"),

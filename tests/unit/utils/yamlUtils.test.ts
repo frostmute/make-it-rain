@@ -345,7 +345,7 @@ describe('yamlUtils', () => {
 
             expect(result).toContain('metadata:');
             expect(result).toContain('author: John');
-            expect(result).toContain('date: 2024-01-01');
+            expect(result).toContain('date: "2024-01-01"');
         });
 
         it('should handle URLs and special characters', () => {
