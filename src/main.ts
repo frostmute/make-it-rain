@@ -1333,10 +1333,11 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             // Fetch raindrops based on the determined mode
 
             if (fetchMode === 'collections') {
-                // Fetch from specified collection IDs
-                for (const collectionId of resolvedCollectionIds) {
+                // Fetch from specified collection IDs in parallel
+                const collectionPromises = resolvedCollectionIds.map(async (collectionId) => {
                     let hasMore = true;
                     let page = 0;
+                    let collectionData: any[] = [];
 
                     // Construct the API URL with filter type and search if specified
                     const collectionApiBaseUrl = `${baseApiUrl}/raindrops/${collectionId}`;
@@ -1378,11 +1379,11 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                             console.error(`API Error for collection ${collectionId}:`, data);
                             new Notice(`Error fetching collection: ${collectionNameForNotice}. Skipping.`, 7000);
                             hasMore = false; // Stop fetching for this collection
-                            continue; // Move to the next specified collection
+                            break; // Exit the loop for this collection
                         }
 
                         if (data?.items) {
-                            allData = allData.concat(data.items);
+                            collectionData = collectionData.concat(data.items);
                             page++;
                             hasMore = data.items.length === perPage;
                             console.log(`Fetched ${data.items.length} items from collection ${collectionId}, page ${page}`);
@@ -1394,18 +1395,25 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                             hasMore = false;
                         }
                     }
-                }
+                    return collectionData;
+                });
+
+                const results = await Promise.all(collectionPromises);
+                results.forEach(items => {
+                    allData = allData.concat(items);
+                });
             } else if (fetchMode === 'tags') {
                 // Fetch based on tags (uses collectionId 0 endpoint)
                 if (options.tagMatchType === TagMatchTypes.ANY && options.apiFilterTags.length > 0) {
-                    // Implementation of OR logic for tags (fetch each tag separately)
+                    // Implementation of OR logic for tags (fetch each tag separately in parallel)
                     const uniqueItems = new Map<number, RaindropItem>();
 
                     const tagsArray = options.apiFilterTags.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag !== '');
 
-                    for (const tag of tagsArray) {
+                    const tagPromises = tagsArray.map(async (tag) => {
                         let hasMore = true;
                         let page = 0;
+                        let tagData: any[] = [];
 
                         while (hasMore) {
                             const params = new URLSearchParams({
@@ -1432,7 +1440,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
 
                             if (!data.result) {
                                 console.error(`API Error for tag ${tag}:`, data);
-                                continue; // Skip this tag if there's an error, but continue with others
+                                break; // Skip this tag if there's an error, but continue with others
                             }
 
                             console.log(`API Response for tag ${tag}:`, {
@@ -1442,12 +1450,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                             });
 
                             if (data?.items) {
-                                // Store items in Map using _id as key to automatically handle duplicates
-                                data.items.forEach(item => {
-                                    if (!uniqueItems.has(item._id)) {
-                                        uniqueItems.set(item._id, item);
-                                    }
-                                });
+                                tagData = tagData.concat(data.items);
 
                                 page++;
                                 hasMore = data.items.length === perPage; // Continue if we got a full page
@@ -1459,7 +1462,19 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                                 hasMore = false;
                             }
                         }
-                    }
+                        return tagData;
+                    });
+
+                    const results = await Promise.all(tagPromises);
+
+                    // Store items in Map using _id as key to automatically handle duplicates
+                    results.forEach(items => {
+                        items.forEach(item => {
+                            if (!uniqueItems.has(item._id)) {
+                                uniqueItems.set(item._id, item);
+                            }
+                        });
+                    });
 
                     // Convert the Map values back to an array for processing
                     allData = Array.from(uniqueItems.values());
@@ -1630,55 +1645,57 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         const total = raindrops.length;
 
         try {
-            // Group raindrops by collection
-            const raindropsByCollection: { [key: string]: RaindropItem[] } = {};
-            for (const raindrop of raindrops) {
-                const collectionId = raindrop.collection?.$id?.toString() || 'uncategorized';
-                if (!raindropsByCollection[collectionId]) {
-                    raindropsByCollection[collectionId] = [];
-                }
-                raindropsByCollection[collectionId].push(raindrop);
-            }
+            // Flatten raindrops for concurrent processing
+            const allRaindropsToProcess = raindrops;
 
-            // Process each collection
-            for (const [collectionId, collectionRaindrops] of Object.entries(raindropsByCollection)) {
-                try {
-                    // Process collection raindrops
-                    for (const raindrop of collectionRaindrops) {
-                        try {
-                            // Process individual raindrop
-                            const result = await this.processRaindrop(
-                                raindrop,
-                                baseTargetFolderPath,
-                                settingsFMTags,
-                                options,
-                                loadingNotice,
-                                processed,
-                                total,
-                                collectionHierarchy,
-                                collectionIdToNameMap,
-                                verifiedFolderPaths
-                            );
+            // Worker pool for concurrency limiting
+            const CONCURRENCY_LIMIT = 10;
+            let currentIndex = 0;
 
-                            if (result.success) {
-                                if (result.type === 'created') createdCount++;
-                                else if (result.type === 'updated') updatedCount++;
-                                else if (result.type === 'skipped') skippedCount++;
-                            } else {
-                                errorCount++;
-                            }
-                            processed++;
+            const worker = async () => {
+                while (currentIndex < allRaindropsToProcess.length) {
+                    const index = currentIndex++;
+                    const raindrop = allRaindropsToProcess[index];
 
-                        } catch (error) {
+                    try {
+                        // Process individual raindrop
+                        const result = await this.processRaindrop(
+                            raindrop,
+                            baseTargetFolderPath,
+                            settingsFMTags,
+                            options,
+                            loadingNotice,
+                            processed,
+                            total,
+                            collectionHierarchy,
+                            collectionIdToNameMap,
+                            verifiedFolderPaths
+                        );
+
+                        if (result.success) {
+                            if (result.type === 'created') createdCount++;
+                            else if (result.type === 'updated') updatedCount++;
+                            else if (result.type === 'skipped') skippedCount++;
+                        } else {
                             errorCount++;
-                            processed++;
-                            console.error('Error processing raindrop:', error);
                         }
+                        processed++;
+
+                    } catch (error) {
+                        errorCount++;
+                        processed++;
+                        console.error('Error processing raindrop:', error);
                     }
-                } catch (error) {
-                    console.error(`Error processing collection ${collectionId}:`, error);
                 }
-            }
+            };
+
+            // Start workers
+            const workers = Array.from(
+                { length: Math.min(CONCURRENCY_LIMIT, allRaindropsToProcess.length) },
+                () => worker()
+            );
+
+            await Promise.all(workers);
 
             // Show final summary
             loadingNotice.hide();
@@ -1733,10 +1750,19 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             // Ensure target directory exists before attempting to write
             // individualNoteTargetFolderPath is already normalized
             if (individualNoteTargetFolderPath && !verifiedFolderPaths.has(individualNoteTargetFolderPath)) {
-                if (!(await app.vault.adapter.exists(individualNoteTargetFolderPath))) {
-                    await createFolderStructure(app, individualNoteTargetFolderPath);
+                try {
+                    if (!(await app.vault.adapter.exists(individualNoteTargetFolderPath))) {
+                        await createFolderStructure(app, individualNoteTargetFolderPath);
+                    }
+                    verifiedFolderPaths.add(individualNoteTargetFolderPath);
+                } catch (folderError) {
+                    // Ignore "Folder already exists" errors that can occur during concurrent execution
+                    const errorMsg = folderError instanceof Error ? folderError.message : String(folderError);
+                    if (!errorMsg.toLowerCase().includes('already exists') && !errorMsg.toLowerCase().includes('folder already exists')) {
+                        throw folderError;
+                    }
+                    verifiedFolderPaths.add(individualNoteTargetFolderPath);
                 }
-                verifiedFolderPaths.add(individualNoteTargetFolderPath);
             }
             
             // Use normalizePath for the final file path

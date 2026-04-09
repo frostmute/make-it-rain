@@ -15,7 +15,7 @@ import { Notice } from "obsidian";
  * @param value - Value to check
  * @returns True if the value is a plain object (not null, not an array)
  */
-export function isPlainObject(value: any): value is Record<string, any> {
+export function isPlainObject(value: unknown): value is Record<string, unknown> {
   return (
     value !== null &&
     typeof value === "object" &&
@@ -37,6 +37,29 @@ export function formatYamlValue(value: any, indentLevel: number = 0, seen: Set<a
     // Handle null/undefined
     if (value === null || value === undefined) {
         return 'null';
+export function formatYamlValue(value: unknown, indentLevel: number = 0): string {
+  const indent = "  ".repeat(indentLevel);
+
+  // Handle null/undefined
+  if (value === null || value === undefined) {
+    return "null";
+  }
+
+  // Handle booleans
+  if (typeof value === "boolean") {
+    return value ? "true" : "false";
+  }
+
+  // Handle numbers
+  if (typeof value === "number") {
+    return value.toString();
+  }
+
+  // Handle strings - the most common case
+  if (typeof value === "string") {
+    // Check if the string looks like a date (YYYY-MM-DD format) - don't quote it
+    if (/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2})?/.test(value)) {
+      return value;
     }
     
     // Handle booleans
@@ -163,7 +186,7 @@ export function escapeYamlString(str: string): string {
  * @param data - Object containing the frontmatter data
  * @returns Formatted YAML frontmatter as a string
  */
-export function createYamlFrontmatter(data: Record<string, any>): string {
+export function createYamlFrontmatter(data: Record<string, unknown>): string {
   try {
     let frontmatter = "---\n";
 

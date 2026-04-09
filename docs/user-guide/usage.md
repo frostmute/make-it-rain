@@ -22,7 +22,7 @@ Make It Rain provides two main ways to import your bookmarks, each with its own 
 
 ## Fetch Raindrops Modal Options
 
-<!-- TODO: Update screenshot of Fetch Modal to reflect v1.7.1 UI (collection list, stacked layout, help icons) -->
+![Fetch Modal](../../assets/makeitrain-modal-v171.png)
 
 The "Fetch Raindrops" modal is designed for bulk imports and provides several options for filtering and organizing your raindrops:
 
