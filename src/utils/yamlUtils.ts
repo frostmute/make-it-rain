@@ -29,15 +29,10 @@ export function isPlainObject(value: unknown): value is Record<string, unknown> 
  *
  * @param value - The value to format as YAML
  * @param indentLevel - Current indentation level (for nested structures)
+ * @param seen - Set of seen objects to detect circular references
  * @returns Properly formatted and escaped YAML string
  */
-export function formatYamlValue(value: any, indentLevel: number = 0, seen: Set<any> = new Set()): string {
-    const indent = '  '.repeat(indentLevel);
-    
-    // Handle null/undefined
-    if (value === null || value === undefined) {
-        return 'null';
-export function formatYamlValue(value: unknown, indentLevel: number = 0): string {
+export function formatYamlValue(value: unknown, indentLevel: number = 0, seen: Set<unknown> = new Set()): string {
   const indent = "  ".repeat(indentLevel);
 
   // Handle null/undefined
@@ -57,112 +52,95 @@ export function formatYamlValue(value: unknown, indentLevel: number = 0): string
 
   // Handle strings - the most common case
   if (typeof value === "string") {
-    // Check if the string looks like a date (YYYY-MM-DD format) - don't quote it
-    if (/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2})?/.test(value)) {
-      return value;
-    }
-    
-    // Handle booleans
-    if (typeof value === 'boolean') {
-        return value ? 'true' : 'false';
-    }
-    
-    // Handle numbers
-    if (typeof value === 'number') {
-        return value.toString();
-    }
-    
-    // Handle strings - the most common case
-    if (typeof value === 'string') {
-        // Check if the string needs special handling
-        if (
-            value.includes('\n') || 
-            value.includes(':') || 
-            value.includes('{') || 
-            value.includes('}') ||
-            value.includes('[') ||
-            value.includes(']') ||
-            value.includes('#') ||
-            value.includes('*') ||
-            value.includes('&') ||
-            value.includes('!') ||
-            value.includes('|') ||
-            value.includes('>') ||
-            value.includes('`') ||
-            value.trim() === '' ||
-            /^[0-9]/.test(value) || // Starts with number
-            /^true$|^false$|^yes$|^no$|^on$|^off$/i.test(value) // Looks like a boolean
-        ) {
-            // If the string contains newlines, use the block scalar syntax
-            if (value.includes('\n')) {
-                // Use the literal block scalar (|) for preserving line breaks
-                let result = '|\n';
-                const lines = value.split('\n');
-                for (const line of lines) {
-                    // Add two more spaces for the block indentation
-                    result += `${indent}  ${line}\n`;
-                }
-                return result.trimEnd();
+    // Check if the string needs special handling
+    if (
+        value.includes('\n') ||
+        value.includes(':') ||
+        value.includes('{') ||
+        value.includes('}') ||
+        value.includes('[') ||
+        value.includes(']') ||
+        value.includes('#') ||
+        value.includes('*') ||
+        value.includes('&') ||
+        value.includes('!') ||
+        value.includes('|') ||
+        value.includes('>') ||
+        value.includes('`') ||
+        value.trim() === '' ||
+        /^[0-9]/.test(value) || // Starts with number
+        /^true$|^false$|^yes$|^no$|^on$|^off$/i.test(value) // Looks like a boolean
+    ) {
+        // If the string contains newlines, use the block scalar syntax
+        if (value.includes('\n')) {
+            // Use the literal block scalar (|) for preserving line breaks
+            let result = '|\n';
+            const lines = value.split('\n');
+            for (const line of lines) {
+                // Add two more spaces for the block indentation
+                result += `${indent}  ${line}\n`;
             }
-            
-            // Otherwise use quoted string with escaping
-            return `"${escapeYamlString(value)}"`;
+            return result.trimEnd();
         }
-        
-        // For simple strings, no quotes needed
-        return value;
-    }
-    
-    // Handle arrays
-    if (Array.isArray(value)) {
-        if (value.length === 0) {
-            return '[]';
-        }
-        if (seen.has(value)) {
-            return '"[Circular Reference]"';
-        }
-        seen.add(value);
-        
-        let result = '\n';
-        for (const item of value) {
-            result += `${indent}- ${formatYamlValue(item, indentLevel + 1, seen)}\n`;
-        }
-        seen.delete(value);
-        return result.trimEnd();
-    }
-    
-    // Handle objects
-    if (isPlainObject(value)) {
-        const keys = Object.keys(value);
-        if (keys.length === 0) {
-            return '{}';
-        }
-        if (seen.has(value)) {
-            return '"[Circular Reference]"';
-        }
-        seen.add(value);
-        
-        let result = '\n';
-        for (const key of keys) {
-            const formattedValue = formatYamlValue(value[key], indentLevel + 1, seen);
-            // If the formatted value starts with a newline, it's a complex value
-            if (formattedValue.startsWith('\n')) {
-                result += `${indent}${key}:${formattedValue}\n`;
-            } else {
-                result += `${indent}${key}: ${formattedValue}\n`;
-            }
-        }
-        seen.delete(value);
-        return result.trimEnd();
-    }
 
-    // Fallback for any other types
-    try {
-        return JSON.stringify(value);
-    } catch (error) {
-        console.error("Error formatting YAML value:", error);
-        return `"Error formatting value"`;
+        // Otherwise use quoted string with escaping
+        return `"${escapeYamlString(value)}"`;
     }
+    
+    // For simple strings, no quotes needed
+    return value;
+  }
+
+  // Handle arrays
+  if (Array.isArray(value)) {
+    if (value.length === 0) {
+      return '[]';
+    }
+    if (seen.has(value)) {
+      return '"[Circular Reference]"';
+    }
+    seen.add(value);
+    
+    let result = '\n';
+    for (const item of value) {
+      result += `${indent}- ${formatYamlValue(item, indentLevel + 1, seen)}\n`;
+    }
+    seen.delete(value);
+    return result.trimEnd();
+  }
+
+  // Handle objects
+  if (isPlainObject(value)) {
+    const keys = Object.keys(value);
+    if (keys.length === 0) {
+      return '{}';
+    }
+    if (seen.has(value)) {
+      return '"[Circular Reference]"';
+    }
+    seen.add(value);
+    
+    let result = '\n';
+    for (const key of keys) {
+      const formattedValue = formatYamlValue(value[key], indentLevel + 1, seen);
+      // If the formatted value starts with a newline, it's a complex value
+      if (formattedValue.startsWith('\n')) {
+        result += `${indent}${key}:${formattedValue}\n`;
+      } else {
+        result += `${indent}${key}: ${formattedValue}\n`;
+      }
+    }
+    seen.delete(value);
+    return result.trimEnd();
+  }
+
+  // Fallback for any other types
+  try {
+    return JSON.stringify(value);
+  } catch (error) {
+    console.error("Error formatting YAML value:", error);
+    return `"Error formatting value"`;
+  }
 }
 
 /**
