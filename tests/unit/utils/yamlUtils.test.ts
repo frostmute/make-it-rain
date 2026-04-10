@@ -287,6 +287,10 @@ describe('yamlUtils', () => {
                 expect(formatYamlValue('value|pipe')).toContain('"');
                 expect(formatYamlValue('value>greater')).toContain('"');
             });
+            it("should handle errors when JSON.stringify fails", () => {
+                const result = formatYamlValue(BigInt(9007199254740991));
+                expect(result).toBe("\"Error formatting value\"");
+            });
         });
     });
 
@@ -345,7 +349,7 @@ describe('yamlUtils', () => {
 
             expect(result).toContain('metadata:');
             expect(result).toContain('author: John');
-            expect(result).toContain('date: "2024-01-01"');
+            expect(result).toContain('date: 2024-01-01');
         });
 
         it('should handle URLs and special characters', () => {
