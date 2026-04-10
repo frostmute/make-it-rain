@@ -169,6 +169,14 @@ describe("fileUtils", () => {
       expect(result).toBe("Unnamed_Raindrop");
     });
 
+    it("should handle invisible and control characters", () => {
+      expect(sanitizeFileName("\0")).toBe("Unnamed_Raindrop");
+      expect(sanitizeFileName("\x08")).toBe("Unnamed_Raindrop");
+      expect(sanitizeFileName("\u200B")).toBe("Unnamed_Raindrop");
+      expect(sanitizeFileName("hello\0world")).toBe("helloworld");
+      expect(sanitizeFileName("  \0  ")).toBe("Unnamed_Raindrop");
+    });
+
     it("should return default name if sanitization results in empty string", () => {
       const result = sanitizeFileName("///:::***");
 
