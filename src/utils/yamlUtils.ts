@@ -15,7 +15,7 @@ import { Notice } from "obsidian";
  * @param value - Value to check
  * @returns True if the value is a plain object (not null, not an array)
  */
-export function isPlainObject(value: any): value is Record<string, any> {
+export function isPlainObject(value: unknown): value is Record<string, unknown> {
   return (
     value !== null &&
     typeof value === "object" &&
@@ -29,9 +29,10 @@ export function isPlainObject(value: any): value is Record<string, any> {
  *
  * @param value - The value to format as YAML
  * @param indentLevel - Current indentation level (for nested structures)
+ * @param seen - Set of seen objects to handle circular references
  * @returns Properly formatted and escaped YAML string
  */
-export function formatYamlValue(value: any, indentLevel: number = 0): string {
+export function formatYamlValue(value: any, indentLevel: number = 0, seen: Set<any> = new Set()): string {
   const indent = "  ".repeat(indentLevel);
 
   // Handle null/undefined
@@ -100,11 +101,16 @@ export function formatYamlValue(value: any, indentLevel: number = 0): string {
     if (value.length === 0) {
       return "[]";
     }
+    if (seen.has(value)) {
+      return '"[Circular Reference]"';
+    }
+    seen.add(value);
 
     let result = "\n";
     for (const item of value) {
-      result += `${indent}- ${formatYamlValue(item, indentLevel + 1)}\n`;
+      result += `${indent}- ${formatYamlValue(item, indentLevel + 1, seen)}\n`;
     }
+    seen.delete(value);
     return result.trimEnd();
   }
 
@@ -114,10 +120,14 @@ export function formatYamlValue(value: any, indentLevel: number = 0): string {
     if (keys.length === 0) {
       return "{}";
     }
+    if (seen.has(value)) {
+      return '"[Circular Reference]"';
+    }
+    seen.add(value);
 
     let result = "\n";
     for (const key of keys) {
-      const formattedValue = formatYamlValue(value[key], indentLevel + 1);
+      const formattedValue = formatYamlValue(value[key], indentLevel + 1, seen);
       // If the formatted value starts with a newline, it's a complex value
       if (formattedValue.startsWith("\n")) {
         result += `${indent}${key}:${formattedValue}\n`;
@@ -125,6 +135,7 @@ export function formatYamlValue(value: any, indentLevel: number = 0): string {
         result += `${indent}${key}: ${formattedValue}\n`;
       }
     }
+    seen.delete(value);
     return result.trimEnd();
   }
 
@@ -158,7 +169,7 @@ export function escapeYamlString(str: string): string {
  * @param data - Object containing the frontmatter data
  * @returns Formatted YAML frontmatter as a string
  */
-export function createYamlFrontmatter(data: Record<string, any>): string {
+export function createYamlFrontmatter(data: Record<string, unknown>): string {
   try {
     let frontmatter = "---\n";
 

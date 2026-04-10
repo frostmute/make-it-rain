@@ -22,7 +22,7 @@ Make It Rain provides two main ways to import your bookmarks, each with its own 
 
 ## Fetch Raindrops Modal Options
 
-<!-- TODO: Update screenshot of Fetch Modal to reflect v1.7.1 UI (collection list, stacked layout, help icons) -->
+![Fetch Modal](../../assets/makeitrain-modal-v171.png)
 
 The "Fetch Raindrops" modal is designed for bulk imports and provides several options for filtering and organizing your raindrops:
 
@@ -96,7 +96,7 @@ After configuring your options in the "Fetch Raindrops" modal:
 
 ## Quick Import Raindrop by URL/ID
 
-<!-- TODO: Add screenshot of Quick Import Modal -->
+![Quick Import Modal](../../assets/quick-import-modal.png)
 
 New in v1.7.1 (and improved!), this command allows you to quickly import a single Raindrop item if you know its URL or unique numeric ID. This is ideal for quickly bringing in a specific item without going through the full filtered fetch process.
 
