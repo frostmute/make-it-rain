@@ -29,14 +29,10 @@ export function isPlainObject(value: unknown): value is Record<string, unknown> 
  *
  * @param value - The value to format as YAML
  * @param indentLevel - Current indentation level (for nested structures)
- * @param seen - Set of visited objects to detect circular references
+ * @param seen - Set of seen objects to handle circular references
  * @returns Properly formatted and escaped YAML string
  */
-export function formatYamlValue(
-  value: unknown,
-  indentLevel: number = 0,
-  seen: Set<unknown> = new Set()
-): string {
+export function formatYamlValue(value: any, indentLevel: number = 0, seen: Set<any> = new Set()): string {
   const indent = "  ".repeat(indentLevel);
 
   // Handle null/undefined
@@ -54,8 +50,13 @@ export function formatYamlValue(
     return value.toString();
   }
 
-  // Handle strings
+  // Handle strings - the most common case
   if (typeof value === "string") {
+    // Check if the string looks like a date (YYYY-MM-DD format) - don't quote it
+    if (/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2})?/.test(value)) {
+      return value;
+    }
+
     // Check if the string needs special handling
     if (
       value.includes("\n") ||
@@ -143,7 +144,7 @@ export function formatYamlValue(
     return JSON.stringify(value);
   } catch (error) {
     console.error("Error formatting YAML value:", error);
-    return '"Error formatting value"';
+    return `"Error formatting value"`;
   }
 }
 
