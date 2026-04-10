@@ -3,6 +3,7 @@
 ## 🐛 Bug Fixes
 
 ### Fixed Release Packaging (Issue #6)
+
 - **Problem:** Users downloading "Source code (zip)" didn't receive the compiled plugin files (`main.js`, `manifest.json`, `styles.css`)
 - **Solution:** Release workflow now creates `make-it-rain.zip` containing all required plugin files
 - **Documentation:** Updated README with clearer installation instructions and warning about which file to download

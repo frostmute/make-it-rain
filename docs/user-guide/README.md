@@ -21,6 +21,7 @@ Once you've completed these three steps, you'll be ready to import all your book
 ## 📚 Complete Documentation
 
 ### Setup & Configuration
+
 **Just getting started? Begin here.**
 
 - **[📥 Installation Guide](installation.md)** `Beginner`
@@ -35,6 +36,7 @@ Once you've completed these three steps, you'll be ready to import all your book
   - Banner field settings
 
 ### Using the Plugin
+
 **Core features and daily usage.**
 
 - **[📖 Usage Guide](usage.md)** `Beginner to Intermediate`
@@ -62,6 +64,7 @@ Once you've completed these three steps, you'll be ready to import all your book
   - Available metadata
 
 ### Customization
+
 **Make the plugin work exactly how you want.**
 
 - **[🎨 Template System](template-system.md)** `Intermediate to Advanced`
@@ -78,6 +81,7 @@ Once you've completed these three steps, you'll be ready to import all your book
   - Customization tips
 
 ### Help & Support
+
 **Troubleshooting and answers.**
 
 - **[🆘 Troubleshooting Guide](troubleshooting.md)** `Beginner to Intermediate`
@@ -103,6 +107,7 @@ Once you've completed these three steps, you'll be ready to import all your book
 ## 🎓 Learning Paths
 
 ### Path 1: Just Getting Started ⭐
+
 **Estimated time: 10-15 minutes**
 
 Want to import your first bookmarks quickly? Follow this path:
@@ -118,6 +123,7 @@ Want to import your first bookmarks quickly? Follow this path:
 ```
 
 ### Path 2: Complete Setup 🚀
+
 **Estimated time: 30-45 minutes**
 
 Get everything set up and understand all features:
@@ -137,6 +143,7 @@ Get everything set up and understand all features:
 ```
 
 ### Path 3: Power User 💪
+
 **Estimated time: 1-2 hours**
 
 Customize everything and unlock advanced features:
@@ -179,6 +186,7 @@ Customize everything and unlock advanced features:
 ### Workflow Examples
 
 #### Workflow 1: Daily Bookmark Sync
+
 **Time: 2-3 minutes per day**
 
 ```
@@ -194,6 +202,7 @@ Customize everything and unlock advanced features:
 See: [Usage Guide - Fetch Raindrops](usage.md#fetch-raindrops)
 
 #### Workflow 2: Organized Research Collection
+
 **Time: 15-20 minutes**
 
 ```
@@ -209,6 +218,7 @@ See: [Usage Guide - Fetch Raindrops](usage.md#fetch-raindrops)
 See: [Collections Guide](collections.md) | [Configuration Guide](configuration.md)
 
 #### Workflow 3: Custom Templates Setup
+
 **Time: 30-45 minutes (one-time)**
 
 ```
@@ -226,6 +236,7 @@ See: [Collections Guide](collections.md) | [Configuration Guide](configuration.m
 See: [Template System](template-system.md) | [Template Gallery](template-gallery.md)
 
 #### Workflow 4: Multi-Collection Organization
+
 **Time: 20-30 minutes**
 
 ```
@@ -248,24 +259,28 @@ See: [Collections Guide](collections.md) | [Usage Guide](usage.md)
 ## 💡 Tips & Best Practices
 
 ### Getting Started Tips
+
 - ✅ Start with a small test import (3-5 bookmarks) to verify settings
 - ✅ Use "Quick Import" to test a single bookmark first
 - ✅ Verify your API token is working before bulk importing
 - ✅ Check the developer console (Ctrl/Cmd+Shift+I) for detailed error messages
 
 ### Organization Tips
+
 - 📂 Use collections in Raindrop to organize by topic, then import by collection
 - 🏷️ Use tags for cross-cutting concerns (e.g., "to-read", "high-priority")
 - 📝 Customize filename templates to include dates or collection names
 - 🎨 Create different templates for different content types
 
 ### Template Tips
+
 - 🎨 Start with a pre-built template from the gallery
 - 🧪 Test template changes with a small batch first
 - 📚 Use the Template System guide for advanced variables
 - 🔄 You can reset to defaults at any time in Settings
 
 ### Import Tips
+
 - ⚡ "Fetch only new items" is great for daily syncs (fast!)
 - 🔄 "Update existing notes" can refresh old items with new highlights
 - 🏷️ Combine collection and tag filters for precise imports
@@ -308,14 +323,18 @@ See: [Collections Guide](collections.md) | [Usage Guide](usage.md)
 ## ✨ Key Features Explained
 
 ### 🔄 Smart Filtering
+
 Filter your imports by:
+
 - **Collections** - Specific Raindrop collections
 - **Tags** - AND/OR tag logic for precise matching
 - **Content Type** - Links, Articles, Images, Videos, Documents, Audio
 - **Status** - Fetch only new items or update existing
 
 ### 🗂️ Collection Hierarchy
+
 Your Raindrop collection structure is automatically replicated:
+
 ```
 Raindrop.io:              Obsidian:
 ├── Research       →      ├── Research/
@@ -325,13 +344,16 @@ Raindrop.io:              Obsidian:
 ```
 
 ### 🎨 Template System
+
 Complete control over note format:
+
 - Use variables like `{{title}}`, `{{domain}}`, `{{formattedDate}}`
 - Content-type specific templates
 - Handlebars-like syntax for advanced formatting
 - Built-in helpers for common operations
 
 ### 🏷️ Tag Management
+
 - Import original Raindrop tags
 - Append custom Obsidian tags
 - Filter by AND/OR tag logic
@@ -373,15 +395,21 @@ User Guide (you are here)
 ## 🎓 Difficulty Levels Explained
 
 ### Beginner ⭐
+
 Requires no prior knowledge. Straightforward steps with clear outcomes.
+
 - **Examples**: Installation, Basic Configuration, Quick Import
 
 ### Intermediate 🔷
+
 Requires some familiarity with the plugin. Combines multiple features.
+
 - **Examples**: Advanced Filtering, Custom Filenames, Using Templates
 
 ### Advanced 🔶
+
 Requires understanding of templates, syntax, and plugin mechanics.
+
 - **Examples**: Creating Custom Templates, Complex Filtering Logic
 
 ---

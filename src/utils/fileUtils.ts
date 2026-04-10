@@ -97,25 +97,26 @@ export async function createFolderStructure(app: App, fullPath: string): Promise
     if (!fullPath || fullPath === '/') return true;
     
     try {
-        const doesExist = await doesPathExist(app, fullPath);
-        if (doesExist) {
-            const isFolder = await isPathAFolder(app, fullPath);
-            if (isFolder) return true;
-            throw new Error(`Path exists but is not a folder: ${fullPath}`);
-        }
+        const normalizedPath = fullPath.replace(/^\/+|\/+$/g, '');
+        const pathSegments = normalizedPath.split('/');
+
+        let currentPath = '';
         
-        // Create parent directory first
-        const lastSlashIndex = fullPath.lastIndexOf('/');
-        if (lastSlashIndex > 0) {
-            const parentPath = fullPath.substring(0, lastSlashIndex);
-            // Optimization: check if parent exists before recursing
-            if (!(await doesPathExist(app, parentPath))) {
-                await createFolderStructure(app, parentPath);
+        for (const segment of pathSegments) {
+            currentPath = currentPath ? `${currentPath}/${segment}` : segment;
+
+            const doesExist = await doesPathExist(app, currentPath);
+
+            if (doesExist) {
+                const isFolder = await isPathAFolder(app, currentPath);
+                if (!isFolder) {
+                    throw new Error(`Path exists but is not a folder: ${currentPath}`);
+                }
+            } else {
+                await createFolder(app, currentPath);
             }
         }
         
-        // Now create this folder
-        await createFolder(app, fullPath);
         return true;
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
