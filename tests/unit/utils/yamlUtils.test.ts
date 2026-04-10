@@ -287,6 +287,10 @@ describe('yamlUtils', () => {
                 expect(formatYamlValue('value|pipe')).toContain('"');
                 expect(formatYamlValue('value>greater')).toContain('"');
             });
+            it("should handle errors when JSON.stringify fails", () => {
+                const result = formatYamlValue(BigInt(9007199254740991));
+                expect(result).toBe("\"Error formatting value\"");
+            });
         });
     });
 
