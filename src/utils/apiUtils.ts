@@ -44,32 +44,47 @@ export function createRateLimiter(maxRequestsPerMinute = 60, delayBetweenRequest
     /**
      * Checks if we're within rate limits and handles delays if needed
      */
-    const checkLimit = async (): Promise<void> => {
-        const now = Date.now();
-        
-        // Reset counter if we're in a new time window
-        if (now > resetTime) {
-            resetTime = now + 60000;
-            requestCount = 0;
-        }
-        
-        // If we've hit the rate limit, wait for the reset
-        if (requestCount >= maxRequestsPerMinute) {
-            const waitTime = resetTime - now;
-            console.log(`Rate limit reached. Waiting ${waitTime}ms before next request.`);
-            await new Promise(resolve => setTimeout(resolve, waitTime));
-            // Reset after waiting
-            resetTime = Date.now() + 60000;
-            requestCount = 0;
-        } else {
-            // Standard delay between requests to be polite to the API
-            await new Promise(resolve => setTimeout(resolve, delayBetweenRequests));
-        }
-        
-        // Increment counter after making a request
-        requestCount++;
+
+    let queuePromise: Promise<void> = Promise.resolve();
+
+    /**
+     * Checks if we're within rate limits and handles delays if needed
+     */
+    const checkLimit = (): Promise<void> => {
+        // Chain promises to ensure sequential execution of the rate limit check
+        // even when called concurrently
+        const nextPromise = queuePromise.then(async () => {
+            const now = Date.now();
+
+            // Reset counter if we're in a new time window
+            if (now > resetTime) {
+                resetTime = now + 60000;
+                requestCount = 0;
+            }
+
+            // If we've hit the rate limit, wait for the reset
+            if (requestCount >= maxRequestsPerMinute) {
+                const waitTime = resetTime - now;
+                console.log(`Rate limit reached. Waiting ${waitTime}ms before next request.`);
+                await new Promise(resolve => setTimeout(resolve, waitTime));
+                // Reset after waiting
+                resetTime = Date.now() + 60000;
+                requestCount = 0;
+            } else if (requestCount > 0) {
+                // Standard delay between requests to be polite to the API
+                await new Promise(resolve => setTimeout(resolve, delayBetweenRequests));
+            }
+
+            // Increment counter after making a request
+            requestCount++;
+        });
+
+        // Update the tail of the queue
+        queuePromise = nextPromise.catch(() => {});
+
+        return nextPromise;
     };
-    
+
     /**
      * Resets the counter when hitting a rate limit
      */
@@ -207,8 +222,9 @@ export async function fetchWithRetry(
     }
     
     // Try up to maxRetries times
-    for (let attemptNumber = 0; attemptNumber < maxRetries; attemptNumber++) {
-        const isLastAttempt = attemptNumber === maxRetries - 1;
+    let attemptNumber = 0;
+    while (true) {
+        const isLastAttempt = attemptNumber >= maxRetries - 1;
         
         try {
             // Check rate limit before making request
@@ -227,16 +243,14 @@ export async function fetchWithRetry(
             
         } catch (error) {
             // Handle rate limiting and retry logic
-            if (!await handleRequestError(error, rateLimiter, attemptNumber, maxRetries, delayBetweenRetries) && isLastAttempt) {
-                // If it's the last attempt and error handling didn't resolve it, rethrow
+            const shouldRetry = await handleRequestError(error, rateLimiter, attemptNumber, maxRetries, delayBetweenRetries);
+            if (!shouldRetry || isLastAttempt) {
+                // If it's the last attempt or error handling didn't resolve it, rethrow
                 throw error;
             }
+            attemptNumber++;
         }
     }
-    
-    // This should never be reached because the last iteration will either
-    // return a successful response or throw an error
-    throw new Error('Request failed after maximum retry attempts');
 }
 
 /**

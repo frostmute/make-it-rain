@@ -51,6 +51,7 @@ Quick reference checklist for cleaning up the repository.
 - [ ] Run asset audit: See CLEANUP_PLAN.md Section 2
 - [ ] List all images: `ls -lh assets/`
 - [ ] Check each image usage:
+
   ```bash
   grep -r "1748151599078.webp" . --include="*.md"
   grep -r "Screenshot_20250526" . --include="*.md"

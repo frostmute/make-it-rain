@@ -9,7 +9,7 @@ This guide covers all the configuration options available in the Make It Rain pl
 3. Find "Make It Rain" in your list of installed plugins
 4. Click the **Settings** button
 
-<!-- TODO: Update screenshot of Settings page to reflect v1.7.1 UI (stacked inputs, help icons, reset buttons) -->
+<!-- TODO: Need a v1.7.1 screenshot for the Settings page (stacked inputs, help icons, reset buttons). Please upload it and update the reference here. -->
 
 ## API Configuration
 

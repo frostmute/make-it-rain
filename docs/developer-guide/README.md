@@ -23,6 +23,7 @@ This guide covers everything you need to contribute:
 ### Prerequisites
 
 Before you start, ensure you have:
+
 - **Node.js** 16+ and npm
 - **Git** for version control
 - **TypeScript** knowledge
@@ -633,6 +634,7 @@ logger.debug("Details", { data });
 ```
 
 Access logs in:
+
 - **Obsidian Console**: Ctrl/Cmd+Shift+I → Console tab
 - **File**: Check plugin logs directory
 

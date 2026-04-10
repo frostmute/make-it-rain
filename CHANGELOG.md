@@ -10,15 +10,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.7.1] - 2025-05-27
 
 ### Added
+
 - **Fetch Modal**: Collections can now be selected from a dynamic, filterable list populated from the user's Raindrop.io account, in addition to manual ID/name entry.
 - Contextual help links (`(?)`) next to complex settings in the Settings page (API Token, Filename Template) and Fetch Modal (Tag Match Type) linking to documentation.
 - "Reset to Default" buttons in the Settings page for the main Default Template and for each content-type specific template.
 
 ### Changed
+
 - Improved layout for input fields in Modals (Quick Import, Fetch Raindrops) and template text areas in Settings page, stacking them below descriptions for better readability and editing space.
 - Enhanced user guidance in Quick Import modal with clearer instructions on how to find Raindrop item URLs/IDs.
 
 ### Fixed
+
 - Corrected an issue in the Quick Import modal where Raindrop item IDs were not being parsed correctly from URLs or direct numeric input.
 - Resolved a CI build failure by ensuring the `scripts` directory (containing `esbuild.config.mjs`) is included in the Git repository and not ignored by `.gitignore`.
 
@@ -27,9 +30,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **All-New Template System**: Introduced a powerful and flexible template system for complete control over note structure and content.
-    - Includes a default template and pre-filled, customizable templates for each Raindrop type (Link, Article, Image, Video, Document, Audio).
-    - Settings UI to enable/disable the template system, edit the default template, and manage individual content-type templates with toggles.
-    - Modal options during fetch to temporarily override template settings (e.g., force default template).
+  - Includes a default template and pre-filled, customizable templates for each Raindrop type (Link, Article, Image, Video, Document, Audio).
+  - Settings UI to enable/disable the template system, edit the default template, and manage individual content-type templates with toggles.
+  - Modal options during fetch to temporarily override template settings (e.g., force default template).
 - **Pre-calculated Template Variables**: Added new variables like `formattedCreatedDate`, `formattedUpdatedDate`, `renderedType`, `domain`, and `formattedTags` for easier template customization.
 - **Directory Creation**: Implemented logic in `processRaindrop` to automatically create necessary target directories before writing note files, preventing "ENOENT: no such file or directory" errors.
 

@@ -49,6 +49,7 @@ These files serve as:
 ## Lifecycle
 
 These files are temporary in nature and may be:
+
 - Archived after tasks are complete
 - Deleted once no longer needed
 - Kept for historical reference

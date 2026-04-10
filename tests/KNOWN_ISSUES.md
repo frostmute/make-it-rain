@@ -4,7 +4,8 @@
 
 Some tests in `apiUtils.test.ts` that involve both fake timers and async operations are currently failing due to Jest's limitations with mixing fake timers and promises.
 
-### Affected Tests (9 tests):
+### Affected Tests (9 tests)
+
 - `handleRequestError › should handle rate limit error (429) and reset counter`
 - `handleRequestError › should handle rate limit message in error`  
 - `handleRequestError › should wait longer for rate limit errors`
@@ -14,18 +15,21 @@ Some tests in `apiUtils.test.ts` that involve both fake timers and async operati
 - `fetchWithRetry › should use default maxRetries if not provided`
 - `createFolderStructure › should create partial structure if some folders exist`
 
-### Current Status:
+### Current Status
+
 - **108 tests passing** ✅
 - **9 tests failing** ⚠️ (timer-related)
 - **Coverage still at ~95%+** for tested utilities
 
-### Why This Happens:
+### Why This Happens
+
 Jest's fake timers don't play well with async/await when:
+
 1. A promise is created that depends on setTimeout
 2. The timer needs to advance before the promise can resolve
 3. But we're awaiting the promise, blocking timer advancement
 
-### Solutions (Pick One):
+### Solutions (Pick One)
 
 **Option 1: Use Real Timers (Recommended)**
 Add `jest.useRealTimers()` at the start of failing tests and reduce delays to 10-50ms:
@@ -49,13 +53,15 @@ it.skip('should retry...', async () => {
 **Option 3: Rewrite Without Timers**
 Mock the delay functions to resolve immediately.
 
-### Impact:
+### Impact
+
 - **Low**: The actual code works fine in production
 - These functions have been tested manually
 - The core logic (not timing) is tested
 - 92% test coverage is still excellent
 
-### Future Fix:
+### Future Fix
+
 When we refactor the retry logic into a separate class, we can make it more testable by injecting a delay function that can be mocked.
 
 ---

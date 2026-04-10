@@ -32,6 +32,7 @@ Make It Rain is a powerful Obsidian plugin that brings your Raindrop.io bookmark
 ## ✨ Features at a Glance
 
 ### 🎨 Powerful Template System
+
 Fully customize how your notes look with our flexible template system. Choose from pre-configured templates for different content types, or build your own with smart variables.
 
 - **Customizable templates** with Handlebars-like syntax
@@ -41,6 +42,7 @@ Fully customize how your notes look with our flexible template system. Choose fr
 - **Per-import overrides** to use different templates on demand
 
 ### 🎯 Advanced Filtering & Selection
+
 Import exactly what you need with granular filtering options.
 
 - **Bulk import** with filtering by collections, tags, and content types
@@ -51,6 +53,7 @@ Import exactly what you need with granular filtering options.
 - **Selective sync** - fetch only new items or update existing notes
 
 ### 🗂️ Smart Organization
+
 Your imported notes organize themselves based on your Raindrop structure.
 
 - **Automatic folder hierarchy** mirroring your collections
@@ -60,6 +63,7 @@ Your imported notes organize themselves based on your Raindrop structure.
 - **Banner images** automatically included in notes
 
 ### ⚙️ Reliable & Robust
+
 Built to handle large Raindrop libraries with confidence.
 
 - **Smart rate limiting** (120 requests/minute) with automatic retries
@@ -149,6 +153,7 @@ Learn how to contribute to the project:
 ### Filename Template Placeholders
 
 Use these variables in your filename template:
+
 - `{{title}}` - Raindrop bookmark title
 - `{{id}}` - Raindrop unique ID
 - `{{collectionTitle}}` - Collection name
@@ -163,6 +168,7 @@ Use these variables in your filename template:
 Each imported Raindrop becomes a beautifully formatted Markdown note with YAML frontmatter.
 
 ### Example Note Frontmatter
+
 ```yaml
 ---
 title: "Understanding React Hooks"
@@ -205,18 +211,21 @@ For complete details, see the [Note Structure documentation](https://frostmute.g
 ## 🎯 Common Tasks
 
 ### Import bookmarks from a specific collection
+
 1. Open Command Palette (`Ctrl/Cmd+P`)
 2. Run **"Fetch Raindrops"**
 3. Select your collection from the dynamic list
 4. Click **Fetch Raindrops**
 
 ### Import a single bookmark by URL
+
 1. Open Command Palette
 2. Run **"Quick Import Raindrop by URL/ID"**
 3. Paste the Raindrop URL or ID
 4. Click **Fetch & Create Note**
 
 ### Use different templates for different import types
+
 1. Open **"Fetch Raindrops"** modal
 2. Configure your filters
 3. Enable **"Override template"**
@@ -224,6 +233,7 @@ For complete details, see the [Note Structure documentation](https://frostmute.g
 5. Fetch!
 
 ### Automatically organize by collection
+
 1. In settings, ensure your collection hierarchy matches your desired folder structure
 2. Enable **"Include Subcollections"** when fetching
 3. Notes will automatically create nested folders
@@ -235,28 +245,33 @@ For more tips and workflows, see the [Usage Guide](https://frostmute.github.io/m
 ## 🔧 Troubleshooting
 
 ### "API token is not set" Error
+
 - Verify you've copied your token correctly
 - Click **"Verify Token"** in settings to test the connection
 - Token should start with `eyJ` (JWT format)
 
 ### Notes Not Importing
+
 - Check the Developer Console (`Ctrl/Cmd+Shift+I` → `Console` tab)
 - Verify collections/tags exist in your Raindrop account
 - Ensure the target vault folder exists
 - Check that you have bookmarks in the selected collections
 
 ### Template Not Working
+
 - Verify the template syntax is correct
 - Check the browser console for error messages
 - Reset to default template to test
 - See the [Template System guide](https://frostmute.github.io/make-it-rain/user-guide/template-system) for syntax help
 
 ### Performance Issues with Large Libraries
+
 - Fetch in smaller batches using collection filters
 - Import by content type to reduce load
 - Enable "Fetch only new items" to skip existing notes
 
 **Still need help?**
+
 - 📖 [Troubleshooting Guide](https://frostmute.github.io/make-it-rain/user-guide/troubleshooting)
 - ❓ [FAQ](https://frostmute.github.io/make-it-rain/user-guide/faq)
 - 🐛 [GitHub Issues](https://github.com/frostmute/make-it-rain/issues)
@@ -284,11 +299,13 @@ See the full [GitHub Issues](https://github.com/frostmute/make-it-rain/issues?q=
 We welcome contributions from the community! Whether you're fixing bugs, adding features, or improving documentation, your help makes Make It Rain better.
 
 ### Getting Started
+
 1. Read our [Contributing Guide](CONTRIBUTING.md)
 2. Check the [Developer Guide](https://frostmute.github.io/make-it-rain/developer-guide/)
 3. Follow our [Code of Conduct](CODE_OF_CONDUCT.md)
 
 ### Ways to Contribute
+
 - **Code** - Submit pull requests with bug fixes or features
 - **Documentation** - Improve guides or add examples
 - **Testing** - Report bugs or test new features
@@ -296,6 +313,7 @@ We welcome contributions from the community! Whether you're fixing bugs, adding 
 - **Translation** - Help localize the plugin
 
 ### Development Quick Start
+
 ```bash
 # Install dependencies
 npm install
@@ -329,6 +347,7 @@ If you find Make It Rain useful and want to support its development, consider bu
 [![Support on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Z8Z7RYUWN)
 
 Even if you can't contribute financially, you can help by:
+
 - ⭐ Starring the repository
 - 📢 Sharing the project with friends
 - 🐛 Reporting bugs
@@ -340,19 +359,23 @@ Even if you can't contribute financially, you can help by:
 ## 🆘 Getting Help
 
 ### I have a question
+
 - 📖 Check the [FAQ](https://frostmute.github.io/make-it-rain/user-guide/faq)
 - 💬 Ask in [GitHub Discussions](https://github.com/frostmute/make-it-rain/discussions)
 - 📧 Email [frostmute@gmail.com](mailto:frostmute@gmail.com)
 
 ### I found a bug
+
 - 🐛 [Report it on GitHub Issues](https://github.com/frostmute/make-it-rain/issues/new?template=bug_report.md)
 - 📋 Use the bug report template for details
 
 ### I have a feature idea
+
 - 💡 [Suggest it on GitHub Issues](https://github.com/frostmute/make-it-rain/issues/new?template=feature_request.md)
 - 📝 Use the feature request template
 
 ### I want to contribute
+
 - 🤝 See [Contributing Guide](CONTRIBUTING.md)
 - 👨‍💻 Check [Developer Guide](https://frostmute.github.io/make-it-rain/developer-guide/)
 
