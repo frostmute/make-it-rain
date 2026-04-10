@@ -434,7 +434,7 @@ describe('yamlUtils', () => {
             expect(result).toContain('- testing');
         });
 
-        it('should handle errors gracefully', () => {
+        it('should handle circular references gracefully', () => {
             // Create a circular reference
             const circular: any = { name: 'test' };
             circular.self = circular;
@@ -444,6 +444,38 @@ describe('yamlUtils', () => {
             // Should still return valid YAML structure even on error
             expect(result).toMatch(/^---\n/);
             expect(result).toMatch(/\n---\n\n$/);
+        });
+
+        it('should return error frontmatter when an exception occurs', () => {
+            const throwingObject = {};
+            Object.defineProperty(throwingObject, 'error', {
+                get: () => { throw new Error('Simulated error'); },
+                enumerable: true
+            });
+
+            const result = createYamlFrontmatter(throwingObject as any);
+
+            expect(result).toBe('---\ntitle: "Error creating frontmatter"\n---\n\n');
+        });
+
+        it('should handle circular references in arrays', () => {
+            const arr: any[] = [];
+            arr.push(arr);
+            const result = formatYamlValue(arr);
+            expect(result).toContain('"[Circular Reference]"');
+        });
+
+        it('should handle circular references in objects', () => {
+            const obj: any = {};
+            obj.self = obj;
+            const result = formatYamlValue(obj);
+            expect(result).toContain('"[Circular Reference]"');
+        });
+
+        it('should handle JSON.stringify errors in fallback', () => {
+            const bigInt = BigInt(9007199254740991);
+            const result = formatYamlValue(bigInt);
+            expect(result).toBe('"Error formatting value"');
         });
     });
 });
