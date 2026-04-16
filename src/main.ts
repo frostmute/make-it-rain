@@ -17,7 +17,7 @@
  */
 
 import { App, Notice, Plugin, PluginSettingTab, Setting, Modal, TextComponent, ButtonComponent, ToggleComponent, PluginManifest, TFile, TAbstractFile, normalizePath } from 'obsidian';
-import { request, RequestUrlParam } from 'obsidian';
+import { request, requestUrl, RequestUrlParam } from 'obsidian';
 import { MakeItRainSettings, RaindropType, CONTENT_TYPES, ModalFetchOptions, RaindropItem, RaindropResponse, RaindropCollection, CollectionResponse, IRaindropToObsidian } from './types';
 
 // Import utility functions from consolidated index
@@ -80,12 +80,6 @@ const FilterTypes = {
 type FilterType = typeof FilterTypes[keyof typeof FilterTypes];
 
 // Add new interface for Collection info
-/**
- * Regex constants for tag sanitization to avoid redundant compilation in loops
- */
-const TAG_SPACE_REGEX = / /g;
-const TAG_INVALID_CHARS_REGEX = /[#?"*<>:|]/g;
-
 /**
  * Regex constants for tag sanitization to avoid redundant compilation in loops
  */
@@ -485,7 +479,69 @@ tags:
 - **Updated**: {{formattedUpdatedDate}}
 - **Tags**: {{formattedTags}}
 
-[Listen to Audio]({{link}})`
+[Listen to Audio]({{link}})
+
+{{#if localEmbed}}
+## Local File
+{{localEmbed}}
+{{/if}}`,
+        book: `---
+title: "{{title}}"
+source: {{link}}
+type: {{type}}
+created: {{created}}
+lastupdate: {{lastupdate}}
+id: {{id}}
+collectionId: {{collectionId}}
+collectionTitle: "{{collectionTitle}}"
+collectionPath: "{{collectionPath}}"
+{{#if collectionParentId}}collectionParentId: {{collectionParentId}}{{/if}}
+tags:
+{{#each tags}}
+  - {{this}}
+{{/each}}
+{{#if cover}}
+{{bannerFieldName}}: {{cover}}
+{{/if}}
+---
+
+{{#if cover}}
+![{{title}}]({{cover}})
+{{/if}}
+
+# {{title}}
+
+{{#if excerpt}}
+## Description
+{{excerpt}}
+{{/if}}
+
+{{#if note}}
+## Notes
+{{note}}
+{{/if}}
+
+{{#if highlights}}
+## Highlights
+{{#each highlights}}
+- {{text}}
+{{#if note}}  *Note:* {{note}}{{/if}}
+{{/each}}
+{{/if}}
+
+{{#if localEmbed}}
+## Local File
+{{localEmbed}}
+{{/if}}
+
+---
+## Details
+- **Type**: {{renderedType}}
+- **Created**: {{formattedCreatedDate}}
+- **Updated**: {{formattedUpdatedDate}}
+- **Tags**: {{formattedTags}}
+
+[Open Book]({{link}})`
     },
     contentTypeTemplateToggles: {
         link: true,
@@ -493,8 +549,11 @@ tags:
         image: true,
         video: true,
         document: true,
-        audio: true
-    }
+        audio: true,
+        book: true
+    },
+    downloadFiles: false,
+    createFolderNotes: false
 };
 
 // Rate limiting and retry utilities are now imported from './utils/apiUtils'
@@ -1703,6 +1762,49 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
 
             await Promise.all(workers);
 
+            if (this.settings.createFolderNotes) {
+                loadingNotice.setMessage('Generating collection folder notes...');
+                try {
+                    for (const folderPath of verifiedFolderPaths) {
+                        try {
+                            const folderName = folderPath.split('/').pop();
+                            if (!folderName) continue;
+                            const folderNotePath = normalizePath(`${folderPath}/${folderName}.md`);
+                            const abstractFile = app.vault.getAbstractFileByPath(folderPath);
+                            
+                            if (abstractFile && 'children' in abstractFile) {
+                                const folderChildren = (abstractFile as any).children as any[];
+                                
+                                let content = `---\n`;
+                                content += `title: "${folderName.replace(/"/g, '\\"')}"\n`;
+                                content += `type: collection\n`;
+                                content += `---\n\n`;
+                                content += `# ${folderName}\n\n`;
+                                content += `## Collection Contents\n\n`;
+                                
+                                const sortedChildren = [...folderChildren].sort((a, b) => a.name.localeCompare(b.name));
+                                
+                                for (const child of sortedChildren) {
+                                    if (child.name !== `${folderName}.md`) {
+                                        content += `- [[${child.name.replace('.md', '')}]]\n`;
+                                    }
+                                }
+                                
+                                if (await app.vault.adapter.exists(folderNotePath)) {
+                                    await app.vault.adapter.write(folderNotePath, content);
+                                } else {
+                                    await app.vault.create(folderNotePath, content);
+                                }
+                            }
+                        } catch (e) {
+                            console.error(`Error generating folder note for ${folderPath}:`, e);
+                        }
+                    }
+                } catch (e) {
+                    console.error('Failed to generate folder notes:', e);
+                }
+            }
+
             // Show final summary
             loadingNotice.hide();
             let summary = `${createdCount} notes created.`;
@@ -1812,7 +1914,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
 
             try {
                 // Prepare data for the rendering engine (including pre-calculated fields for helpers)
-                const enhancedDataForRender = {
+                const enhancedDataForRender: Record<string, any> = {
                     ...templateData, // Spread the original templateData
                     url: templateData.link || '', // Ensure url is available, aliasing link
                     domain: this.getDomain(templateData.link || ''),
@@ -1822,6 +1924,148 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     formattedUpdatedDate: this.formatDate(templateData.lastupdate), // Changed from lastUpdate
                     formattedTags: this.formatTags(templateData.tags || []),
                 };
+
+                let localEmbedLink = '';
+                // Detect if a raindrop points to a natively uploaded file.
+                // Raindrop sets raindrop.link to an internal /v2/ API URL when the item is an upload.
+                // The real CDN URL is embedded inside raindrop.cover via rdl.ink/render/<encoded_url>
+                const isNativeUpload = !!(raindrop.file || (raindrop.link && raindrop.link.includes('api.raindrop.io/v2/') && raindrop.link.includes('/file')));
+                // Also detect link-type items whose URL directly ends in a downloadable extension
+                const DOWNLOADABLE_LINK_EXTENSIONS = /\.(pdf|epub|mobi|azw3?|djvu|mp3|mp4|m4a|m4v|wav|ogg|flac|aac|mov|avi|mkv|webm|docx?|xlsx?|pptx?)(\?.*)?$/i;
+                const isDirectFileLink = !isNativeUpload && DOWNLOADABLE_LINK_EXTENSIONS.test(raindrop.link || '');
+                
+                if (this.settings.downloadFiles && raindrop.link && 
+                   (isNativeUpload || isDirectFileLink || raindrop.type === 'document' || raindrop.type === 'book' || raindrop.type === 'image' || raindrop.type === 'video' || raindrop.type === 'audio')) {
+
+                    // Resolve the real download URL and file extension OUTSIDE the try
+                    // so we can write debug info even on failure.
+                    let downloadUrl = raindrop.link;
+                    let fileExtFromMime = '';
+                    
+                    if (isNativeUpload) {
+                        // For native uploads, use the v1 API file endpoint via query string auth.
+                        // We use ?access_token instead of the Authorization header because
+                        // requestUrl automatically follows the 303 redirect to AWS S3.
+                        // S3 will reject the request with 400 Bad Request if both query string
+                        // credentials (the pre-signed URL params) AND an Authorization header are present.
+                        downloadUrl = `https://api.raindrop.io/rest/v1/raindrop/${raindrop._id}/file?access_token=${this.settings.apiToken}`;
+                        
+                        try {
+                            const mimeType = new URL(raindrop.link).searchParams.get('type') || '';
+                            const MIME_TO_EXT: Record<string, string> = {
+                                'application/pdf': 'pdf',
+                                'application/epub+zip': 'epub',
+                                'application/epub': 'epub',
+                                'application/x-mobipocket-ebook': 'mobi',
+                                'application/x-fictionbook+xml': 'fb2',
+                                'video/mp4': 'mp4',
+                                'video/webm': 'webm',
+                                'video/quicktime': 'mov',
+                                'audio/mpeg': 'mp3',
+                                'audio/mp4': 'm4a',
+                                'audio/ogg': 'ogg',
+                                'image/png': 'png',
+                                'image/jpeg': 'jpg',
+                                'image/gif': 'gif',
+                                'image/webp': 'webp',
+                            };
+                            fileExtFromMime = MIME_TO_EXT[mimeType] || '';
+                        } catch (e) { /* no type param */ }
+                    }
+                    
+                    // Determine file extension
+                    let fileExt = 'pdf';
+                    if (fileExtFromMime) {
+                        fileExt = fileExtFromMime;
+                    } else if (raindrop.file && raindrop.file.name) {
+                        const parts = raindrop.file.name.split('.');
+                        if (parts.length > 1) {
+                            fileExt = parts.pop()?.toLowerCase() || 'pdf';
+                        }
+                    } else {
+                        const urlForExt = downloadUrl.split('?')[0];
+                        const extCandidate = urlForExt.split('.').pop()?.toLowerCase() || '';
+                        if (extCandidate && extCandidate.length <= 5 && !extCandidate.includes('/')) {
+                            fileExt = extCandidate;
+                        } else {
+                            fileExt = raindrop.type === 'image' ? 'png' : 
+                                      raindrop.type === 'video' ? 'mp4' : 
+                                      raindrop.type === 'audio' ? 'mp3' :
+                                      raindrop.type === 'book' ? 'epub' : 'pdf';
+                        }
+                    }
+                    
+                    const binaryFileName = `${generatedFilename}.${fileExt}`;
+                    const binaryFilePath = normalizePath(`${individualNoteTargetFolderPath}/${binaryFileName}`);
+
+                    // Only attempt download if the binary file doesn't already exist
+                    if (!(await app.vault.adapter.exists(binaryFilePath))) {
+                        try {
+                            const requestOptions: RequestUrlParam = { 
+                                url: downloadUrl
+                            };
+                            const response = await requestUrl(requestOptions);
+                            
+                            if (response.status >= 400) {
+                                throw new Error(`HTTP ${response.status} from ${downloadUrl}`);
+                            }
+                            
+                            const arrayBuffer = response.arrayBuffer;
+                            
+                            if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+                                throw new Error(`Empty response (0 bytes) from ${downloadUrl}`);
+                            }
+                            
+                            // Validate magic bytes
+                            const view = new Uint8Array(arrayBuffer);
+                            let isCorrupt = false;
+                            if (fileExt === 'pdf' && (view.length < 5 || view[0] !== 37 || view[1] !== 80 || view[2] !== 68 || view[3] !== 70)) {
+                                isCorrupt = true;
+                            } else if ((fileExt === 'epub' || fileExt === 'zip') && (view.length < 2 || view[0] !== 80 || view[1] !== 75)) {
+                                isCorrupt = true;
+                            }
+                            
+                            if (isCorrupt) {
+                                // Write debug file showing what we actually received
+                                const rawString = new TextDecoder("utf-8", { fatal: false }).decode(arrayBuffer.slice(0, 500));
+                                const debugContent = `--- CORRUPT DOWNLOAD DEBUG ---\nDownload URL: ${downloadUrl}\nOriginal Link: ${raindrop.link}\nCover: ${raindrop.cover || 'none'}\nFile Ext: ${fileExt}\nSize: ${arrayBuffer.byteLength}\nFirst 5 bytes: ${view.slice(0, 5).join(',')}\nisNativeUpload: ${isNativeUpload}\nraindrop.file: ${JSON.stringify(raindrop.file || null)}\n\n--- FIRST 500 BYTES ---\n${rawString}\n`;
+                                try {
+                                    const debugPath = normalizePath(`${individualNoteTargetFolderPath}/${generatedFilename}_debug.txt`);
+                                    if (await app.vault.adapter.exists(debugPath)) {
+                                        await app.vault.adapter.write(debugPath, debugContent);
+                                    } else {
+                                        await app.vault.create(debugPath, debugContent);
+                                    }
+                                } catch (e) { /* debug write failed */ }
+                                throw new Error(`Corrupt download (invalid magic bytes for .${fileExt})`);
+                            }
+                            
+                            await app.vault.createBinary(binaryFilePath, arrayBuffer);
+                        } catch (downloadError) {
+                            // Write a debug file even if requestUrl itself threw (e.g. network error, 404)
+                            const errMsg = downloadError instanceof Error ? downloadError.message : String(downloadError);
+                            console.error(`Download failed for ${generatedFilename}: ${errMsg}`);
+                            try {
+                                const debugContent = `--- DOWNLOAD ERROR DEBUG ---\nDownload URL: ${downloadUrl}\nOriginal Link: ${raindrop.link}\nCover: ${raindrop.cover || 'none'}\nFile Ext: ${fileExt}\nisNativeUpload: ${isNativeUpload}\nraindrop.file: ${JSON.stringify(raindrop.file || null)}\nraindrop.type: ${raindrop.type}\nError: ${errMsg}\n`;
+                                const debugPath = normalizePath(`${individualNoteTargetFolderPath}/${generatedFilename}_debug.txt`);
+                                if (await app.vault.adapter.exists(debugPath)) {
+                                    await app.vault.adapter.write(debugPath, debugContent);
+                                } else {
+                                    await app.vault.create(debugPath, debugContent);
+                                }
+                            } catch (e) {
+                                console.error("Failed to write download debug file:", e);
+                            }
+                        }
+                    }
+                    
+                    // Set embed link regardless (if binary exists from this or a previous run)
+                    if (await app.vault.adapter.exists(binaryFilePath)) {
+                        localEmbedLink = `![[${binaryFileName}]]`;
+                        enhancedDataForRender.localEmbed = localEmbedLink; 
+                        enhancedDataForRender.localFilePath = binaryFilePath;
+                    }
+                }
 
                 if (this.settings.isTemplateSystemEnabled) {
                     const template = this.getTemplateForType(raindrop.type as RaindropType, options);
@@ -1899,6 +2143,11 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                         });
                         noteBody += '\n'; // Corrected
                     }
+                    
+                    if (localEmbedLink) {
+                        noteBody += `\n## Local File\n${localEmbedLink}\n\n`;
+                    }
+                    
                     const basicContent = frontmatter + noteBody;
                     await app.vault.create(filePath, basicContent);
                     return { success: true, type: processOutcome };
@@ -1984,7 +2233,8 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             image: 'Image',
             video: 'Video',
             document: 'Document',
-            audio: 'Audio'
+            audio: 'Audio',
+            book: 'Book'
         };
         return types[type as keyof typeof types] || type;
     }
@@ -2382,6 +2632,29 @@ class RaindropToObsidianSettingTab extends PluginSettingTab {
                     .setValue(this.plugin.settings.bannerFieldName)
                     .onChange(async (value: string) => {
                         this.plugin.settings.bannerFieldName = value;
+                        await this.plugin.saveSettings();
+                    });
+            });
+
+
+        new Setting(containerEl)
+            .setName('Download Files Locally')
+            .setDesc('If a raindrop is a Document, Image, Video, or Audio file, automatically download the raw file directly into your vault.')
+            .addToggle((toggle: ToggleComponent) => {
+                toggle.setValue(this.plugin.settings.downloadFiles)
+                    .onChange(async (value: boolean) => {
+                        this.plugin.settings.downloadFiles = value;
+                        await this.plugin.saveSettings();
+                    });
+            });
+
+        new Setting(containerEl)
+            .setName('Create Folder Notes')
+            .setDesc('Automatically generate an index note matching the name of each collection folder, listing its children.')
+            .addToggle((toggle: ToggleComponent) => {
+                toggle.setValue(this.plugin.settings.createFolderNotes)
+                    .onChange(async (value: boolean) => {
+                        this.plugin.settings.createFolderNotes = value;
                         await this.plugin.saveSettings();
                     });
             });

@@ -49,7 +49,7 @@ Import exactly what you need with granular filtering options.
 - **Quick import** by URL or ID for individual items
 - **Dynamic collection selector** - browse and select from your Raindrop account
 - **Tag filtering** with AND/OR logic
-- **Content type filtering** (links, articles, images, videos, documents, audio)
+- **Content type filtering** (links, articles, images, videos, documents, audio, books)
 - **Selective sync** - fetch only new items or update existing notes
 
 ### 🗂️ Smart Organization
@@ -57,6 +57,8 @@ Import exactly what you need with granular filtering options.
 Your imported notes organize themselves based on your Raindrop structure.
 
 - **Automatic folder hierarchy** mirroring your collections
+- **Automatic Folder Notes** (`FOLDER_NAME.md`) generated to serve as structured indexes
+- **Native File Downloads** to directly retrieve PDFs, EPUBs, video, and audio file attachments
 - **Rich YAML frontmatter** with comprehensive metadata
 - **Customizable filenames** with template variables
 - **Auto-tagging** - append custom tags to all imports
@@ -149,6 +151,8 @@ Learn how to contribute to the project:
 | **Filename Template** | Template for note filenames | `{{title}}` |
 | **Show Ribbon Icon** | Display plugin icon in sidebar | Enabled |
 | **Banner Field Name** | Frontmatter field for banner images | `banner` |
+| **Create Folder Notes** | Generate index notes for each collection folder | Enabled |
+| **Download Files** | Fetch native Raindrop upload attachments | Enabled |
 
 ### Filename Template Placeholders
 

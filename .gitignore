@@ -167,3 +167,6 @@ testvault/
 
 # Ignore Cursor specific folder
 .cursor/
+
+# Release archives
+*.zip

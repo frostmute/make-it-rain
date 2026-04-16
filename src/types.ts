@@ -1,6 +1,6 @@
-export type RaindropType = 'link' | 'article' | 'image' | 'video' | 'document' | 'audio';
+export type RaindropType = 'link' | 'article' | 'image' | 'video' | 'document' | 'audio' | 'book';
 
-export const CONTENT_TYPES: RaindropType[] = ['link', 'article', 'image', 'video', 'document', 'audio'];
+export const CONTENT_TYPES: RaindropType[] = ['link', 'article', 'image', 'video', 'document', 'audio', 'book'];
 
 export interface ContentTypeTemplates {
     link: string;
@@ -9,6 +9,7 @@ export interface ContentTypeTemplates {
     video: string;
     document: string;
     audio: string;
+    book: string;
 }
 
 export interface ContentTypeToggles {
@@ -18,6 +19,7 @@ export interface ContentTypeToggles {
     video: boolean;
     document: boolean;
     audio: boolean;
+    book: boolean;
 }
 
 export interface MakeItRainSettings {
@@ -30,6 +32,8 @@ export interface MakeItRainSettings {
     defaultTemplate: string;
     contentTypeTemplates: ContentTypeTemplates;
     contentTypeTemplateToggles: ContentTypeToggles;
+    downloadFiles: boolean;
+    createFolderNotes: boolean;
 }
 
 export interface ModalFetchOptions {

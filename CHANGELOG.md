@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-04-16
+
+### Added
+
+- **Native File Downloads**: The plugin now fully supports downloading native binary file uploads (PDFs, EPUBs, MP4s, MP3s, etc.) directly into your Obsidian vault, properly fetching the attachments from Raindrop.io's servers behind the scenes!
+- **Book Type Support**: Added first-class processing for Raindrop's `book` item type (for EPUBs, MOBIs, etc.).
+- **Automatic Folder Notes**: The plugin now automatically generates index notes for your folders (`FOLDER_NAME.md`), matching your collection structure to improve Obsidian graph compatibility and linkability.
+- **Robust MIME Handling**: Added dynamic MIME-to-extension parsing, ensuring downloaded files successfully retain accurate file extensions and aren't miscategorized automatically as PDFs.
+- **Secure S3 File Retrieval**: Enhanced the internal downloader to follow AWS S3 redirects gracefully using `?access_token` query paths, solving 403 / 400 Bad Request errors on native attachment payloads.
+
 ## [1.7.1] - 2025-05-27
 
 ### Added

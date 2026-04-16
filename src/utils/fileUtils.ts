@@ -66,8 +66,13 @@ export async function createFolder(app: App, path: string): Promise<boolean> {
     }
 }
 
+/** Known file extensions to strip from note titles to prevent e.g. "My Book.pdf.md" */
+const KNOWN_FILE_EXTENSIONS = /\.(pdf|epub|mobi|azw3?|djvu|docx?|xlsx?|pptx?|odt|ods|odp|txt|rtf|csv|mp3|mp4|m4a|m4v|wav|ogg|flac|aac|mov|avi|mkv|webm|png|jpe?g|gif|webp|svg|bmp|tiff?|zip|rar|7z|tar|gz)$/i;
+
 /**
- * Sanitizes a file name by removing invalid characters
+ * Sanitizes a file name by removing invalid characters and stripping known
+ * file extensions (e.g. ".pdf") so a title like "My Book.pdf" becomes
+ * "My Book" rather than producing a note named "My Book.pdf.md".
  * @param fileName - The raw file name to sanitize
  * @returns A sanitized file name safe for file systems
  */
@@ -75,11 +80,13 @@ export function sanitizeFileName(fileName: string): string {
     const invalidChars = /[\x00-\x1F\x7F\u200B-\u200D\uFEFF/\\:*?"<>|#%&{}$!@'`+=]/g;
     const replacement = '';
     
-    // Use meaningful variable names with auxiliary verbs
     const isStringEmpty = !fileName || fileName.trim() === '';
     if (isStringEmpty) return "Unnamed_Raindrop";
     
-    const sanitizedName = fileName.replace(invalidChars, replacement).trim();
+    // Strip known file extensions from the title before sanitizing
+    const withoutExt = fileName.replace(KNOWN_FILE_EXTENSIONS, '').trim() || fileName.trim();
+    
+    const sanitizedName = withoutExt.replace(invalidChars, replacement).trim();
     const isSanitizedEmpty = !sanitizedName;
     
     // Enforce maximum length to avoid overly long file names
