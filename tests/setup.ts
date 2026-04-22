@@ -18,6 +18,15 @@ class MockNotice {
         this.message = message;
         this.duration = duration;
     }
+
+    hide() {
+        // Mock implementation
+    }
+
+    setMessage(message: string) {
+        this.message = message;
+        return this;
+    }
 }
 
 // Mock Modal class

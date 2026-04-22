@@ -362,42 +362,14 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             const collectionIdToNameMap = new Map<number, string>();
             const collectionHierarchy = new Map<number, { title: string, parentId?: number }>();
 
-            let collectionsData: CollectionResponse | undefined = undefined;
-
-            // Always fetch all collections to build complete hierarchy
             loadingNotice.setMessage('Fetching collections hierarchy...');
+            
+            const allCollections = await this.fetchAllUserCollections();
 
-            // Fetch root collections
-            const rootCollectionsResponse = await fetchWithRetry(
-                `${baseApiUrl}/collections`,
-                fetchOptions,
-                this.rateLimiter
-            );
-            const rootCollectionsData = rootCollectionsResponse as CollectionResponse;
-
-            // Fetch nested collections
-            const nestedCollectionsResponse = await fetchWithRetry(
-                `${baseApiUrl}/collections/childrens`,
-                fetchOptions,
-                this.rateLimiter
-            );
-            const nestedCollectionsData = nestedCollectionsResponse as CollectionResponse;
-
-            // Combine root and nested collections
-            let allCollections: RaindropCollection[] = [];
-            if (rootCollectionsData?.result && rootCollectionsData?.items) {
-                allCollections = allCollections.concat(rootCollectionsData.items);
-            }
-            if (nestedCollectionsData?.result && nestedCollectionsData?.items) {
-                allCollections = allCollections.concat(nestedCollectionsData.items);
-            }
-
-            // If neither call was successful or no collections returned
             if (allCollections.length === 0) {
-                console.error('API Error fetching collections: No collections returned from both endpoints.');
                 loadingNotice.hide();
-                new Notice('Error fetching user collections. Please check your API token and connection.', 10000);
-                return; // Stop the fetch process
+                // fetchAllUserCollections already shows a notice on error
+                return;
             }
 
             // Build the hierarchy and name/ID maps from all collections
@@ -406,7 +378,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 collectionIdToNameMap.set(col._id, col.title);
                 collectionHierarchy.set(col._id, { title: col.title, parentId: col.parent?.$id });
             });
-            collectionsData = { result: true, items: allCollections };
+            const collectionsData = { result: true, items: allCollections };
 
             // Resolve input names/IDs if options.collections is provided
             if (options.collections) {
@@ -980,7 +952,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 ...(collectionHierarchy.has(raindrop.collection?.$id || 0) && collectionHierarchy.get(raindrop.collection?.$id || 0)?.parentId !== undefined && {
                     collectionParentId: collectionHierarchy.get(raindrop.collection?.$id || 0)?.parentId
                 }),
-                tags: (raindrop.tags || []).map(tag => escapeYamlString(tag)),
+                tags: [...(raindrop.tags || []), ...settingsFMTags].map(tag => escapeYamlString(tag)),
                 highlights: (raindrop.highlights || []).map(h => ({
                     ...h,
                     text: escapeYamlString(h.text),
@@ -1188,7 +1160,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     }
                     
                     frontmatter += `tags:\n`;
-                    const finalTags = (tags || []).map((tag: string) => `  - ${tag.trim().replace(TAG_SPACE_REGEX, '_').replace(TAG_INVALID_CHARS_REGEX, '')}`).join('\n');
+                    const finalTags = [...(tags || []), ...settingsFMTags].map((tag: string) => `  - ${tag.trim().replace(TAG_SPACE_REGEX, '_').replace(TAG_INVALID_CHARS_REGEX, '')}`).join('\n');
                     if (finalTags) {
                         frontmatter += `${finalTags}\n`;
                     }

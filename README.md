@@ -68,11 +68,13 @@ Your imported notes organize themselves based on your Raindrop structure.
 
 Built to handle large Raindrop libraries with confidence.
 
-- **Smart rate limiting** (120 requests/minute) with automatic retries
+- **Smart rate limiting** (configurable, default 60 requests/minute) with automatic retries
+- **Modular architecture** - Improved reliability with dedicated collection fetching logic
+- **Enhanced tag handling** - Automatic tag sanitization and appending from settings
 - **Safe by default** - prevents accidental overwrites
 - **Detailed logging** for troubleshooting
 - **Comprehensive error handling**
-- **Automated testing** with CI/CD
+- **Automated testing** with integration coverage
 
 ---
 
