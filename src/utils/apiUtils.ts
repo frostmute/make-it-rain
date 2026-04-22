@@ -1,5 +1,6 @@
-import { App, request } from 'obsidian';
+import { App, request, Notice } from 'obsidian';
 import { sanitizeFileName } from './fileUtils';
+import { RaindropCollection } from '../types';
 
 
 /**
@@ -260,11 +261,11 @@ export async function fetchWithRetry(
  * @param response - The raw API response
  * @returns The collection data or null if invalid response
  */
-export function extractCollectionData(response: any): any {
-    const isValidResponse = response && response.result && response.item;
+export function extractCollectionData(response: Record<string, any>): RaindropCollection | null {
+    const isValidResponse = response && response.result === true && response.item;
     
     if (isValidResponse) {
-        return response.item;
+        return response.item as RaindropCollection;
     }
     
     console.error('Failed to fetch collection info:', response);

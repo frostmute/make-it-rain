@@ -174,6 +174,9 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
     private rateLimiter: RateLimiter;
     private ribbonIconEl: HTMLElement | undefined;
     private isRibbonShown: boolean = false;
+    private collectionCache: RaindropCollection[] | null = null;
+    private lastCollectionFetch: number = 0;
+    private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache
 
     constructor(app: App, manifest: PluginManifest) {
         super(app, manifest);
@@ -1248,11 +1251,15 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         }
     }
 
+    private readonly IF_REGEX = /{{#if ([^}]+)}}([\s\S]*?)(?:{{else}}([\s\S]*?))?{{\/if}}/g;
+    private readonly EACH_REGEX = /{{#each ([^}]+)}}([\s\S]*?){{\/each}}/g;
+    private readonly VAR_REGEX = /{{([^}]+)}}/g;
+
     private renderTemplate(template: string, data: Record<string, any>): string {
         const renderBlock = (blockContent: string, context: any): string => {
             return blockContent
                 // Handle if conditions
-                .replace(/{{#if ([^}]+)}}([\s\S]*?)(?:{{else}}([\s\S]*?))?{{\/if}}/g, (match, conditionVar, content, elseContent) => {
+                .replace(this.IF_REGEX, (match, conditionVar, content, elseContent) => {
                     const value = this.getNestedProperty(context, conditionVar.trim());
                     if (value && (Array.isArray(value) ? value.length > 0 : !!value)) {
                         return renderBlock(content, context);
@@ -1260,7 +1267,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     return elseContent ? renderBlock(elseContent, context) : '';
                 })
                 // Handle each loops
-                .replace(/{{#each ([^}]+)}}([\s\S]*?){{\/each}}/g, (match, arrayVar, content) => {
+                .replace(this.EACH_REGEX, (match, arrayVar, content) => {
                     const array = this.getNestedProperty(context, arrayVar.trim());
                     if (!Array.isArray(array)) return '';
                     return array.map(item => {
@@ -1269,7 +1276,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     }).join('');
                 })
                 // Handle simple variables
-                .replace(/{{([^}]+)}}/g, (match, key) => {
+                .replace(this.VAR_REGEX, (match, key) => {
                     const value = this.getNestedProperty(context, key.trim());
                     if (typeof value === 'object' && value !== null) {
                         return formatYamlValue(value);
@@ -1297,8 +1304,13 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         }, obj);
     }
 
-    // New method to fetch all user collections
     async fetchAllUserCollections(): Promise<RaindropCollection[]> {
+        // Check cache first
+        const now = Date.now();
+        if (this.collectionCache && (now - this.lastCollectionFetch < this.CACHE_TTL)) {
+            return this.collectionCache;
+        }
+
         if (!this.settings.apiToken) {
             console.warn('API token not set. Cannot fetch user collections.');
             new Notice('API token not set. Cannot fetch collections for modal.', 5000);
@@ -1314,52 +1326,36 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         let allCollections: RaindropCollection[] = [];
 
         try {
-            // Fetch root collections
-            const rootResponse = await fetchWithRetry(
-                this.app,
-                `${baseApiUrl}/collections`,
-                fetchOptions,
-                this.rateLimiter
-            );
+            // Fetch root and nested collections in parallel
+            const [rootResponse, nestedResponse] = await Promise.all([
+                fetchWithRetry(this.app, `${baseApiUrl}/collections`, fetchOptions, this.rateLimiter),
+                fetchWithRetry(this.app, `${baseApiUrl}/collections/childrens`, fetchOptions, this.rateLimiter)
+            ]);
+
             const rootData = rootResponse as CollectionResponse;
             if (rootData?.result && rootData?.items) {
                 allCollections = allCollections.concat(rootData.items);
-            } else if (!rootData?.result) {
-                console.warn('Failed to fetch root collections or result was false:', rootData);
             }
 
-            // Fetch nested collections
-            const nestedResponse = await fetchWithRetry(
-                this.app,
-                `${baseApiUrl}/collections/childrens`,
-                fetchOptions,
-                this.rateLimiter
-            );
             const nestedData = nestedResponse as CollectionResponse;
             if (nestedData?.result && nestedData?.items) {
                 allCollections = allCollections.concat(nestedData.items);
-            } else if (!nestedData?.result) {
-                console.warn('Failed to fetch nested collections or result was false:', nestedData);
             }
             
-            // Filter out potential duplicates if any endpoint returns overlapping data (e.g. by _id)
-            // and also filter out system collections like Trash (-99) or Unsorted (-1) as they are not typically user-selectable targets
+            // Filter out potential duplicates and system collections
             const uniqueCollections = Array.from(new Map(allCollections.map(col => [col._id, col])).values())
                                           .filter(col => col._id !== SystemCollections.TRASH && col._id !== SystemCollections.UNSORTED);
             
-            if (allCollections.length > 0 && uniqueCollections.length === 0 && (rootData?.items?.length || nestedData?.items?.length)) {
-                // This might happen if only system collections were returned
-                 console.log('Only system collections (Trash/Unsorted) were found.');
-            } else if (allCollections.length === 0) {
-                console.warn('No collections were fetched from either endpoint.');
-            }
+            // Update cache
+            this.collectionCache = uniqueCollections;
+            this.lastCollectionFetch = now;
             
             return uniqueCollections;
 
         } catch (error) {
             console.error('Error fetching all user collections for modal:', error);
             new Notice('Failed to load your Raindrop.io collections for selection.', 7000);
-            return []; // Return empty on error, modal will handle displaying a message
+            return this.collectionCache || []; // Return stale cache if error
         }
     }
 

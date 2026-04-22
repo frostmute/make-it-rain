@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  body { background: #0d1117; color: #c9d1d9; font-family: 'JetBrains Mono', monospace; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
+  h1 { color: #58a6ff; }
+  svg { border: 1px solid #30363d; border-radius: 8px; background: #161b22; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+  .node { fill: #21262d; stroke: #30363d; stroke-width: 2; rx: 10; ry: 10; }
+  .core { stroke: #58a6ff; fill: #111b27; }      /* Blue: Core Logic */
+  .ui { stroke: #bc8cff; fill: #1e152d; }        /* Purple: UI/Modals */
+  .util { stroke: #3fb950; fill: #101e16; }      /* Green: Utilities */
+  .external { stroke: #f0883e; fill: #261a11; }  /* Orange: APIs */
+  .settings { stroke: #d29922; fill: #251e11; }  /* Yellow: Config */
+  .text { fill: #c9d1d9; font-size: 13px; pointer-events: none; }
+  .title { font-weight: bold; font-size: 14px; }
+  .arrow { stroke: #8b949e; stroke-width: 1.5; fill: none; marker-end: url(#arrowhead); }
+  .legend { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; }
+  .legend-item { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+  .box { width: 15px; height: 15px; border-radius: 3px; }
+</style>
+</head>
+<body>
+  <h1>make-it-rain Knowledge Graph</h1>
+  <svg width="1000" height="700" viewBox="0 0 1000 700">
+    <!-- DEFINITIONS -->
+    <defs>
+      <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+        <polygon points="0 0, 10 3.5, 0 7" fill="#8b949e" />
+      </marker>
+    </defs>
+
+    <!-- EXTERNAL APIs -->
+    <rect x="50" y="50" width="180" height="80" class="node external" />
+    <text x="65" y="80" class="text title">Raindrop.io API</text>
+    <text x="65" y="100" class="text">Bookmarks, Highlights</text>
+
+    <rect x="770" y="50" width="180" height="80" class="node external" />
+    <text x="785" y="80" class="text title">Obsidian API</text>
+    <text x="785" y="100" class="text">Vault, UI, Workspace</text>
+
+    <!-- CORE MONOLITH -->
+    <rect x="350" y="200" width="300" height="150" class="node core" />
+    <text x="365" y="235" class="text title">main.ts (Monolith)</text>
+    <text x="365" y="260" class="text">- RaindropToObsidian (Plugin)</text>
+    <text x="365" y="280" class="text">- Command Registry</text>
+    <text x="365" y="300" class="text">- Handlebars Orchestration</text>
+    <text x="365" y="320" class="text">- Lifecycle Management</text>
+
+    <!-- UI COMPONENTS (Embedded in main.ts currently) -->
+    <rect x="50" y="225" width="220" height="100" class="node ui" />
+    <text x="65" y="255" class="text title">Modals</text>
+    <text x="65" y="275" class="text">- RaindropFetchModal</text>
+    <text x="65" y="295" class="text">- QuickImportModal</text>
+
+    <rect x="730" y="225" width="220" height="100" class="node settings" />
+    <text x="745" y="255" class="text title">Settings UI</text>
+    <text x="745" y="275" class="text">RaindropToObsidian-</text>
+    <text x="745" y="295" class="text">SettingTab</text>
+
+    <!-- UTILITIES -->
+    <rect x="350" y="450" width="300" height="180" class="node util" />
+    <text x="365" y="485" class="text title">src/utils/</text>
+    <text x="365" y="510" class="text">apiUtils: Auth, Retry, RateLimit</text>
+    <text x="365" y="535" class="text">fileUtils: Path, Sanitize, Folder</text>
+    <text x="365" y="560" class="text">yamlUtils: Frontmatter</text>
+    <text x="365" y="585" class="text">index.ts: Consolidated Export</text>
+
+    <!-- CONNECTIONS -->
+    <!-- Core to APIs -->
+    <path d="M 350 210 L 230 130" class="arrow" /> <!-- Core -> Raindrop -->
+    <path d="M 650 210 L 770 130" class="arrow" /> <!-- Core -> Obsidian -->
+
+    <!-- Core to UI -->
+    <path d="M 350 275 L 270 275" class="arrow" /> <!-- Core -> Modals -->
+    <path d="M 650 275 L 730 275" class="arrow" /> <!-- Core -> Settings -->
+
+    <!-- Core to Utils -->
+    <path d="M 500 350 L 500 450" class="arrow" /> <!-- Core -> Utils -->
+
+    <!-- Utils to APIs -->
+    <path d="M 350 540 Q 140 540 140 130" class="arrow" /> <!-- Utils -> Raindrop -->
+    <path d="M 650 540 Q 860 540 860 130" class="arrow" /> <!-- Utils -> Obsidian -->
+
+  </svg>
+
+  <div class="legend">
+    <div class="legend-item"><div class="box" style="background: #111b27; border: 1px solid #58a6ff;"></div> Core Logic</div>
+    <div class="legend-item"><div class="box" style="background: #1e152d; border: 1px solid #bc8cff;"></div> UI / Modals</div>
+    <div class="legend-item"><div class="box" style="background: #101e16; border: 1px solid #3fb950;"></div> Utilities</div>
+    <div class="legend-item"><div class="box" style="background: #261a11; border: 1px solid #f0883e;"></div> External APIs</div>
+    <div class="legend-item"><div class="box" style="background: #251e11; border: 1px solid #d29922;"></div> Configuration</div>
+  </div>
+</body>
+</html>
