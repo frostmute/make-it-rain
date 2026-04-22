@@ -40,11 +40,22 @@ import {
     handleRequestError,
     fetchWithRetry,
     extractCollectionData,
+    getFullPathSegments,
     
     // YAML utilities
     createYamlFrontmatter,
-    formatYamlValue
+    formatYamlValue,
+    escapeYamlString,
+    
+    // Format utilities
+    formatDate,
+    formatDateISO,
+    formatTags,
+    getDomain,
+    raindropType
 } from './utils';
+
+
 
 // Constants for type unions - following Raindrop.io API types
 export const RaindropTypes = {
@@ -87,43 +98,9 @@ type FilterType = typeof FilterTypes[keyof typeof FilterTypes];
 const TAG_SPACE_REGEX = / /g;
 const TAG_INVALID_CHARS_REGEX = /[#?"*<>:|]/g;
 
-// Helper function to get the full path segments from the root collection down to the given ID
-const getFullPathSegments = (collectionId: number, hierarchy: Map<number, { title: string, parentId?: number }>, idToNameMap: Map<number, string>): string[] => {
-    const segments: string[] = [];
-    let currentId: number | undefined = collectionId;
-    const pathIds: number[] = [];
-
-    // Traverse upwards from the current ID to collect all ancestor IDs
-    while (currentId !== undefined && currentId !== 0 && currentId !== SystemCollections.UNSORTED && currentId !== SystemCollections.TRASH) {
-         pathIds.push(currentId);
-         const collection = hierarchy.get(currentId);
-         if (!collection || collection.parentId === undefined) {
-              break; // Stop if collection not found or no parent defined
-         }
-         currentId = collection.parentId;
-    }
-
-    // Reverse the collected IDs and find their names to build the path from root down
-    pathIds.reverse();
-
-    for (const id of pathIds) {
-         const name = idToNameMap.get(id);
-         if (name) {
-              // Use the imported sanitizeFileName utility directly as this is a standalone function
-              const sanitizedName = sanitizeFileName(name);
-              if(sanitizedName) segments.push(sanitizedName);
-         } else {
-             // If name not found, add a placeholder or skip?
-             // For now, let's add a placeholder to indicate the missing segment
-             segments.push(`Unknown_Collection_${id}`);
-         }
-    }
-
-    return segments;
-};
-
 
 // Rate limiting and retry utilities are now imported from './utils/apiUtils'
+
 
 /**
  * Configuration options for API requests with retry capability
@@ -762,7 +739,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
      * @param useRaindropTitleForFileName - Whether to use the raindrop title for the file name
      * @returns The generated file name
      */
-    generateFileName(raindrop: any, useRaindropTitleForFileName: boolean): string {
+    generateFileName(raindrop: RaindropItem, useRaindropTitleForFileName: boolean): string {
         // Use the template from settings if title is enabled, otherwise use ID
         const fileNameTemplate = useRaindropTitleForFileName ? this.settings.fileNameTemplate : '{{id}}';
         let fileName = fileNameTemplate;
@@ -1045,7 +1022,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     const tagPromises = tagsArray.map(async (tag) => {
                         let hasMore = true;
                         let page = 0;
-                        let tagData: any[] = [];
+                        let tagData: RaindropItem[] = [];
 
                         while (hasMore) {
                             const params = new URLSearchParams({
@@ -1275,6 +1252,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         let updatedCount = 0;
         let processed = 0;
         const total = raindrops.length;
+        const pendingFolderCreations = new Map<string, Promise<boolean>>();
 
         try {
             // Flatten raindrops for concurrent processing
@@ -1301,8 +1279,10 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                             total,
                             collectionHierarchy,
                             collectionIdToNameMap,
-                            verifiedFolderPaths
+                            verifiedFolderPaths,
+                            pendingFolderCreations
                         );
+
 
                         if (result.success) {
                             if (result.type === 'created') createdCount++;
@@ -1400,21 +1380,17 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         total: number,
         collectionHierarchy: Map<number, { title: string, parentId?: number }>,
         collectionIdToNameMap: Map<number, string>,
-        verifiedFolderPaths: Set<string>
+        verifiedFolderPaths: Set<string>,
+        pendingFolderCreations: Map<string, Promise<boolean>>
     ): Promise<{ success: boolean; type: 'created' | 'updated' | 'skipped' }> {
         try {
             const { app } = this;
-
-            const escapeYamlStringValue = (str: string | undefined | null): string => {
-                if (str === undefined || str === null) return '';
-                return str.replace(/\\/g, '\\\\').replace(/"/g, '\\"'); // Escape double quotes for YAML
-            };
 
             const generatedFilename = this.generateFileName(raindrop, options.useRaindropTitleForFileName);
             
             let individualNoteTargetFolderPath = baseTargetFolderPath; // Starts as normalized
             if (raindrop.collection?.$id) {
-                const pathSegments = this.getFullPathSegments(raindrop.collection.$id, collectionHierarchy, collectionIdToNameMap); // getFullPathSegments now uses sanitizeFileName
+                const pathSegments = getFullPathSegments(raindrop.collection.$id, collectionHierarchy, collectionIdToNameMap);
                 if (pathSegments.length > 0) {
                     const collectionSubPath = pathSegments.join('/');
                     // Use normalizePath for the full path
@@ -1425,19 +1401,28 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             // Ensure target directory exists before attempting to write
             // individualNoteTargetFolderPath is already normalized
             if (individualNoteTargetFolderPath && !verifiedFolderPaths.has(individualNoteTargetFolderPath)) {
-                try {
-                    if (!(await app.vault.adapter.exists(individualNoteTargetFolderPath))) {
-                        await createFolderStructure(app, individualNoteTargetFolderPath);
-                    }
-                    verifiedFolderPaths.add(individualNoteTargetFolderPath);
-                } catch (folderError) {
-                    // Ignore "Folder already exists" errors that can occur during concurrent execution
-                    const errorMsg = folderError instanceof Error ? folderError.message : String(folderError);
-                    if (!errorMsg.toLowerCase().includes('already exists') && !errorMsg.toLowerCase().includes('folder already exists')) {
-                        throw folderError;
-                    }
-                    verifiedFolderPaths.add(individualNoteTargetFolderPath);
+                if (pendingFolderCreations.has(individualNoteTargetFolderPath)) {
+                    await pendingFolderCreations.get(individualNoteTargetFolderPath);
+                } else {
+                    const createPromise = (async () => {
+                        try {
+                            if (!(await app.vault.adapter.exists(individualNoteTargetFolderPath))) {
+                                await createFolderStructure(app, individualNoteTargetFolderPath);
+                            }
+                            return true;
+                        } catch (folderError) {
+                            const errorMsg = folderError instanceof Error ? folderError.message : String(folderError);
+                            if (!errorMsg.toLowerCase().includes('already exists') && !errorMsg.toLowerCase().includes('folder already exists')) {
+                                console.error(`Failed to create folder ${individualNoteTargetFolderPath}:`, folderError);
+                                return false;
+                            }
+                            return true;
+                        }
+                    })();
+                    pendingFolderCreations.set(individualNoteTargetFolderPath, createPromise);
+                    await createPromise;
                 }
+                verifiedFolderPaths.add(individualNoteTargetFolderPath);
             }
             
             // Use normalizePath for the final file path
@@ -1452,9 +1437,9 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             // Generate template data
             const templateData: Record<string, any> = {
                 id: raindrop._id,
-                title: escapeYamlStringValue(raindrop.title),
-                excerpt: escapeYamlStringValue(raindrop.excerpt || ''),
-                note: escapeYamlStringValue(raindrop.note || ''),
+                title: escapeYamlString(raindrop.title),
+                excerpt: escapeYamlString(raindrop.excerpt || ''),
+                note: escapeYamlString(raindrop.note || ''),
                 link: raindrop.link, // URLs generally don't need YAML escaping unless they have special chars
                 cover: raindrop.cover || '', // URLs generally don't need YAML escaping
                 created: raindrop.created,
@@ -1462,17 +1447,17 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 type: raindrop.type,
                 // Flattened collection data
                 collectionId: raindrop.collection?.$id || 0,
-                collectionTitle: escapeYamlStringValue(collectionIdToNameMap.get(raindrop.collection?.$id || 0) || 'Unknown'),
-                collectionPath: escapeYamlStringValue(this.getFullPathSegments(raindrop.collection?.$id || 0, collectionHierarchy, collectionIdToNameMap).join('/')),
+                collectionTitle: escapeYamlString(collectionIdToNameMap.get(raindrop.collection?.$id || 0) || 'Unknown'),
+                collectionPath: escapeYamlString(getFullPathSegments(raindrop.collection?.$id || 0, collectionHierarchy, collectionIdToNameMap).join('/')),
                 // Add collectionParentId if it exists
                 ...(collectionHierarchy.has(raindrop.collection?.$id || 0) && collectionHierarchy.get(raindrop.collection?.$id || 0)?.parentId !== undefined && {
                     collectionParentId: collectionHierarchy.get(raindrop.collection?.$id || 0)?.parentId
                 }),
-                tags: (raindrop.tags || []).map(tag => escapeYamlStringValue(tag)),
+                tags: (raindrop.tags || []).map(tag => escapeYamlString(tag)),
                 highlights: (raindrop.highlights || []).map(h => ({
                     ...h,
-                    text: escapeYamlStringValue(h.text),
-                    note: escapeYamlStringValue(h.note)
+                    text: escapeYamlString(h.text),
+                    note: escapeYamlString(h.note || '')
                 })),
                 bannerFieldName: this.settings.bannerFieldName,
                 // Pre-calculated fields for helpers
@@ -1484,12 +1469,12 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 const enhancedDataForRender: Record<string, any> = {
                     ...templateData, // Spread the original templateData
                     url: templateData.link || '', // Ensure url is available, aliasing link
-                    domain: this.getDomain(templateData.link || ''),
+                    domain: getDomain(templateData.link || ''),
                     // Pre-calculate values that used helpers in the template:
-                    renderedType: this.raindropType(templateData.type as RaindropType), // Cast type to RaindropType
-                    formattedCreatedDate: this.formatDate(templateData.created),
-                    formattedUpdatedDate: this.formatDate(templateData.lastupdate), // Changed from lastUpdate
-                    formattedTags: this.formatTags(templateData.tags || []),
+                    renderedType: raindropType(templateData.type as RaindropType), // Cast type to RaindropType
+                    formattedCreatedDate: formatDate(templateData.created),
+                    formattedUpdatedDate: formatDate(templateData.lastupdate), // Changed from lastUpdate
+                    formattedTags: formatTags(templateData.tags || []),
                 };
 
                 let localEmbedLink = '';
@@ -1668,8 +1653,8 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     
                     if (templateData.collectionId) { // Use flattened collectionId from templateData
                         frontmatter += `collectionId: ${templateData.collectionId}\n`;
-                        frontmatter += `collectionTitle: "${escapeYamlStringValue(templateData.collectionTitle)}"\n`;
-                        frontmatter += `collectionPath: "${escapeYamlStringValue(templateData.collectionPath)}"\n`;
+                        frontmatter += `collectionTitle: "${escapeYamlString(templateData.collectionTitle)}"\n`;
+                        frontmatter += `collectionPath: "${escapeYamlString(templateData.collectionPath)}"\n`;
                         if (templateData.collectionParentId) {
                             frontmatter += `collectionParentId: ${templateData.collectionParentId}\n`;
                         }
@@ -1739,197 +1724,47 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         }
     }
 
-    private getFullPathSegments(
-        collectionId: number,
-        collectionHierarchy: Map<number, { title: string, parentId?: number }>,
-        collectionIdToNameMap: Map<number, string>
-    ): string[] {
-        const segments: string[] = [];
-        let currentId: number | undefined = collectionId;
-
-        while (currentId !== undefined && currentId !== 0 && currentId !== SystemCollections.UNSORTED && currentId !== SystemCollections.TRASH) {
-            const collection = collectionHierarchy.get(currentId);
-            if (!collection) break;
-
-            const name = collectionIdToNameMap.get(currentId);
-            if (name) {
-                // Use the imported sanitizeFileName utility for path segments
-                segments.unshift(sanitizeFileName(name)); 
-            }
-
-            currentId = collection.parentId;
-        }
-
-        return segments;
-    }
-
-    // The updateRibbonIcon method is already defined at line ~360
-
-    private formatDate(date: string): string {
-        try {
-            return new Date(date).toLocaleDateString();
-        } catch {
-            return '';
-        }
-    }
-
-    private formatDateISO(date: string): string {
-        try {
-            return new Date(date).toISOString();
-        } catch {
-            return '';
-        }
-    }
-
-    private formatTags(tags: string[]): string {
-        return tags.map(tag => `#${tag.trim()}`).join(' ');
-    }
-
-    private getDomain(url: string): string {
-        try {
-            return new URL(url).hostname;
-        } catch {
-            return '';
-        }
-    }
-
-    private raindropType(type: string): string {
-        const types = {
-            link: 'Web Link',
-            article: 'Article',
-            image: 'Image',
-            video: 'Video',
-            document: 'Document',
-            audio: 'Audio',
-            book: 'Book'
-        };
-        return types[type as keyof typeof types] || type;
-    }
-
     private renderTemplate(template: string, data: Record<string, any>): string {
-        // Add helper functions to the data
+        const renderBlock = (blockContent: string, context: any): string => {
+            return blockContent
+                // Handle if conditions
+                .replace(/{{#if ([^}]+)}}([\s\S]*?)(?:{{else}}([\s\S]*?))?{{\/if}}/g, (match, conditionVar, content, elseContent) => {
+                    const value = this.getNestedProperty(context, conditionVar.trim());
+                    if (value && (Array.isArray(value) ? value.length > 0 : !!value)) {
+                        return renderBlock(content, context);
+                    }
+                    return elseContent ? renderBlock(elseContent, context) : '';
+                })
+                // Handle each loops
+                .replace(/{{#each ([^}]+)}}([\s\S]*?){{\/each}}/g, (match, arrayVar, content) => {
+                    const array = this.getNestedProperty(context, arrayVar.trim());
+                    if (!Array.isArray(array)) return '';
+                    return array.map(item => {
+                        const itemContext = typeof item === 'object' ? { ...context, ...item } : { ...context, 'this': item };
+                        return renderBlock(content, itemContext);
+                    }).join('');
+                })
+                // Handle simple variables
+                .replace(/{{([^}]+)}}/g, (match, key) => {
+                    const value = this.getNestedProperty(context, key.trim());
+                    if (typeof value === 'object' && value !== null) {
+                        return formatYamlValue(value);
+                    }
+                    return String(value ?? '');
+                });
+        };
+
         const enhancedData = {
             ...data,
-            url: data.link || '',
-            domain: this.getDomain(data.link || ''),
-            formatDate: (date: string) => this.formatDate(date),
-            formatDateISO: (date: string) => this.formatDateISO(date),
-            formatTags: (tags: string[]) => this.formatTags(tags),
-            raindropType: (type: string) => this.raindropType(type),
-            updated: data.lastupdate || '', // Changed from lastUpdate
+            domain: getDomain(data.link || ''),
+            formatDate: (date: string) => formatDate(date),
+            formatDateISO: (date: string) => formatDateISO(date),
+            formatTags: (tags: string[]) => formatTags(tags),
+            raindropType: (type: string) => raindropType(type),
+            updated: data.lastupdate || '',
         };
 
-        // Simple Handlebars-like rendering
-        return template
-            // Handle if conditions first
-            .replace(/{{#if ([^}]+)}}([\s\S]*?)(?:{{else}}([\s\S]*?))?{{\/if}}/g, (match: string, conditionVar: string, content: string, elseContent?: string) => {
-                const value = this.getNestedProperty(enhancedData, conditionVar.trim());
-                if (value && (Array.isArray(value) ? value.length > 0 : !!value)) {
-                    return content;
-                }
-                return elseContent || '';
-            })
-            // Handle each loops
-            .replace(/{{#each ([^}]+)}}([\s\S]*?){{\/each}}/g, (match: string, arrayVar: string, content: string) => {
-                const array = this.getNestedProperty(enhancedData, arrayVar.trim());
-                if (!Array.isArray(array)) return '';
-                
-                return array.map(item => {
-                    let itemContent = content.replace(/{{this}}/g, String(item));
-                    return itemContent.replace(/{{([^}]+)}}/g, (m: string, key: string) => {
-                        if (key.includes('.')) {
-                            return String(this.getNestedProperty(item, key) || '');
-                        }
-                        return String(item[key] || '');
-                    });
-                }).join('');
-            })
-            // Handle simple variables
-            .replace(/{{([^}]+)}}/g, (match: string, key: string) => {
-                const value = this.getNestedProperty(enhancedData, key.trim());
-                if (typeof value === 'object' && value !== null) {
-                    // Handle objects (like collection) by converting to YAML format
-                    return this.formatYamlValue(value);
-                }
-                return String(value || '');
-            });
-    }
-
-    private formatYamlValue(value: any, indentLevel: number = 0): string {
-        const indent = '  '.repeat(indentLevel);
-        
-        if (value === null || value === undefined) {
-            return 'null';
-        }
-        
-        if (typeof value === 'boolean') {
-            return value ? 'true' : 'false';
-        }
-        
-        if (typeof value === 'number') {
-            return value.toString();
-        }
-        
-        if (typeof value === 'string') {
-            // Check if the string needs special handling
-            if (value.includes('\n') || value.includes(':') || value.includes('{') || 
-                value.includes('}') || value.includes('[') || value.includes(']') ||
-                value.includes('#') || value.includes('*') || value.includes('&') ||
-                value.includes('!') || value.includes('|') || value.includes('>') ||
-                value.includes('`') || value.trim() === '' ||
-                /^[0-9]/.test(value) || /^true$|^false$|^yes$|^no$|^on$|^off$/i.test(value)) {
-                
-                // If the string contains newlines, use the block scalar syntax
-                if (value.includes('\n')) {
-                    return '|\n' + value.split('\n').map(line => `${indent}  ${line}`).join('\n');
-                }
-                
-                // Otherwise use quoted string with escaping
-                return `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
-            }
-            return value;
-        }
-        
-        if (Array.isArray(value)) {
-            if (value.length === 0) {
-                return '[]';
-            }
-            return value.map(item => `\n${indent}- ${this.formatYamlValue(item, indentLevel + 1)}`).join('');
-        }
-        
-        if (typeof value === 'object') {
-            const entries = Object.entries(value);
-            if (entries.length === 0) {
-                return '{}'; // Flow style for empty is fine
-            }
-            // Keys of this object will be indented one level more than the object itself.
-            const keysIndent = '  '.repeat(indentLevel + 1); 
-            return entries.map(([key, val]) => {
-                // Format the value; it will be indented according to its own type and level.
-                const formattedValue = this.formatYamlValue(val, indentLevel + 1);
-                
-                // Check if the formattedValue is already a multi-line block (starts with newline and indent)
-                // or if it's a simple single-line value.
-                if (formattedValue.startsWith('\\n')) { 
-                    // If formattedValue is already a block (e.g., a nested object),
-                    // it starts with '\\n' and its own correct indentation.
-                    // So, we just place our key before it.
-                    return `\\n${keysIndent}${key}:${formattedValue}`;
-                } else { // Sub-value is single line
-                    return `\\n${keysIndent}${key}: ${formattedValue}`;
-                }
-            }).join('');
-        }
-        
-        return String(value);
-    }
-
-    private escapeYamlString(str: string): string {
-        return str
-            .replace(/\\/g, '\\\\')
-            .replace(/"/g, '\\"')
-            .replace(/\t/g, '\\t')
-            .replace(/\r/g, '\\r');
+        return renderBlock(template, enhancedData);
     }
 
     private getNestedProperty(obj: any, path: string): any {
@@ -2108,4 +1943,8 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         }
     }
 }
+
+
+
+
 

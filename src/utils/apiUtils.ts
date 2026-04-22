@@ -1,4 +1,6 @@
 import { App, request } from 'obsidian';
+import { sanitizeFileName } from './fileUtils';
+
 
 /**
  * API Utilities for Make It Rain
@@ -268,3 +270,36 @@ export function extractCollectionData(response: any): any {
     console.error('Failed to fetch collection info:', response);
     return null;
 }
+
+/**
+ * Helper function to get the full path segments from the root collection down to the given ID
+ * 
+ * @param collectionId - The ID of the collection to get path for
+ * @param hierarchy - Map of collection IDs to their parent info
+ * @param idToNameMap - Map of collection IDs to their titles
+ * @returns Array of sanitized path segments from root to collection
+ */
+export function getFullPathSegments(
+    collectionId: number,
+    hierarchy: Map<number, { title: string, parentId?: number }>,
+    idToNameMap: Map<number, string>
+): string[] {
+    const segments: string[] = [];
+    let currentId: number | undefined = collectionId;
+
+    // Traversal upward to root (excluding system collections -1, -99 and root 0)
+    while (currentId !== undefined && currentId !== 0 && currentId !== -1 && currentId !== -99) {
+        const collection = hierarchy.get(currentId);
+        if (!collection) break;
+
+        const name = idToNameMap.get(currentId);
+        if (name) {
+            segments.unshift(sanitizeFileName(name));
+        }
+
+        currentId = collection.parentId;
+    }
+
+    return segments;
+}
+
