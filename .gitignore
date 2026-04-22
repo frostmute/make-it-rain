@@ -33,3 +33,4 @@ knowledge_graph*.html
 # Tooling
 GEMINI.md
 gemini.md
+/src/index.ts
