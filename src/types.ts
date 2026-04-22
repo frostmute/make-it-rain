@@ -1,3 +1,24 @@
+// Constants for type unions - following Raindrop.io API types
+export const RaindropTypes = {
+    LINK: 'link',
+    ARTICLE: 'article',
+    IMAGE: 'image',
+    VIDEO: 'video',
+    DOCUMENT: 'document',
+    AUDIO: 'audio',
+    BOOK: 'book'
+} as const;
+
+export const TagMatchTypes = {
+    ALL: 'all' as const,
+    ANY: 'any' as const
+};
+
+export const FilterTypes = {
+    ...RaindropTypes,
+    ALL: 'all'
+} as const;
+
 export type RaindropType = 'link' | 'article' | 'image' | 'video' | 'document' | 'audio' | 'book';
 
 export const CONTENT_TYPES: RaindropType[] = ['link', 'article', 'image', 'video', 'document', 'audio', 'book'];

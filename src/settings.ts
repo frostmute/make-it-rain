@@ -1,6 +1,6 @@
 import { App, PluginSettingTab, Setting, TextComponent, ButtonComponent, Notice, request, ToggleComponent } from 'obsidian';
 import type RaindropToObsidian from './main';
-import { RaindropTypes } from './main';
+import { RaindropTypes, RaindropType } from './types';
 import { MakeItRainSettings } from './types';
 
 export const DEFAULT_SETTINGS: MakeItRainSettings = {
@@ -623,13 +623,14 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
 
             const contentTypes = Object.values(RaindropTypes);
             for (const type of contentTypes) {
+                const typeStr = type as string;
                 const typeKey = type as keyof typeof this.plugin.settings.contentTypeTemplates;
                 
-                containerEl.createEl('h4', { text: `${type.charAt(0).toUpperCase() + type.slice(1)} Template`});
+                containerEl.createEl('h4', { text: `${typeStr.charAt(0).toUpperCase() + typeStr.slice(1)} Template`});
                 
                 new Setting(containerEl)
-                    .setName(`Enable ${type} Template`)
-                    .setDesc(`Use a custom template for "${type}" items.`)
+                    .setName(`Enable ${typeStr} Template`)
+                    .setDesc(`Use a custom template for "${typeStr}" items.`)
                     .addToggle((toggle) => {
                         toggle
                             .setValue(this.plugin.settings.contentTypeTemplateToggles[typeKey])
@@ -642,10 +643,10 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
 
                 if (this.plugin.settings.contentTypeTemplateToggles[typeKey]) {
                     new Setting(containerEl)
-                        .setDesc(`Template for "${type}" content. Leave empty to use the default template.`)
+                        .setDesc(`Template for "${typeStr}" content. Leave empty to use the default template.`)
                         .setClass('setting-item-stacked') // Added class
                         .addTextArea((text) => {
-                            text.setPlaceholder(`Enter template for ${type} items...`)
+                            text.setPlaceholder(`Enter template for ${typeStr} items...`)
                                 .setValue(this.plugin.settings.contentTypeTemplates[typeKey])
                                 .onChange(async (value) => {
                                     this.plugin.settings.contentTypeTemplates[typeKey] = value;
@@ -659,16 +660,16 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                             button
                                 .setButtonText("Reset") 
                                 .setIcon("undo")
-                                .setTooltip(`Reset ${type} template to its original default`)
+                                .setTooltip(`Reset ${typeStr} template to its original default`)
                                 .onClick(async () => {
                                     // Ensure DEFAULT_SETTINGS.contentTypeTemplates[typeKey] exists before assigning
                                     if (DEFAULT_SETTINGS.contentTypeTemplates[typeKey]) {
                                         this.plugin.settings.contentTypeTemplates[typeKey] = DEFAULT_SETTINGS.contentTypeTemplates[typeKey];
                                         await this.plugin.saveSettings();
                                         this.display(); // Refresh the settings tab
-                                        new Notice(`${type.charAt(0).toUpperCase() + type.slice(1)} template has been reset.`);
+                                        new Notice(`${typeStr.charAt(0).toUpperCase() + typeStr.slice(1)} template has been reset.`);
                                     } else {
-                                        new Notice(`Error: Default template for ${type} not found.`, 7000);
+                                        new Notice(`Error: Default template for ${typeStr} not found.`, 7000);
                                     }
                                 });
                         });
