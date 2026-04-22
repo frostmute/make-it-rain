@@ -157,18 +157,19 @@ describe('ImportService', () => {
 
 ### Core Components
 
-- `RaindropService`: API integration
-- `TemplateService`: Template processing
-- `ImportService`: Note creation
-- `SettingsService`: Configuration
+- **RaindropService**: Handles low-level API communication, authentication, and retry logic.
+- **CollectionService**: Manages user collections, folder hierarchies, and subcollection resolution.
+- **ImportService**: Orchestrates the fetch-to-note lifecycle.
+- **TemplateService**: Renders notes using Handlebars-like syntax.
+- **SettingsService**: Persistent configuration management.
 
-### Data Flow
+### Modular Data Flow
 
-1. User triggers import
-2. Fetch data from API
-3. Process templates
-4. Create notes
-5. Update UI
+1. **Initiation**: User triggers an import (bulk, folder, or single).
+2. **Collection Resolution**: `fetchAllUserCollections` builds a complete parent-child hierarchy.
+3. **Item Fetching**: Parallelized or sequential fetching based on filters, managed by a centralized `RateLimiter`.
+4. **Processing**: Items are sanitized, tags are normalized, and templates are rendered.
+5. **Persistence**: Notes are created in the Obsidian vault with structured metadata.
 
 ### Event System
 

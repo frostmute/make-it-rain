@@ -32,33 +32,26 @@ Each tag has the following properties:
 
 ### Basic Import
 
-Tags are automatically imported with your Raindrop items and added to the YAML frontmatter:
-
-```yaml
----
-title: My Bookmark
-tags:
-  - work
-  - research
-  - to_read
----
-```
+Tags are automatically imported with your Raindrop items and added to the YAML frontmatter.
 
 ### Tag Processing
 
-During import, tags are:
+During import, tags undergo a rigorous sanitization process to ensure Obsidian compatibility:
 
-1. Sanitized for Obsidian compatibility
-2. Converted to lowercase
-3. Spaces replaced with underscores
-4. Special characters removed
+1. **Native Sanitization**: Special characters (except underscores) are removed.
+2. **Space Handling**: Spaces are replaced with underscores.
+3. **Normalization**: Tags are trimmed and converted to lowercase.
+4. **Collision Prevention**: Duplicate tags after sanitization are filtered out.
+
+### Settings-based Global Tags
+
+A new feature allows you to define global tags in the plugin settings that are appended to **every** imported note. These tags follow the same sanitization rules as native Raindrop tags.
 
 ### Import Options
 
-- **Append Tags**: Add custom tags to all imports
-- **Prefix Tags**: Add prefix to Raindrop tags
-- **Skip Tags**: Don't import certain tags
-- **Tag Mapping**: Map Raindrop tags to Obsidian tags
+- **Default Metadata Tags**: Define a list of tags in settings to be applied globally.
+- **Append Tags**: Add custom tags to specific import sessions.
+- **Tag Match Type**: Filter Raindrops by "All" (AND) or "Any" (OR) tags during fetching.
 
 ## Tag Filtering
 

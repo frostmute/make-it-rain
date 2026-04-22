@@ -29,9 +29,16 @@ Make It Rain uses **Jest** as its testing framework with **TypeScript** support 
 
 ### Test Types
 
-1. **Unit Tests**: Test individual functions and utilities in isolation
-2. **Integration Tests**: Test how components work together
-3. **E2E Tests**: (Future) Test the entire plugin workflow
+1. **Unit Tests**: Test individual functions and utilities in isolation. Located in `tests/unit/`.
+2. **Integration Tests**: Verify the full import lifecycle, from API request mocking to vault file creation. Located in `tests/integration/importWorkflow.test.ts`.
+3. **E2E Tests**: Manual validation in the Obsidian development vault.
+
+### Key Coverage Areas
+
+- **Rate Limiting**: Verified via simulated timer advances (see `tests/unit/utils/apiUtils.test.ts`).
+- **Collection Hierarchy**: Modular fetching via `fetchAllUserCollections` ensures subcollection resolution is accurate.
+- **Template Rendering**: Handles complex Handlebars logic and frontmatter generation.
+- **Workflow Stability**: Integration tests confirm that network errors and rate limits are handled gracefully without breaking the user experience.
 
 ## Getting Started
 
