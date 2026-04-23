@@ -16,21 +16,18 @@
  * and immutable data structures to improve code reliability and testability.
  */
 
-import { App, Notice, Plugin, PluginSettingTab, Setting, Modal, TextComponent, ButtonComponent, ToggleComponent, PluginManifest, TFile, TAbstractFile, normalizePath } from 'obsidian';
-import { request, requestUrl, RequestUrlParam } from 'obsidian';
+import { App, Notice, Plugin, PluginManifest, normalizePath } from 'obsidian';
+import { requestUrl, RequestUrlParam } from 'obsidian';
 import { 
     MakeItRainSettings, 
     RaindropType, 
-    CONTENT_TYPES, 
     ModalFetchOptions, 
     RaindropItem, 
     RaindropResponse, 
     RaindropCollection, 
     CollectionResponse, 
     IRaindropToObsidian,
-    RaindropTypes,
-    TagMatchTypes,
-    FilterTypes
+    TagMatchTypes
 } from './types';
 
 // Import utility functions from consolidated index
@@ -40,9 +37,6 @@ import { RaindropFetchModal, QuickImportModal } from './modals';
 import { 
     // File utilities
     sanitizeFileName,
-    doesPathExist,
-    isPathAFolder,
-    createFolder,
     createFolderStructure,
     
     // API utilities
@@ -50,16 +44,11 @@ import {
     createRateLimiter,
     createAuthenticatedRequestOptions,
     buildCollectionApiUrl,
-    parseApiResponse,
-    handleRequestError,
     fetchWithRetry,
     extractCollectionData,
     getFullPathSegments,
     
     // YAML utilities
-    createYamlFrontmatter,
-    formatYamlValue,
-    escapeYamlString,
     
     // Format utilities
     formatDate,
@@ -77,7 +66,6 @@ const SystemCollections = {
     TRASH: -99
 } as const;
 
-type SystemCollectionId = typeof SystemCollections[keyof typeof SystemCollections];
 
 // Add new interface for Collection info
 /**
@@ -198,7 +186,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         this.addCommand({ // New command for Quick Import
             id: 'quick-import-raindrop',
             name: 'Quick Import Raindrop by URL/ID',
-            callback: async () => {
+            callback: () => {
                 new QuickImportModal(this.app, this).open();
             }
         });
@@ -207,13 +195,13 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         this.updateRibbonIcon();
 
         this.addSettingTab(new RaindropToObsidianSettingTab(this.app, this));
-        console.log('Make It Rain plugin loaded!');
+        console.debug('Make It Rain plugin loaded!');
     }
 
     onunload() {
         // Remove ribbon icon when plugin is unloaded
         this.ribbonIconEl?.remove();
-        console.log('Make It Rain plugin unloaded.');
+        console.debug('Make It Rain plugin unloaded.');
     }
 
     async loadSettings(): Promise<void> {
@@ -469,7 +457,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                         }
 
                         const currentApiUrl = `${collectionApiBaseUrl}?${params.toString()}`;
-                        console.log(`Requesting items from collection ID: ${collectionId}`, currentApiUrl);
+                        console.debug(`Requesting items from collection ID: ${collectionId}`, currentApiUrl);
 
                         // Get collection name for notice message (optional)
                         const collectionNameForNotice = collectionIdToNameMap.get(collectionId) || collectionId.toString();
@@ -494,7 +482,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                             collectionData = collectionData.concat(data.items);
                             page++;
                             hasMore = data.items.length === perPage;
-                            console.log(`Fetched ${data.items.length} items from collection ${collectionId}, page ${page}`);
+                            console.debug(`Fetched ${data.items.length} items from collection ${collectionId}, page ${page}`);
                             if (hasMore) { // Update message only if there's more to fetch
                                 loadingNotice.setMessage(`Fetching from collection: ${collectionNameForNotice}, page ${page + 1}...`); // Use name in message
                             }
@@ -536,7 +524,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                             }
 
                             const currentApiUrl = `${baseApiUrl}/raindrops/0?${params.toString()}`;
-                            console.log(`Requesting items with tag: ${tag}`, currentApiUrl);
+                            console.debug(`Requesting items with tag: ${tag}`, currentApiUrl);
                             loadingNotice.setMessage(`Fetching items with tag: ${tag}, page ${page + 1}...`);
 
                             const response = await fetchWithRetry(
@@ -551,7 +539,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                                 break; // Skip this tag if there's an error, but continue with others
                             }
 
-                            console.log(`API Response for tag ${tag}:`, {
+                            console.debug(`API Response for tag ${tag}:`, {
                                 result: data.result,
                                 itemCount: data?.items?.length || 0,
                                 totalCount: data?.count || 0
@@ -562,7 +550,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
 
                                 page++;
                                 hasMore = data.items.length === perPage; // Continue if we got a full page
-                                console.log(`Fetched ${data.items.length} items for tag ${tag}, page ${page}`);
+                                console.debug(`Fetched ${data.items.length} items for tag ${tag}, page ${page}`);
                                 if (hasMore) { // Update message only if there's more to fetch
                                     loadingNotice.setMessage(`Fetching items with tag: ${tag}, page ${page + 1}...`);
                                 }
@@ -586,7 +574,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
 
                     // Convert the Map values back to an array for processing
                     allData = Array.from(uniqueItems.values());
-                    console.log(`Total unique items found across all tags: ${allData.length}`);
+                    console.debug(`Total unique items found across all tags: ${allData.length}`);
 
                 } else if (searchParameterString) {
                     // Original AND logic or single tag search using the simple space-separated format
@@ -606,7 +594,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                         }
 
                         const currentApiUrl = `${baseApiUrl}/raindrops/0?${params.toString()}`;
-                        console.log(`Requesting items with tags: ${searchParameterString}`, currentApiUrl);
+                        console.debug(`Requesting items with tags: ${searchParameterString}`, currentApiUrl);
                         loadingNotice.setMessage(`Fetching items with tags: ${searchParameterString}, page ${page + 1}...`);
 
                         const response = await fetchWithRetry(
@@ -625,7 +613,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                             allData = allData.concat(data.items);
                             page++;
                             hasMore = data.items.length === perPage;
-                            console.log(`Fetched ${data.items.length} items with tags, page ${page}`);
+                            console.debug(`Fetched ${data.items.length} items with tags, page ${page}`);
                             if (hasMore) { // Update message only if there's more to fetch
                                 loadingNotice.setMessage(`Fetching items with tags: ${searchParameterString}, page ${page + 1}...`);
                             }
@@ -648,7 +636,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     }
 
                     const currentApiUrl = `${baseApiUrl}/raindrops/0?${params.toString()}`;
-                    console.log('Requesting all items:', currentApiUrl);
+                    console.debug('Requesting all items:', currentApiUrl);
                     loadingNotice.setMessage(`Fetching all items, page ${page + 1}...`);
 
                     const response = await fetchWithRetry(
@@ -667,7 +655,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                         allData = allData.concat(data.items);
                         page++;
                         hasMore = data.items.length === perPage;
-                        console.log(`Fetched ${data.items.length} items, page ${page}`);
+                        console.debug(`Fetched ${data.items.length} items, page ${page}`);
                         if (hasMore) { // Update message only if there's more to fetch
                             loadingNotice.setMessage(`Fetching all items, page ${page + 1}...`);
                         }
@@ -842,7 +830,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                                     await app.vault.create(folderNotePath, content);
                                 }
                             }
-                        } catch (e) {
+                        } catch {
                             console.error(`Error generating folder note for ${folderPath}:`, e);
                         }
                     }
@@ -1021,7 +1009,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                                 'image/webp': 'webp',
                             };
                             fileExtFromMime = MIME_TO_EXT[mimeType] || '';
-                        } catch (e) { /* no type param */ }
+                        } catch { /* no type param */ }
                     }
                     
                     // Determine file extension
@@ -1087,7 +1075,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                                     } else {
                                         await app.vault.create(debugPath, debugContent);
                                     }
-                                } catch (e) { /* debug write failed */ }
+                                } catch { /* debug write failed */ }
                                 throw new Error(`Corrupt download (invalid magic bytes for .${fileExt})`);
                             }
                             
@@ -1342,7 +1330,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             return;
         }
 
-        const loadingNotice = new Notice(`Fetching Raindrop item ID: ${itemId}...`, 0);
+        const loadingNotice = new Notice(`Fetching raindrop item ID: ${itemId}...`, 0);
         const baseApiUrl = 'https://api.raindrop.io/rest/v1';
         const fetchOptions: RequestInit = {
             method: 'GET',
@@ -1432,6 +1420,24 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             if (error instanceof Error) errorMessage = error.message;
             new Notice(`Error during Quick Import of item ${itemId}: ${errorMessage}`, 10000);
             console.error(`Error quick importing Raindrop ID ${itemId}:`, error);
+        }
+    }
+}
+
+
+
+
+
+or);
+        }
+    }
+}
+
+
+
+
+
+ID ${itemId}:`, error);
         }
     }
 }

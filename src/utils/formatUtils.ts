@@ -1,4 +1,3 @@
-import { RaindropType } from "../types";
 
 /**
  * Format Utilities for Make It Rain

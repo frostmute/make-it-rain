@@ -450,13 +450,13 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
         const { containerEl } = this;
         containerEl.empty();
 
-        containerEl.createEl('h1', { text: 'Make It Rain Settings' });
+        new Setting(containerEl).setName('Make it rain settings').setHeading();
 
         // --- API Configuration Section ---
-        containerEl.createEl('h2', { text: '💧 Raindrop.io API Configuration' });
+        new Setting(containerEl).setName('Raindrop.io API configuration').setHeading();
         const apiTokenSetting = new Setting(containerEl)
-            .setName('Raindrop.io API Token')
-            .setDesc('Create a "Test Token" from your Raindrop.io Apps settings.')
+            .setName('Raindrop.io API token')
+            .setDesc('Create a "test token" from your Raindrop.io apps settings.')
             .addText((text: TextComponent) => {
                 text.setPlaceholder('Enter your API token')
                     .setValue(this.plugin.settings.apiToken)
@@ -465,7 +465,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                         await this.plugin.saveSettings();
                     });
                 text.inputEl.type = 'password'; // Mask the token
-                text.inputEl.style.width = '100%';
+                text.inputEl.addClass('make-it-rain-full-width');
             })
             .addButton((button: ButtonComponent) => {
                 button.setButtonText("Verify Token")
@@ -485,9 +485,9 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
         apiTokenHelpLink.setAttr('target', '_blank');
 
         // --- General Import Settings Section ---
-        containerEl.createEl('h2', { text: '⚙️ General Import Settings' });
+        new Setting(containerEl).setName('General import settings').setHeading();
         new Setting(containerEl)
-            .setName('Default Vault Save Location')
+            .setName('Default vault save location')
             .setDesc('Specify the default folder for imported notes (e.g., Imports/Raindrops). Leave blank for vault root.')
             .addText((text: TextComponent) => {
                 text.setPlaceholder('e.g., Raindrops/')
@@ -496,11 +496,11 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                         this.plugin.settings.defaultFolder = value;
                         await this.plugin.saveSettings();
                     });
-                text.inputEl.style.width = '100%';
+                text.inputEl.addClass('make-it-rain-full-width');
             });
 
         const fileNameTemplateSetting = new Setting(containerEl)
-            .setName('Filename Template')
+            .setName('Filename template')
             .setDesc('Define the filename for notes when "Use Raindrop Title" is enabled. Placeholders: {{title}}, {{id}}, {{collectionTitle}}, {{date}} (YYYY-MM-DD).')
             .addText((text: TextComponent) => {
                 text.setPlaceholder('{{title}}')
@@ -509,7 +509,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                         this.plugin.settings.fileNameTemplate = value;
                         await this.plugin.saveSettings();
                     });
-                text.inputEl.style.width = '100%';
+                text.inputEl.addClass('make-it-rain-full-width');
             });
         
         const fileNameTemplateHelpLink = fileNameTemplateSetting.nameEl.createEl('a', {
@@ -521,7 +521,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
         fileNameTemplateHelpLink.setAttr('target', '_blank');
 
         new Setting(containerEl)
-            .setName('Banner Frontmatter Field Name')
+            .setName('Banner frontmatter field name')
             .setDesc('Customize the frontmatter field name for the banner/cover image (default: banner).')
             .addText((text: TextComponent) => {
                 text.setPlaceholder('banner')
@@ -534,7 +534,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
 
 
         new Setting(containerEl)
-            .setName('Download Files Locally')
+            .setName('Download files locally')
             .setDesc('If a raindrop is a Document, Image, Video, or Audio file, automatically download the raw file directly into your vault.')
             .addToggle((toggle: ToggleComponent) => {
                 toggle.setValue(this.plugin.settings.downloadFiles)
@@ -545,7 +545,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
             });
 
         new Setting(containerEl)
-            .setName('Create Folder Notes')
+            .setName('Create folder notes')
             .setDesc('Automatically generate an index note matching the name of each collection folder, listing its children.')
             .addToggle((toggle: ToggleComponent) => {
                 toggle.setValue(this.plugin.settings.createFolderNotes)
@@ -556,9 +556,9 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
             });
 
         // --- UI Settings Section ---
-        containerEl.createEl('h2', { text: '🎨 User Interface' });
+        new Setting(containerEl).setName('User interface').setHeading();
         new Setting(containerEl)
-            .setName('Show Ribbon Icon')
+            .setName('Show ribbon icon')
             .setDesc('Toggle the Make It Rain ribbon icon in the Obsidian sidebar.')
             .addToggle((toggle: ToggleComponent) => {
                 toggle.setValue(this.plugin.settings.showRibbonIcon)
@@ -572,9 +572,9 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
         containerEl.createEl('hr');
 
         // --- Template System Section ---
-        containerEl.createEl('h2', { text: '📄 Template System' });
+        new Setting(containerEl).setName('Template system').setHeading();
         new Setting(containerEl)
-            .setName('Enable Template System')
+            .setName('Enable template system')
             .setDesc('Use custom templates for formatting imported notes. If disabled, a basic note structure will be used.')
             .addToggle((toggle: ToggleComponent) => {
                 toggle.setValue(this.plugin.settings.isTemplateSystemEnabled)
@@ -586,7 +586,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
             });
 
         if (this.plugin.settings.isTemplateSystemEnabled) {
-            containerEl.createEl('h3', { text: 'Default Template' });
+            new Setting(containerEl).setName('Default template').setHeading();
             new Setting(containerEl)
                 .setDesc('This template is used if no content-type specific template is active or defined below.')
                 .setClass('setting-item-stacked') // Added class
@@ -598,12 +598,12 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                             await this.plugin.saveSettings();
                         });
                     text.inputEl.rows = 15;
-                    text.inputEl.style.width = '100%';
-                    text.inputEl.style.fontFamily = 'monospace';
+                    text.inputEl.addClass('make-it-rain-full-width');
+                    text.inputEl.addClass('make-it-rain-monospace');
                 })
                 .addButton((button) => {
                     button
-                        .setButtonText("Reset to Default")
+                        .setButtonText("Reset to default")
                         .setIcon("undo") // Using 'undo' icon
                         .setTooltip("Reset this template to its original default value")
                         .onClick(async () => {
@@ -614,7 +614,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                         });
                 });
 
-            containerEl.createEl('h3', { text: 'Content-Type Specific Templates' });
+            new Setting(containerEl).setName('Content-type specific templates').setHeading();
             const contentTypeDesc = containerEl.createEl('p', { cls: 'setting-item-description' });
             contentTypeDesc.appendText('Define specific templates for different Raindrop types. If a type-specific template is enabled and filled, it will be used instead of the default template. If disabled or empty, the default template is used for that type. Visit the ');
             contentTypeDesc.createEl('a', { href: 'https://frostmute.github.io/make-it-rain/template-system/', text: 'documentation' });
@@ -626,7 +626,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                 const typeStr = type as string;
                 const typeKey = type as keyof typeof this.plugin.settings.contentTypeTemplates;
                 
-                containerEl.createEl('h4', { text: `${typeStr.charAt(0).toUpperCase() + typeStr.slice(1)} Template`});
+                new Setting(containerEl).setName(`${typeStr.charAt(0).toUpperCase() + typeStr.slice(1)} template`).setHeading();
                 
                 new Setting(containerEl)
                     .setName(`Enable ${typeStr} Template`)
@@ -653,8 +653,8 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                                     await this.plugin.saveSettings();
                                 });
                             text.inputEl.rows = 10;
-                            text.inputEl.style.width = '100%';
-                            text.inputEl.style.fontFamily = 'monospace';
+                            text.inputEl.addClass('make-it-rain-full-width');
+                            text.inputEl.addClass('make-it-rain-monospace');
                         })
                         .addButton((button) => { // Add Reset Button for specific type
                             button
@@ -748,8 +748,25 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
             let errorMsg = 'An error occurred during token verification.';
             if (error instanceof Error) errorMsg = error.message;
             else if (typeof error === 'string') errorMsg = error;
-            new Notice(`API Token verification failed: ${errorMsg}`, 10000);
+            new Notice(`API token verification failed: ${errorMsg}`, 10000);
             console.error('Error verifying API token:', error);
         }
+    }
+}
+
+    }
+}
+rifying API token:', error);
+        }
+    }
+}
+
+    }
+}
+en:', error);
+        }
+    }
+}
+
     }
 }

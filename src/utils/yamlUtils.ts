@@ -32,7 +32,7 @@ export function isPlainObject(value: unknown): value is Record<string, unknown> 
  * @param seen - Set of seen objects to handle circular references
  * @returns Properly formatted and escaped YAML string
  */
-export function formatYamlValue(value: any, indentLevel: number = 0, seen: Set<any> = new Set()): string {
+export function formatYamlValue(value: unknown, indentLevel: number = 0, seen: Set<unknown> = new Set()): string {
   const indent = "  ".repeat(indentLevel);
 
   // Handle null/undefined
