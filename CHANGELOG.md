@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-04-22
+
+### Changed
+
+- **Submission Prep**: Structural reorganization of the project to meet official Obsidian Community Plugin requirements.
+- **Manifest Relocation**: Moved `manifest.json` from `build/` to the project root for better compatibility with automated submission tools.
+- **Build Pipeline**: Optimized the esbuild process to output assets (`main.js`, `styles.css`) directly to the root for release packaging while keeping source styles in `src/styles.css`.
+- **Ignore Rules**: Updated `.gitignore` to track release manifests while keeping the source repository clean of generated assets.
+
 ## [1.8.0] - 2026-04-16
 
 ### Added
