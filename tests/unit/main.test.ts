@@ -1,6 +1,7 @@
 import RaindropToObsidian from '../../src/main';
 import { mockApp, MockNotice } from '../setup';
 import { App, PluginManifest } from 'obsidian';
+import { RaindropItem, RaindropType } from '../../src/types';
 
 describe('RaindropToObsidian', () => {
     let plugin: RaindropToObsidian;
@@ -72,9 +73,12 @@ describe('RaindropToObsidian', () => {
             const raindrop = {
                 _id: 123,
                 title: 'Test Raindrop',
-                collection: { title: 'Test Collection' },
-                created: '2024-01-01T12:00:00Z'
-            };
+                collection: { title: 'Test Collection', $id: 1 },
+                created: '2024-01-01T12:00:00Z',
+                link: 'https://test.com',
+                lastUpdate: '2024-01-01T12:00:00Z',
+                type: 'link' as RaindropType
+            } as RaindropItem;
             const fileName = plugin.generateFileName(raindrop, true);
             expect(fileName).toBe('Test Raindrop');
         });
@@ -82,16 +86,25 @@ describe('RaindropToObsidian', () => {
         it('should use ID when title template is disabled', () => {
             const raindrop = {
                 _id: 123,
-                title: 'Test Raindrop'
-            };
+                title: 'Test Raindrop',
+                link: 'https://test.com',
+                created: '2024-01-01T12:00:00Z',
+                lastUpdate: '2024-01-01T12:00:00Z',
+                type: 'link' as RaindropType
+            } as RaindropItem;
             const fileName = plugin.generateFileName(raindrop, false);
             expect(fileName).toBe('123');
         });
 
         it('should handle missing title', () => {
             const raindrop = {
-                _id: 456
-            };
+                _id: 456,
+                title: '',
+                link: 'https://test.com',
+                created: '2024-01-01T12:00:00Z',
+                lastUpdate: '2024-01-01T12:00:00Z',
+                type: 'link' as RaindropType
+            } as RaindropItem;
             const fileName = plugin.generateFileName(raindrop, true);
             expect(fileName).toBe('Untitled');
         });
@@ -99,8 +112,12 @@ describe('RaindropToObsidian', () => {
         it('should sanitize generated file names', () => {
             const raindrop = {
                 _id: 789,
-                title: 'Test / Raindrop: Illegal'
-            };
+                title: 'Test / Raindrop: Illegal',
+                link: 'https://test.com',
+                created: '2024-01-01T12:00:00Z',
+                lastUpdate: '2024-01-01T12:00:00Z',
+                type: 'link' as RaindropType
+            } as RaindropItem;
             const fileName = plugin.generateFileName(raindrop, true);
             expect(fileName).toBe('Test  Raindrop Illegal');
         });

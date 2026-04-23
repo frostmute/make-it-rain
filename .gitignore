@@ -34,3 +34,5 @@ knowledge_graph*.html
 GEMINI.md
 gemini.md
 /src/index.ts
+/docs/meta/
+/scripts/
