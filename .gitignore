@@ -20,10 +20,12 @@ Thumbs.db
 build/
 dist/
 node_modules/
+main.js
+styles.css
 *.js
+!jest.config.js
 *.map
 *.d.ts
-!jest.config.js
 knowledge_graph*.html
 
 # Env
