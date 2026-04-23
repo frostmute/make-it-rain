@@ -30,74 +30,123 @@ import { RaindropCollection } from '../types';
 export interface RateLimiter {
     checkLimit: () => Promise<void>;
     resetCounter: () => void;
+    complete: () => void;
 }
 
 /**
- * Creates a rate limiter that manages API request pacing
- * Uses a functional closure approach to maintain state
+ * Creates a rate limiter that manages API request pacing using a Token Bucket algorithm
+ * Supports concurrency and respects per-minute limits.
  * 
  * @param maxRequestsPerMinute - Maximum number of requests allowed per minute
- * @param delayBetweenRequests - Milliseconds to wait between requests
+ * @param delayBetweenRequests - Minimum delay between requests to the same slot (ms)
+ * @param maxConcurrency - Maximum number of concurrent requests allowed
  * @returns A rate limiter object with methods to check limits and reset counters
  */
-export function createRateLimiter(maxRequestsPerMinute = 60, delayBetweenRequests = 300): RateLimiter {
-    let requestCount = 0;
-    let resetTime = Date.now() + 60000; // 1 minute window
+/**
+ * Creates a rate limiter that manages API request pacing using a Token Bucket algorithm
+ * Supports concurrency and respects per-minute limits.
+ * 
+ * @param maxRequestsPerMinute - Maximum number of requests allowed per minute
+ * @param delayBetweenRequests - Minimum delay between requests to the same slot (ms)
+ * @param maxConcurrency - Maximum number of concurrent requests allowed
+ * @returns A rate limiter object with methods to check limits and reset counters
+ */
+export function createRateLimiter(
+    maxRequestsPerMinute = 60, 
+    delayBetweenRequests = 300,
+    maxConcurrency = 5
+): RateLimiter {
+    let tokens = maxRequestsPerMinute;
+    let lastRefill = Date.now();
+    const refillRate = 60000 / maxRequestsPerMinute; // ms per token
     
+    let runningCount = 0;
+    const waitingQueue: (() => void)[] = [];
+
+    /**
+     * Refills tokens based on elapsed time
+     */
+    const refill = () => {
+        const now = Date.now();
+        const elapsed = now - lastRefill;
+        if (elapsed >= refillRate) {
+            const newTokens = Math.floor(elapsed / refillRate);
+            tokens = Math.min(maxRequestsPerMinute, tokens + newTokens);
+            lastRefill = now - (elapsed % refillRate);
+        }
+    };
+
     /**
      * Checks if we're within rate limits and handles delays if needed
      */
+    const checkLimit = async (): Promise<void> => {
+        // 1. Concurrency check
+        if (runningCount >= maxConcurrency) {
+            await new Promise<void>(resolve => waitingQueue.push(resolve));
+        }
+        
+        runningCount++;
 
-    let queuePromise: Promise<void> = Promise.resolve();
-
-    /**
-     * Checks if we're within rate limits and handles delays if needed
-     */
-    const checkLimit = (): Promise<void> => {
-        // Chain promises to ensure sequential execution of the rate limit check
-        // even when called concurrently
-        const nextPromise = queuePromise.then(async () => {
-            const now = Date.now();
-
-            // Reset counter if we're in a new time window
-            if (now > resetTime) {
-                resetTime = now + 60000;
-                requestCount = 0;
+        try {
+            refill();
+            
+            if (tokens <= 0) {
+                // Wait for at least one token
+                const now = Date.now();
+                const waitTime = refillRate - (now - lastRefill);
+                await new Promise(resolve => setTimeout(resolve, Math.max(1, waitTime)));
+                refill();
             }
 
-            // If we've hit the rate limit, wait for the reset
-            if (requestCount >= maxRequestsPerMinute) {
-                const waitTime = resetTime - now;
-                console.log(`Rate limit reached. Waiting ${waitTime}ms before next request.`);
-                await new Promise(resolve => setTimeout(resolve, waitTime));
-                // Reset after waiting
-                resetTime = Date.now() + 60000;
-                requestCount = 0;
-            } else if (requestCount > 0) {
-                // Standard delay between requests to be polite to the API
-                await new Promise(resolve => setTimeout(resolve, delayBetweenRequests));
+            // Consume token
+            if (tokens > 0) {
+                tokens--;
+            } else {
+                // Fallback for edge cases/rounding: just wait a bit more
+                await new Promise(resolve => setTimeout(resolve, refillRate));
+                refill();
+                if (tokens > 0) tokens--;
             }
-
-            // Increment counter after making a request
-            requestCount++;
-        });
-
-        // Update the tail of the queue
-        queuePromise = nextPromise.catch(() => {});
-
-        return nextPromise;
+            
+            // Politeness delay to spread out requests
+            if (delayBetweenRequests > 0) {
+                const delay = delayBetweenRequests / maxConcurrency;
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        } catch (error) {
+            // Ensure we don't leak slots on error
+            runningCount--;
+            const next = waitingQueue.shift();
+            if (next) next();
+            throw error;
+        }
     };
 
     /**
      * Resets the counter when hitting a rate limit
      */
     const resetCounter = (): void => {
-        resetTime = Date.now() + 60000;
-        requestCount = 0;
-        console.log('Rate limiter counter reset.');
+        tokens = maxRequestsPerMinute;
+        lastRefill = Date.now();
+        console.log('Rate limiter tokens refilled.');
+    };
+
+    /**
+     * Releases a concurrency slot
+     */
+    const complete = (): void => {
+        if (runningCount > 0) {
+            runningCount--;
+            const next = waitingQueue.shift();
+            if (next) next();
+        }
     };
     
-    return { checkLimit, resetCounter };
+    return { 
+        checkLimit, 
+        resetCounter,
+        complete
+    };
 }
 
 /**
@@ -233,16 +282,21 @@ export async function fetchWithRetry(
             // Check rate limit before making request
             await rateLimiter.checkLimit();
             
-            // Use Obsidian's request API for consistent behavior across platforms
-            const response = await request({
-                url: url,
-                method: requestOptions.method || 'GET',
-                headers: requestOptions.headers as Record<string, string>,
-                body: requestOptions.body as string | ArrayBuffer | undefined
-            });
-            
-            // Parse and return the response
-            return parseApiResponse(response);
+            try {
+                // Use Obsidian's request API for consistent behavior across platforms
+                const response = await request({
+                    url: url,
+                    method: requestOptions.method || 'GET',
+                    headers: requestOptions.headers as Record<string, string>,
+                    body: requestOptions.body as string | ArrayBuffer | undefined
+                });
+                
+                // Parse and return the response
+                return parseApiResponse(response);
+            } finally {
+                // Release concurrency slot
+                rateLimiter.complete();
+            }
             
         } catch (error) {
             // Handle rate limiting and retry logic
@@ -261,8 +315,8 @@ export async function fetchWithRetry(
  * @param response - The raw API response
  * @returns The collection data or null if invalid response
  */
-export function extractCollectionData(response: Record<string, any>): RaindropCollection | null {
-    const isValidResponse = response && response.result === true && response.item;
+export function extractCollectionData(response: any): RaindropCollection | null {
+    const isValidResponse = response && typeof response === 'object' && response.result === true && response.item;
     
     if (isValidResponse) {
         return response.item as RaindropCollection;
