@@ -42,6 +42,15 @@ export interface RateLimiter {
  * @param maxConcurrency - Maximum number of concurrent requests allowed
  * @returns A rate limiter object with methods to check limits and reset counters
  */
+/**
+ * Creates a rate limiter that manages API request pacing using a Token Bucket algorithm
+ * Supports concurrency and respects per-minute limits.
+ * 
+ * @param maxRequestsPerMinute - Maximum number of requests allowed per minute
+ * @param delayBetweenRequests - Minimum delay between requests to the same slot (ms)
+ * @param maxConcurrency - Maximum number of concurrent requests allowed
+ * @returns A rate limiter object with methods to check limits and reset counters
+ */
 export function createRateLimiter(
     maxRequestsPerMinute = 60, 
     delayBetweenRequests = 300,
@@ -79,24 +88,36 @@ export function createRateLimiter(
         runningCount++;
 
         try {
-            while (true) {
+            refill();
+            
+            if (tokens <= 0) {
+                // Wait for at least one token
+                const now = Date.now();
+                const waitTime = refillRate - (now - lastRefill);
+                await new Promise(resolve => setTimeout(resolve, Math.max(1, waitTime)));
                 refill();
-                
-                if (tokens > 0) {
-                    tokens--;
-                    // Politeness delay
-                    if (delayBetweenRequests > 0) {
-                        await new Promise(resolve => setTimeout(resolve, delayBetweenRequests / maxConcurrency));
-                    }
-                    return;
-                }
+            }
 
-                // Wait for next token
-                const waitTime = refillRate - (Date.now() - lastRefill);
-                await new Promise(resolve => setTimeout(resolve, Math.max(0, waitTime)));
+            // Consume token
+            if (tokens > 0) {
+                tokens--;
+            } else {
+                // Fallback for edge cases/rounding: just wait a bit more
+                await new Promise(resolve => setTimeout(resolve, refillRate));
+                refill();
+                if (tokens > 0) tokens--;
+            }
+            
+            // Politeness delay to spread out requests
+            if (delayBetweenRequests > 0) {
+                const delay = delayBetweenRequests / maxConcurrency;
+                await new Promise(resolve => setTimeout(resolve, delay));
             }
         } catch (error) {
+            // Ensure we don't leak slots on error
             runningCount--;
+            const next = waitingQueue.shift();
+            if (next) next();
             throw error;
         }
     };
