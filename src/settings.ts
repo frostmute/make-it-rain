@@ -754,19 +754,3 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
     }
 }
 
-    }
-}
-rifying API token:', error);
-        }
-    }
-}
-
-    }
-}
-en:', error);
-        }
-    }
-}
-
-    }
-}

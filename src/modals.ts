@@ -288,7 +288,7 @@ export class RaindropFetchModal extends Modal {
                     toggle.setValue(this.useDefaultTemplate)
                         .onChange((value: boolean) => {
                             this.useDefaultTemplate = value;
-                            const overrideTemplatesInput = contentEl.querySelector('.override-templates-toggle input[type="checkbox"]');
+                            const overrideTemplatesInput = contentEl.querySelector('.override-templates-toggle input[type="checkbox"]') as HTMLInputElement | null;
                             if (value && overrideTemplatesInput) {
                                 this.overrideTemplates = false; // Can't override if only using default
                                 overrideTemplatesInput.checked = false;
@@ -457,31 +457,4 @@ export class QuickImportModal extends Modal {
         const { contentEl } = this;
         contentEl.empty();
     }
-}
-}
-  contentEl.empty();
-    }
-}
-}
-    return;
-                }
-
-                this.close();
-                await this.plugin.fetchSingleRaindrop(itemId, this.vaultPath || undefined, this.appendTagsToNotes || undefined);
-            });
-
-        new ButtonComponent(buttonsEl)
-            .setButtonText('Cancel')
-            .onClick(() => { this.close(); });
-    }
-
-    onClose() {
-        const { contentEl } = this;
-        contentEl.empty();
-    }
-}
-}
-  contentEl.empty();
-    }
-}
 }
