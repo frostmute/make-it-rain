@@ -177,8 +177,8 @@ export class RaindropFetchModal extends Modal {
                     .addOption(TagMatchTypes.ALL, 'Match ALL Tags (AND)')
                     .addOption(TagMatchTypes.ANY, 'Match ANY Tag (OR)')
                     .setValue(this.tagMatchType)
-                    .onChange((value: 'all' | 'any') => {
-                        this.tagMatchType = value;
+                    .onChange((value: string) => {
+                        this.tagMatchType = value as 'all' | 'any';
                     });
             });
         
@@ -199,8 +199,8 @@ export class RaindropFetchModal extends Modal {
                     dropdown.addOption(type, type.charAt(0).toUpperCase() + type.slice(1));
                 });
                 dropdown.setValue(this.filterType)
-                    .onChange((value: RaindropType | 'all') => {
-                        this.filterType = value;
+                    .onChange((value: string) => {
+                        this.filterType = value as RaindropType | 'all';
                     });
             });
 
