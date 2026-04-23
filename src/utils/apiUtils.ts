@@ -167,7 +167,7 @@ export async function handleRequestError(
     }
     
     // For other errors, log and possibly retry
-    console.error(`Error in API request (attempt ${attemptNumber + 1}/${maxRetries}):`, error);
+    console.error(`Error in API request (attempt ${attemptNumber + 1}/${maxRetries}):`, error instanceof Error ? error.message : String(error));
     
     if (!isLastAttempt) {
         // Wait and retry for non-rate limit errors
