@@ -1,4 +1,4 @@
-import { App, request, Notice } from 'obsidian';
+import { App } from 'obsidian';
 import { sanitizeFileName } from './fileUtils';
 import { RaindropCollection } from '../types';
 
@@ -68,7 +68,7 @@ export function createRateLimiter(maxRequestsPerMinute = 60, delayBetweenRequest
             // If we've hit the rate limit, wait for the reset
             if (requestCount >= maxRequestsPerMinute) {
                 const waitTime = resetTime - now;
-                console.log(`Rate limit reached. Waiting ${waitTime}ms before next request.`);
+                console.debug(`Rate limit reached. Waiting ${waitTime}ms before next request.`);
                 await new Promise(resolve => setTimeout(resolve, waitTime));
                 // Reset after waiting
                 resetTime = Date.now() + 60000;
@@ -94,7 +94,7 @@ export function createRateLimiter(maxRequestsPerMinute = 60, delayBetweenRequest
     const resetCounter = (): void => {
         resetTime = Date.now() + 60000;
         requestCount = 0;
-        console.log('Rate limiter counter reset.');
+        console.debug('Rate limiter counter reset.');
     };
     
     return { checkLimit, resetCounter };
@@ -160,7 +160,7 @@ export async function handleRequestError(
     
     // Handle rate limiting (HTTP 429)
     if (error.status === 429 || (error.message && error.message.includes('rate limit'))) {
-        console.log('Rate limit hit, resetting counter and waiting...');
+        console.debug('Rate limit hit, resetting counter and waiting...');
         rateLimiter.resetCounter();
         await new Promise(resolve => setTimeout(resolve, delayBetweenRetries * 2)); // Longer wait for rate limits
         return true; // We handled the error, continue with retry
@@ -261,7 +261,7 @@ export async function fetchWithRetry(
  * @param response - The raw API response
  * @returns The collection data or null if invalid response
  */
-export function extractCollectionData(response: Record<string, any>): RaindropCollection | null {
+export function extractCollectionData(response: any): any {
     const isValidResponse = response && response.result === true && response.item;
     
     if (isValidResponse) {
