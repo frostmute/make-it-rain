@@ -261,7 +261,7 @@ export async function fetchWithRetry(
  * @param response - The raw API response
  * @returns The collection data or null if invalid response
  */
-export function extractCollectionData(response: Record<string, any>): RaindropCollection | null {
+export function extractCollectionData(response: any): any {
     const isValidResponse = response && response.result === true && response.item;
     
     if (isValidResponse) {

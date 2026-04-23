@@ -49,6 +49,9 @@ import {
     getFullPathSegments,
     
     // YAML utilities
+    createYamlFrontmatter,
+    formatYamlValue,
+    escapeYamlString,
     
     // Format utilities
     formatDate,
@@ -830,7 +833,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                                     await app.vault.create(folderNotePath, content);
                                 }
                             }
-                        } catch {
+                        } catch (e) {
                             console.error(`Error generating folder note for ${folderPath}:`, e);
                         }
                     }
@@ -1423,26 +1426,3 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         }
     }
 }
-
-
-
-
-
-or);
-        }
-    }
-}
-
-
-
-
-
-ID ${itemId}:`, error);
-        }
-    }
-}
-
-
-
-
-
