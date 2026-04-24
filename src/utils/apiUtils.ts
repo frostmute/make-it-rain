@@ -1,5 +1,4 @@
-import { request } from 'obsidian';
-import { App } from 'obsidian';
+import { App, request } from 'obsidian';
 import { sanitizeFileName } from './fileUtils';
 import { RaindropCollection } from '../types';
 
@@ -168,7 +167,7 @@ export async function handleRequestError(
     }
     
     // For other errors, log and possibly retry
-    console.error(`Error in API request (attempt ${attemptNumber + 1}/${maxRetries}):`, error);
+    console.error(`Error in API request (attempt ${attemptNumber + 1}/${maxRetries}):`, error instanceof Error ? error.message : String(error));
     
     if (!isLastAttempt) {
         // Wait and retry for non-rate limit errors

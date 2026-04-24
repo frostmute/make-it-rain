@@ -143,7 +143,7 @@ export function formatYamlValue(value: unknown, indentLevel: number = 0, seen: S
   try {
     return JSON.stringify(value);
   } catch (error) {
-    console.error("Error formatting YAML value:", error);
+    console.error("Error formatting YAML value:", error instanceof Error ? error.message : String(error));
     return `"Error formatting value"`;
   }
 }
@@ -186,7 +186,7 @@ export function createYamlFrontmatter(data: Record<string, unknown>): string {
     frontmatter += "---\n\n";
     return frontmatter;
   } catch (error) {
-    console.error("Error creating YAML frontmatter:", error);
+    console.error("Error creating YAML frontmatter:", error instanceof Error ? error.message : String(error));
     new Notice("Error creating note frontmatter. Check console for details.");
     return '---\ntitle: "Error creating frontmatter"\n---\n\n';
   }
