@@ -77,6 +77,7 @@ const KNOWN_FILE_EXTENSIONS = /\.(pdf|epub|mobi|azw3?|djvu|docx?|xlsx?|pptx?|odt
  * @returns A sanitized file name safe for file systems
  */
 export function sanitizeFileName(fileName: string): string {
+    // eslint-disable-next-line no-control-regex
     const invalidChars = /[\u0000-\u001F\u007F\u200B-\u200D\uFEFF/\\:*?"<>|#%&{}$!@'`+=]/g;
     const replacement = '';
     

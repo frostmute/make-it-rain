@@ -1,3 +1,4 @@
+import { request } from 'obsidian';
 import { App } from 'obsidian';
 import { sanitizeFileName } from './fileUtils';
 import { RaindropCollection } from '../types';
@@ -226,6 +227,7 @@ export async function fetchWithRetry(
     
     // Try up to maxRetries times
     let attemptNumber = 0;
+        // eslint-disable-next-line no-constant-condition
     while (true) {
         const isLastAttempt = attemptNumber >= maxRetries - 1;
         
