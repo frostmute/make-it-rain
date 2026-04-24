@@ -254,8 +254,8 @@ export class RaindropFetchModal extends Modal {
                         if (value && this.updateExisting) {
                             this.updateExisting = false;
                             // Visually update the other toggle if we can access it
-                            const updateExistingInput = contentEl.querySelector('.update-existing-toggle input[type="checkbox"]') as HTMLInputElement;
-                            if (updateExistingInput) updateExistingInput.checked = false;
+                            const updateExistingInput = contentEl.querySelector('.update-existing-toggle input[type="checkbox"]');
+                            if (updateExistingInput) (updateExistingInput as HTMLInputElement).checked = false;
                         }
                     });
             });

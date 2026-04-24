@@ -288,7 +288,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             return "Error_Filename_" + Date.now();
         }
 
-        let finalFileName = sanitizeFileName(fileName);
+        const finalFileName = sanitizeFileName(fileName);
         if (!finalFileName.trim()) {
             return "Unnamed_Raindrop_" + (raindrop._id || Date.now()); // Use _id consistently
         }
@@ -922,7 +922,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             const raindropTitle = raindrop.title || 'Untitled';
             loadingNotice.setMessage(`Processing '${raindropTitle}'... (${processed}/${total})`);
 
-            let processOutcome: 'created' | 'updated' | 'skipped' = 'created';
+            const processOutcome: 'created' | 'updated' | 'skipped' = 'created';
 
             // Generate template data
             const templateData: Record<string, any> = {
@@ -1391,7 +1391,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             // For simplicity in quick import, we can fetch all collections if the item has a collection ID.
             // This ensures collectionPath and title are available for the template.
             let collectionsData: CollectionResponse | undefined = undefined;
-            let collectionIdToNameMap = new Map<number, string>();
+            const collectionIdToNameMap = new Map<number, string>();
 
             if (raindropItem.collection?.$id) {
                  loadingNotice.setMessage(`Fetching collection info for item ${itemId}...`);
