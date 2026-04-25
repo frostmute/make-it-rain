@@ -132,7 +132,7 @@ export function buildCollectionApiUrl(collectionId: string): string {
  * @param response - The response from the API
  * @returns Parsed JSON data
  */
-export function parseApiResponse(response: string | object): any {
+export function parseApiResponse(response: string | object): unknown {
     if (typeof response === 'string') {
         return JSON.parse(response);
     }
@@ -150,7 +150,7 @@ export function parseApiResponse(response: string | object): any {
  * @returns True if error was handled and retry should happen, false otherwise
  */
 export async function handleRequestError(
-    error: any, 
+    error: unknown, 
     rateLimiter: RateLimiter, 
     attemptNumber: number, 
     maxRetries: number,
@@ -159,7 +159,7 @@ export async function handleRequestError(
     const isLastAttempt = attemptNumber >= maxRetries - 1;
     
     // Handle rate limiting (HTTP 429)
-    if (error.status === 429 || (error.message && error.message.includes('rate limit'))) {
+    if (error && typeof error === 'object' && ('status' in error && error.status === 429 || ('message' in error && typeof error.message === 'string' && error.message.includes('rate limit')))) {
         console.debug('Rate limit hit, resetting counter and waiting...');
         rateLimiter.resetCounter();
         await new Promise(resolve => setTimeout(resolve, delayBetweenRetries * 2)); // Longer wait for rate limits
@@ -199,7 +199,7 @@ export async function fetchWithRetry(
     rateLimiterOrMaxRetries?: RateLimiter | number,
     maxRetries: number = 3,
     delayBetweenRetries: number = 1000
-): Promise<any> {
+): Promise<unknown> {
     // Normalize parameters to handle both calling patterns
     let url: string;
     let requestOptions: RequestInit;
@@ -224,7 +224,7 @@ export async function fetchWithRetry(
     
     // Try up to maxRetries times
     let attemptNumber = 0;
-        // eslint-disable-next-line no-constant-condition
+    // eslint-disable-next-line no-constant-condition -- Intentional infinite loop for retry logic
     while (true) {
         const isLastAttempt = attemptNumber >= maxRetries - 1;
         
@@ -262,7 +262,7 @@ export async function fetchWithRetry(
  */
 export function extractCollectionData(response: unknown): RaindropCollection | null {
     if (response && typeof response === 'object' && 'result' in response && response.result === true && 'item' in response) {
-        return (response as any).item as RaindropCollection;
+        return (response as Record<string, unknown>).item as RaindropCollection;
     }
     
     console.error('Failed to fetch collection info:', response);

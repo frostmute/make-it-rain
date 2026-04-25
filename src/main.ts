@@ -16,7 +16,7 @@
  * and immutable data structures to improve code reliability and testability.
  */
 
-import { App, Notice, Plugin, PluginManifest, TFile, normalizePath } from 'obsidian';
+import { App, Notice, Plugin, PluginManifest, TFile, TFolder, normalizePath } from 'obsidian';
 import { requestUrl, RequestUrlParam } from 'obsidian';
 import { 
     MakeItRainSettings, 
@@ -83,7 +83,6 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
     settings: MakeItRainSettings;
     private rateLimiter: RateLimiter;
     private ribbonIconEl: HTMLElement | undefined;
-    private isRibbonShown: boolean = false;
     private collectionCache: RaindropCollection[] | null = null;
     private lastCollectionFetch: number = 0;
     private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache
@@ -99,7 +98,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
 
         this.addCommand({
             id: 'fetch-raindrops',
-            name: 'Fetch Raindrops (Filtered)',
+            name: 'Fetch raindrops (filtered)',
             callback: () => {
                 new RaindropFetchModal(this.app, this).open();
             }
@@ -107,7 +106,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
 
         this.addCommand({ // New command for Quick Import
             id: 'quick-import-raindrop',
-            name: 'Quick Import Raindrop by URL/ID',
+            name: 'Quick import raindrop by URL/ID',
             callback: () => {
                 new QuickImportModal(this.app, this).open();
             }
@@ -235,7 +234,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         if (this.settings.showRibbonIcon) {
             this.ribbonIconEl = this.addRibbonIcon(
                 'cloud-download', // Obsidian icon ID for cloud download
-                'Fetch Raindrops', // Tooltip text
+                'Fetch raindrops', // Tooltip text
                 () => {
                     // Callback function when the icon is clicked
                     new RaindropFetchModal(this.app, this).open();
@@ -355,7 +354,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 const collectionPromises = resolvedCollectionIds.map(async (collectionId) => {
                     let hasMore = true;
                     let page = 0;
-                    let collectionData: any[] = [];
+                    let collectionData: RaindropItem[] = [];
 
                     // Construct the API URL with filter type and search if specified
                     const collectionApiBaseUrl = `${baseApiUrl}/raindrops/${collectionId}`;
@@ -727,8 +726,8 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                             const folderNotePath = normalizePath(`${folderPath}/${folderName}.md`);
                             const abstractFile = app.vault.getAbstractFileByPath(folderPath);
                             
-                            if (abstractFile && 'children' in abstractFile) {
-                                const folderChildren = (abstractFile as any).children as any[];
+                            if (abstractFile instanceof TFolder) {
+                                const folderChildren = abstractFile.children;
                                 
                                 let content = `---\n`;
                                 content += `title: "${folderName.replace(/"/g, '\\"')}"\n`;
@@ -855,7 +854,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             const processOutcome: 'created' | 'updated' | 'skipped' = fileExists ? 'updated' : 'created';
 
             // Generate template data
-            const templateData: Record<string, any> = {
+            const templateData: Record<string, unknown> = {
                 id: raindrop._id,
                 title: escapeYamlString(raindrop.title),
                 excerpt: escapeYamlString(raindrop.excerpt || ''),
@@ -887,15 +886,15 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
 
             try {
                 // Prepare data for the rendering engine (including pre-calculated fields for helpers)
-                const enhancedDataForRender: Record<string, any> = {
+                const enhancedDataForRender: Record<string, unknown> = {
                     ...templateData, // Spread the original templateData
                     url: templateData.link || '', // Ensure url is available, aliasing link
-                    domain: getDomain(templateData.link || ''),
+                    domain: getDomain(templateData.link as string || ''),
                     // Pre-calculate values that used helpers in the template:
                     renderedType: raindropType(templateData.type as RaindropType), // Cast type to RaindropType
-                    formattedCreatedDate: formatDate(templateData.created),
-                    formattedUpdatedDate: formatDate(templateData.lastupdate), // Changed from lastUpdate
-                    formattedTags: formatTags(templateData.tags || []),
+                    formattedCreatedDate: formatDate(templateData.created as string),
+                    formattedUpdatedDate: formatDate(templateData.lastupdate as string), // Changed from lastUpdate
+                    formattedTags: formatTags(templateData.tags as string[] || []),
                 };
 
                 let localEmbedLink = '';
@@ -950,8 +949,8 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     let fileExt = 'pdf';
                     if (fileExtFromMime) {
                         fileExt = fileExtFromMime;
-                    } else if (raindrop.file && typeof raindrop.file === 'object' && 'name' in raindrop.file && typeof (raindrop.file as any).name === 'string') {
-                        const parts = ((raindrop.file as any).name as string).split('.');
+                    } else if (raindrop.file && typeof raindrop.file === 'object' && 'name' in raindrop.file && typeof raindrop.file.name === 'string') {
+                        const parts = (raindrop.file.name).split('.');
                         if (parts.length > 1) {
                             fileExt = parts.pop()?.toLowerCase() || 'pdf';
                         }
@@ -1072,8 +1071,8 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     
                     if (templateData.collectionId) {
                         frontmatter += `collectionId: ${templateData.collectionId}\n`;
-                        frontmatter += `collectionTitle: "${escapeYamlString(templateData.collectionTitle)}"\n`;
-                        frontmatter += `collectionPath: "${escapeYamlString(templateData.collectionPath)}"\n`;
+                        frontmatter += `collectionTitle: "${escapeYamlString(templateData.collectionTitle as string)}"\n`;
+                        frontmatter += `collectionPath: "${escapeYamlString(templateData.collectionPath as string)}"\n`;
                         if (templateData.collectionParentId) {
                             frontmatter += `collectionParentId: ${templateData.collectionParentId}\n`;
                         }
@@ -1103,12 +1102,15 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                          noteBody += `## Notes\n${templateData.note}\n\n`;
                     }
 
-                    if (templateData.highlights && templateData.highlights.length > 0) {
+                    if (templateData.highlights && Array.isArray(templateData.highlights) && templateData.highlights.length > 0) {
                         noteBody += '## Highlights\n';
-                        templateData.highlights.forEach((highlight: any) => {
-                            noteBody += `- ${highlight.text.replace(/\r\n|\r|\n/g, ' ')}\n`;
-                            if (highlight.note) {
-                                noteBody += `  *Note:* ${highlight.note.replace(/\r\n|\r|\n/g, ' ')}\n`;
+                        templateData.highlights.forEach((highlight) => {
+                            const h = highlight as Record<string, unknown>;
+                            const text = typeof h.text === 'string' ? h.text : '';
+                            const note = typeof h.note === 'string' ? h.note : '';
+                            noteBody += `- ${text.replace(/\r\n|\r|\n/g, ' ')}\n`;
+                            if (note) {
+                                noteBody += `  *Note:* ${note.replace(/\r\n|\r|\n/g, ' ')}\n`;
                             }
                         });
                         noteBody += '\n';
@@ -1146,8 +1148,8 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
     private readonly EACH_REGEX = /{{#each ([^}]+)}}([\s\S]*?){{\/each}}/g;
     private readonly VAR_REGEX = /{{([^}]+)}}/g;
 
-    private renderTemplate(template: string, data: Record<string, any>): string {
-        const renderBlock = (blockContent: string, context: any): string => {
+    private renderTemplate(template: string, data: Record<string, unknown>): string {
+        const renderBlock = (blockContent: string, context: Record<string, unknown>): string => {
             return blockContent
                 // Handle if conditions
                 .replace(this.IF_REGEX, (match, conditionVar, content, elseContent) => {
@@ -1162,7 +1164,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     const array = this.getNestedProperty(context, arrayVar.trim());
                     if (!Array.isArray(array)) return '';
                     return array.map(item => {
-                        const itemContext = typeof item === 'object' ? { ...context, ...item } : { ...context, 'this': item };
+                        const itemContext = typeof item === 'object' && item !== null ? { ...context, ...item } as Record<string, unknown> : { ...context, 'this': item } as Record<string, unknown>;
                         return renderBlock(content, itemContext);
                     }).join('');
                 })
@@ -1176,9 +1178,9 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 });
         };
 
-        const enhancedData = {
+        const enhancedData: Record<string, unknown> = {
             ...data,
-            domain: getDomain(data.link || ''),
+            domain: getDomain(data.link as string || ''),
             formatDate: (date: string) => formatDate(date),
             formatDateISO: (date: string) => formatDateISO(date),
             formatTags: (tags: string[]) => formatTags(tags),
@@ -1189,9 +1191,12 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         return renderBlock(template, enhancedData);
     }
 
-    private getNestedProperty(obj: any, path: string): any {
-        return path.split('.').reduce((current: any, prop: string) => {
-            return current && current[prop] !== undefined ? current[prop] : undefined;
+    private getNestedProperty(obj: Record<string, unknown>, path: string): unknown {
+        return path.split('.').reduce((current: unknown, prop: string) => {
+            if (current && typeof current === 'object' && prop in current) {
+                return (current as Record<string, unknown>)[prop];
+            }
+            return undefined;
         }, obj);
     }
 
@@ -1278,7 +1283,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             
             // The API for a single raindrop returns { result: boolean, item: RaindropItem }
             // So we need to adapt this structure.
-            const data = response as { result: boolean, item?: RaindropItem, items?: RaindropItem[] }; // More flexible typing for safety
+            const data = response as { result: boolean, item?: RaindropItem, items?: RaindropItem[], errorMessage?: string }; // More flexible typing for safety
 
             let raindropItem: RaindropItem | undefined;
 
@@ -1292,7 +1297,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             
             if (!raindropItem) {
                 loadingNotice.hide();
-                const errorMsg = data.result === false ? (data as any).errorMessage || 'API indicated failure.' : 'Item not found or invalid response.';
+                const errorMsg = data.result === false ? data.errorMessage || 'API indicated failure.' : 'Item not found or invalid response.';
                 new Notice(`Failed to fetch Raindrop item ${itemId}: ${errorMsg}`, 7000);
                 console.error(`Failed to fetch Raindrop item ${itemId}:`, data);
                 return;

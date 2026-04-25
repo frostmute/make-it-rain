@@ -130,7 +130,7 @@ describe('RaindropToObsidian', () => {
             plugin.updateRibbonIcon();
             expect(addRibbonIconSpy).toHaveBeenCalledWith(
                 'cloud-download',
-                'Fetch Raindrops',
+                'Fetch raindrops',
                 expect.any(Function)
             );
         });

@@ -468,7 +468,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                 text.inputEl.addClass('make-it-rain-full-width');
             })
             .addButton((button: ButtonComponent) => {
-                button.setButtonText("Verify Token")
+                button.setButtonText("Verify token")
                     .setIcon("checkmark")
                     .setCta()
                     .onClick(async () => {

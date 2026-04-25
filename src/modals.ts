@@ -159,8 +159,8 @@ export class RaindropFetchModal extends Modal {
             .setDesc("Choose 'ALL' for items with all specified tags, 'ANY' for items with any.")
             .addDropdown(dropdown => {
                 dropdown
-                    .addOption(TagMatchTypes.ALL, 'Match ALL Tags (AND)')
-                    .addOption(TagMatchTypes.ANY, 'Match ANY Tag (OR)')
+                    .addOption(TagMatchTypes.ALL, 'Match all tags (AND)')
+                    .addOption(TagMatchTypes.ANY, 'Match any tag (OR)')
                     .setValue(this.tagMatchType)
                     .onChange((value: string) => {
                         this.tagMatchType = value as 'all' | 'any';
@@ -179,7 +179,7 @@ export class RaindropFetchModal extends Modal {
             .setName('Filter by content type')
             .setDesc('Select the type of Raindrops to fetch.')
             .addDropdown(dropdown => {
-                dropdown.addOption(FilterTypes.ALL, 'All Types');
+                dropdown.addOption(FilterTypes.ALL, 'All types');
                 Object.values(RaindropTypes).forEach(type => {
                     dropdown.addOption(type, type.charAt(0).toUpperCase() + type.slice(1));
                 });
@@ -322,7 +322,7 @@ export class RaindropFetchModal extends Modal {
         // --- Action Buttons ---
         const buttonsEl = contentEl.createDiv({ cls: 'modal-button-container' });
         new ButtonComponent(buttonsEl)
-            .setButtonText('Fetch Raindrops')
+            .setButtonText('Fetch raindrops')
                     .setCta()
                     .onClick(async () => {
                         const options: ModalFetchOptions = {
@@ -418,7 +418,7 @@ export class QuickImportModal extends Modal {
 
         const buttonsEl = contentEl.createDiv({ cls: 'modal-button-container' });
         new ButtonComponent(buttonsEl)
-            .setButtonText('Fetch & Create Note')
+            .setButtonText('Fetch and create note')
             .setCta()
             .onClick(async () => {
                 if (!this.itemUrlOrId) {
