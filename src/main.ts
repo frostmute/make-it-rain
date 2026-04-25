@@ -719,10 +719,10 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             if (this.settings.createFolderNotes) {
                 loadingNotice.setMessage('Generating collection folder notes...');
                 try {
-                    for (const folderPath of verifiedFolderPaths) {
+                    const folderNotePromises = Array.from(verifiedFolderPaths).map(async (folderPath) => {
                         try {
                             const folderName = folderPath.split('/').pop();
-                            if (!folderName) continue;
+                            if (!folderName) return;
                             const folderNotePath = normalizePath(`${folderPath}/${folderName}.md`);
                             const abstractFile = app.vault.getAbstractFileByPath(folderPath);
                             
@@ -756,7 +756,9 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                         } catch (e) {
                             console.error(`Error generating folder note for ${folderPath}:`, e);
                         }
-                    }
+                    });
+
+                    await Promise.all(folderNotePromises);
                 } catch (e) {
                     console.error('Failed to generate folder notes:', e);
                 }
