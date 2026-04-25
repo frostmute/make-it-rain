@@ -420,9 +420,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 });
 
                 const results = await Promise.all(collectionPromises);
-                results.forEach(items => {
-                    allData = allData.concat(items);
-                });
+                allData = results.flat();
             } else if (fetchMode === 'tags') {
                 // Fetch based on tags (uses collectionId 0 endpoint)
                 if (options.tagMatchType === TagMatchTypes.ANY && options.apiFilterTags.length > 0) {
@@ -489,12 +487,10 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     const results = await Promise.all(tagPromises);
 
                     // Store items in Map using _id as key to automatically handle duplicates
-                    results.forEach(items => {
-                        items.forEach(item => {
-                            if (!uniqueItems.has(item._id)) {
-                                uniqueItems.set(item._id, item);
-                            }
-                        });
+                    results.flat().forEach(item => {
+                        if (!uniqueItems.has(item._id)) {
+                            uniqueItems.set(item._id, item);
+                        }
                     });
 
                     // Convert the Map values back to an array for processing
