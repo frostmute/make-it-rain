@@ -420,7 +420,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 });
 
                 const results = await Promise.all(collectionPromises);
-                allData = allData.concat(results.flat());
+                allData = results.flat();
             } else if (fetchMode === 'tags') {
                 // Fetch based on tags (uses collectionId 0 endpoint)
                 if (options.tagMatchType === TagMatchTypes.ANY && options.apiFilterTags.length > 0) {
