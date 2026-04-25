@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>68/68</span>
+                <span class='fraction'>63/63</span>
             </div>
 
 
@@ -39,14 +39,14 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>4/4</span>
+                <span class='fraction'>7/7</span>
             </div>
 
 
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>68/68</span>
+                <span class='fraction'>61/61</span>
             </div>
 
 
@@ -245,18 +245,7 @@
 <a name='L180'></a><a href='#L180'>180</a>
 <a name='L181'></a><a href='#L181'>181</a>
 <a name='L182'></a><a href='#L182'>182</a>
-<a name='L183'></a><a href='#L183'>183</a>
-<a name='L184'></a><a href='#L184'>184</a>
-<a name='L185'></a><a href='#L185'>185</a>
-<a name='L186'></a><a href='#L186'>186</a>
-<a name='L187'></a><a href='#L187'>187</a>
-<a name='L188'></a><a href='#L188'>188</a>
-<a name='L189'></a><a href='#L189'>189</a>
-<a name='L190'></a><a href='#L190'>190</a>
-<a name='L191'></a><a href='#L191'>191</a>
-<a name='L192'></a><a href='#L192'>192</a>
-<a name='L193'></a><a href='#L193'>193</a>
-<a name='L194'></a><a href='#L194'>194</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">3x</span>
+<a name='L183'></a><a href='#L183'>183</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -338,11 +327,7 @@
 <span class="cline-any cline-yes">27x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -364,10 +349,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">13x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">13x</span>
-<span class="cline-any cline-yes">13x</span>
 <span class="cline-any cline-yes">30x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">13x</span>
 <span class="cline-any cline-yes">13x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -384,13 +366,9 @@
 <span class="cline-any cline-yes">15x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">15x</span>
-<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-yes">24x</span>
 <span class="cline-any cline-yes">24x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">24x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">17x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">15x</span>
@@ -530,13 +508,9 @@ export function formatYamlValue(value: unknown, indentLevel: number = 0, seen: S
       // If the string contains newlines, use the block scalar syntax
       if (value.includes("\n")) {
         // Use the literal block scalar (|) for preserving line breaks
-        let result = "|\n";
         const lines = value.split("\n");
-        for (const line of lines) {
-          // Add two more spaces for the block indentation
-          result += `${indent}  ${line}\n`;
-        }
-        return result.trimEnd();
+        const formattedLines = lines.map((line) =&gt; `${indent}  ${line}`);
+        return "|\n" + formattedLines.join("\n");
       }
 &nbsp;
       // Otherwise use quoted string with escaping
@@ -557,12 +531,9 @@ export function formatYamlValue(value: unknown, indentLevel: number = 0, seen: S
     }
     seen.add(value);
 &nbsp;
-    let result = "\n";
-    for (const item of value) {
-      result += `${indent}- ${formatYamlValue(item, indentLevel + 1, seen)}\n`;
-    }
+    const items = value.map((item) =&gt; `${indent}- ${formatYamlValue(item, indentLevel + 1, seen)}`);
     seen.delete(value);
-    return result.trimEnd();
+    return "\n" + items.join("\n");
   }
 &nbsp;
   // Handle objects
@@ -576,18 +547,14 @@ export function formatYamlValue(value: unknown, indentLevel: number = 0, seen: S
     }
     seen.add(value);
 &nbsp;
-    let result = "\n";
-    for (const key of keys) {
-      const formattedValue = formatYamlValue(value[key], indentLevel + 1, seen);
-      // If the formatted value starts with a newline, it's a complex value
-      if (formattedValue.startsWith("\n")) {
-        result += `${indent}${key}:${formattedValue}\n`;
-      } else {
-        result += `${indent}${key}: ${formattedValue}\n`;
-      }
-    }
+    const formattedKeys = keys.map((key) =&gt; {
+      const formattedValue = formatYamlValue(value[key as keyof typeof value], indentLevel + 1, seen);
+      return formattedValue.startsWith("\n")
+        ? `${indent}${key}:${formattedValue}`
+        : `${indent}${key}: ${formattedValue}`;
+    });
     seen.delete(value);
-    return result.trimEnd();
+    return "\n" + formattedKeys.join("\n");
   }
 &nbsp;
   // Fallback for any other types
@@ -649,7 +616,7 @@ export function createYamlFrontmatter(data: Record&lt;string, unknown&gt;): stri
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-04-23T16:33:27.785Z
+                at 2026-04-25T20:18:07.574Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

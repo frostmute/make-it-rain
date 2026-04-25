@@ -23,16 +23,16 @@
         <div class='clearfix'>
 
             <div class='fl pad1y space-right2'>
-                <span class="strong">80.64% </span>
+                <span class="strong">80.21% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>75/93</span>
+                <span class='fraction'>73/91</span>
             </div>
 
 
             <div class='fl pad1y space-right2'>
-                <span class="strong">79.41% </span>
+                <span class="strong">82.5% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>27/34</span>
+                <span class='fraction'>33/40</span>
             </div>
 
 
@@ -44,9 +44,9 @@
 
 
             <div class='fl pad1y space-right2'>
-                <span class="strong">81.6% </span>
+                <span class="strong">81.17% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>71/87</span>
+                <span class='fraction'>69/85</span>
             </div>
 
 
@@ -366,10 +366,7 @@
 <a name='L301'></a><a href='#L301'>301</a>
 <a name='L302'></a><a href='#L302'>302</a>
 <a name='L303'></a><a href='#L303'>303</a>
-<a name='L304'></a><a href='#L304'>304</a>
-<a name='L305'></a><a href='#L305'>305</a>
-<a name='L306'></a><a href='#L306'>306</a>
-<a name='L307'></a><a href='#L307'>307</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">3x</span>
+<a name='L304'></a><a href='#L304'>304</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -576,7 +573,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">15x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">10x</span>
@@ -592,11 +588,11 @@
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">15x</span>
 <span class="cline-any cline-yes">21x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -633,8 +629,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">15x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">15x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -809,7 +803,7 @@ export function buildCollectionApiUrl(collectionId: string): string {
  * @param response - The response from the API
  * @returns Parsed JSON data
  */
-export function parseApiResponse(response: string | object): any {
+export function parseApiResponse(response: string | object): unknown {
     if (typeof response === 'string') {
         return JSON.parse(response);
     }
@@ -827,7 +821,7 @@ export function parseApiResponse(response: string | object): any {
  * @returns True if error was handled and retry should happen, false otherwise
  */
 export async function handleRequestError(
-    error: any,
+    error: unknown,
     rateLimiter: RateLimiter,
     attemptNumber: number,
     maxRetries: number,
@@ -836,7 +830,7 @@ export async function handleRequestError(
     const isLastAttempt = attemptNumber &gt;= maxRetries - 1;
 
     // Handle rate limiting (HTTP 429)
-    if (error.status === 429 || (error.message &amp;&amp; error.message.includes('rate limit'))) {
+    if (error &amp;&amp; typeof error === 'object' &amp;&amp; ('status' in error &amp;&amp; error.status === 429 || ('message' in error &amp;&amp; typeof error.message === 'string' &amp;&amp; error.message.includes('rate limit')))) {
         console.debug('Rate limit hit, resetting counter and waiting...');
         rateLimiter.resetCounter();
         await new Promise(resolve =&gt; setTimeout(resolve, delayBetweenRetries * 2)); // Longer wait for rate limits
@@ -876,9 +870,8 @@ export async function fetchWithRetry(
     rateLimiterOrMaxRetries?: RateLimiter | number,
     maxRetries: number = 3,
     delayBetweenRetries: number = 1000
-): Promise&lt;any&gt; {
+): Promise&lt;unknown&gt; {
     // Normalize parameters to handle both calling patterns
-    let app: App | undefined;
     let url: string;
     let requestOptions: RequestInit;
     let rateLimiter: RateLimiter;
@@ -895,7 +888,6 @@ export async function fetchWithRetry(
         }
     } else {
         // New pattern: (app, url, options, rateLimiter, maxRetries?, delay?)
-        app = appOrUrl;
         url = urlOrOptions as string;
         requestOptions = optionsOrRateLimiter as RequestInit;
         rateLimiter = rateLimiterOrMaxRetries as RateLimiter;
@@ -903,6 +895,7 @@ export async function fetchWithRetry(
 
     // Try up to maxRetries times
     let attemptNumber = 0;
+    // eslint-disable-next-line no-constant-condition -- Intentional infinite loop for retry logic
     while (true) {
         const isLastAttempt = attemptNumber &gt;= maxRetries - 1;
 
@@ -938,11 +931,9 @@ export async function fetchWithRetry(
  * @param response - The raw API response
  * @returns The collection data or null if invalid response
  */
-export function extractCollectionData(response: any): any {
-    const isValidResponse = response &amp;&amp; response.result === true &amp;&amp; response.item;
-
-    if (isValidResponse) {
-        return response.item as RaindropCollection;
+export function extractCollectionData(response: unknown): RaindropCollection | null {
+    if (response &amp;&amp; typeof response === 'object' &amp;&amp; 'result' in response &amp;&amp; response.result === true &amp;&amp; 'item' in response) {
+        return (response as Record&lt;string, unknown&gt;).item as RaindropCollection;
     }
 
     console.error('Failed to fetch collection info:', response);
@@ -988,7 +979,7 @@ export function getFullPathSegments(
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-04-23T16:33:27.785Z
+                at 2026-04-25T20:18:07.574Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

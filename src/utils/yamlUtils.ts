@@ -79,13 +79,9 @@ export function formatYamlValue(value: unknown, indentLevel: number = 0, seen: S
       // If the string contains newlines, use the block scalar syntax
       if (value.includes("\n")) {
         // Use the literal block scalar (|) for preserving line breaks
-        let result = "|\n";
         const lines = value.split("\n");
-        for (const line of lines) {
-          // Add two more spaces for the block indentation
-          result += `${indent}  ${line}\n`;
-        }
-        return result.trimEnd();
+        const formattedLines = lines.map((line) => `${indent}  ${line}`);
+        return "|\n" + formattedLines.join("\n");
       }
 
       // Otherwise use quoted string with escaping
@@ -106,12 +102,9 @@ export function formatYamlValue(value: unknown, indentLevel: number = 0, seen: S
     }
     seen.add(value);
 
-    let result = "\n";
-    for (const item of value) {
-      result += `${indent}- ${formatYamlValue(item, indentLevel + 1, seen)}\n`;
-    }
+    const items = value.map((item) => `${indent}- ${formatYamlValue(item, indentLevel + 1, seen)}`);
     seen.delete(value);
-    return result.trimEnd();
+    return "\n" + items.join("\n");
   }
 
   // Handle objects
@@ -125,18 +118,14 @@ export function formatYamlValue(value: unknown, indentLevel: number = 0, seen: S
     }
     seen.add(value);
 
-    let result = "\n";
-    for (const key of keys) {
-      const formattedValue = formatYamlValue(value[key], indentLevel + 1, seen);
-      // If the formatted value starts with a newline, it's a complex value
-      if (formattedValue.startsWith("\n")) {
-        result += `${indent}${key}:${formattedValue}\n`;
-      } else {
-        result += `${indent}${key}: ${formattedValue}\n`;
-      }
-    }
+    const formattedKeys = keys.map((key) => {
+      const formattedValue = formatYamlValue(value[key as keyof typeof value], indentLevel + 1, seen);
+      return formattedValue.startsWith("\n")
+        ? `${indent}${key}:${formattedValue}`
+        : `${indent}${key}: ${formattedValue}`;
+    });
     seen.delete(value);
-    return result.trimEnd();
+    return "\n" + formattedKeys.join("\n");
   }
 
   // Fallback for any other types
