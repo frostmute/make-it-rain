@@ -255,7 +255,7 @@ export class RaindropFetchModal extends Modal {
                             this.updateExisting = false;
                             // Visually update the other toggle if we can access it
                             const updateExistingInput = contentEl.querySelector('.update-existing-toggle input[type="checkbox"]');
-                            if (updateExistingInput) updateExistingInput.checked = false;
+                            if (updateExistingInput) (updateExistingInput as HTMLInputElement).checked = false;
                         }
                     });
             });
@@ -271,7 +271,7 @@ export class RaindropFetchModal extends Modal {
                         if (value && this.fetchOnlyNew) {
                             this.fetchOnlyNew = false;
                              // Visually update the other toggle
-                            const fetchNewInput = fetchOnlyNewToggle.controlEl.querySelector('input[type="checkbox"]');
+                            const fetchNewInput = fetchOnlyNewToggle.controlEl.querySelector('input[type="checkbox"]') as HTMLInputElement;
                             if (fetchNewInput) fetchNewInput.checked = false;
                         }
                     });

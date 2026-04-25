@@ -43,7 +43,7 @@ describe('RaindropToObsidian', () => {
 
     describe('onunload', () => {
         it('should log unloading message', () => {
-            const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+            const consoleSpy = jest.spyOn(console, 'debug').mockImplementation();
             plugin.onunload();
             expect(consoleSpy).toHaveBeenCalledWith('Make It Rain plugin unloaded.');
             consoleSpy.mockRestore();

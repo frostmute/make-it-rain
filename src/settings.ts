@@ -450,10 +450,10 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
         const { containerEl } = this;
         containerEl.empty();
 
-        new Setting(containerEl).setName('Make it rain settings').setHeading();
+
 
         // --- API Configuration Section ---
-        new Setting(containerEl).setName('Raindrop.io API configuration').setHeading();
+        new Setting(containerEl).setName('API configuration').setHeading();
         const apiTokenSetting = new Setting(containerEl)
             .setName('Raindrop.io API token')
             .setDesc('Create a "test token" from your Raindrop.io apps settings.')
@@ -485,7 +485,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
         apiTokenHelpLink.setAttr('target', '_blank');
 
         // --- General Import Settings Section ---
-        new Setting(containerEl).setName('General import settings').setHeading();
+
         new Setting(containerEl)
             .setName('Default vault save location')
             .setDesc('Specify the default folder for imported notes (e.g., Imports/Raindrops). Leave blank for vault root.')
