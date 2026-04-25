@@ -57,7 +57,8 @@ import {
     formatDateISO,
     formatTags,
     getDomain,
-    raindropType
+    raindropType,
+    escapeRegExp
 } from './utils';
 
 
@@ -182,7 +183,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         
         const replacePlaceholder = (placeholder: string, value: string) => {
             const safeValue = sanitizeFileName(value);
-            const regex = new RegExp(`{{${placeholder}}}`, 'gi');
+            const regex = new RegExp(`{{${escapeRegExp(placeholder)}}}`, 'gi');
             fileName = fileName.replace(regex, safeValue);
         };
 
