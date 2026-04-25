@@ -1108,17 +1108,23 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     }
 
                     if (templateData.highlights && Array.isArray(templateData.highlights) && templateData.highlights.length > 0) {
-                        noteBody += '## Highlights\n';
-                        templateData.highlights.forEach((highlight) => {
-                            const h = highlight as Record<string, unknown>;
+                        const parts = ['## Highlights\n'];
+                        const NEWLINE_REGEX = /\r\n|\r|\n/g;
+
+                        const highlights = templateData.highlights;
+                        for (let i = 0, len = highlights.length; i < len; i++) {
+                            const h = highlights[i] as Record<string, unknown>;
                             const text = typeof h.text === 'string' ? h.text : '';
                             const note = typeof h.note === 'string' ? h.note : '';
-                            noteBody += `- ${text.replace(/\r\n|\r|\n/g, ' ')}\n`;
+
+                            parts.push(`- ${text.replace(NEWLINE_REGEX, ' ')}\n`);
                             if (note) {
-                                noteBody += `  *Note:* ${note.replace(/\r\n|\r|\n/g, ' ')}\n`;
+                                parts.push(`  *Note:* ${note.replace(NEWLINE_REGEX, ' ')}\n`);
                             }
-                        });
-                        noteBody += '\n';
+                        }
+                        parts.push('\n');
+
+                        noteBody += parts.join('');
                     }
                     
                     if (localEmbedLink) {
