@@ -1401,9 +1401,3 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         }
     }
 }
-Message = error.message;
-            new Notice(`Error during Quick Import of item ${itemId}: ${errorMessage}`, 10000);
-            console.error(`Error quick importing Raindrop ID ${itemId}:`, error);
-        }
-    }
-}
