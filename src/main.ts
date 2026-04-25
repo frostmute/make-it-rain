@@ -49,7 +49,6 @@ import {
     getFullPathSegments,
     
     // YAML utilities
-    createYamlFrontmatter,
     formatYamlValue,
     escapeYamlString,
     
@@ -81,16 +80,6 @@ const TAG_INVALID_CHARS_REGEX = /[#?"*<>:|]/g;
 // Rate limiting and retry utilities are now imported from './utils/apiUtils'
 
 
-/**
- * Configuration options for API requests with retry capability
- */
-interface FetchWithRetryOptions {
-    url: string;
-    requestOptions: RequestInit;
-    rateLimiter: RateLimiter;
-    maxRetries?: number;
-    delayBetweenRetries?: number;
-}
 
 /**
 // All API utility functions moved to apiUtils.ts and imported via index.ts
@@ -99,11 +88,6 @@ interface FetchWithRetryOptions {
 /**
  * Validates the parameters for the fetch operation
  */
-function validateFetchParameters(url: string, options: RequestInit): void {
-    const isUrlValid = typeof url === 'string';
-    if (!isUrlValid) {
-        throw new Error('URL must be a string');
-    }
     
     const areOptionsValid = options && typeof options === 'object';
     if (!areOptionsValid) {
@@ -139,15 +123,6 @@ function validateFetchParameters(url: string, options: RequestInit): void {
  * @param rateLimiter - Rate limiter instance
  * @returns Collection information or null if not found
  */
-async function fetchCollectionInfo(app: App, collectionId: string, apiToken: string, rateLimiter: RateLimiter): Promise<RaindropCollection | null> {
-    const requestOptions = createAuthenticatedRequestOptions(apiToken);
-    const apiUrl = buildCollectionApiUrl(collectionId);
-
-    try {
-        const apiResponse = await fetchWithRetry(app, apiUrl, requestOptions, rateLimiter);
-        // Use the imported extractCollectionData function from utils
-        return extractCollectionData(apiResponse) as RaindropCollection;
-    } catch (error) {
         // Non-fatal error - we can continue without collection info
         // The items will be placed in the base folder instead
         const errorMessage = error instanceof Error ? error.message : 'unknown error';
@@ -181,7 +156,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         this.addCommand({
             id: 'fetch-raindrops',
             name: 'Fetch Raindrops (Filtered)',
-            callback: async () => {
+            callback: () => {
                 new RaindropFetchModal(this.app, this).open();
             }
         });
@@ -1421,6 +1396,12 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             loadingNotice.hide();
             let errorMessage = 'An unknown error occurred during quick import';
             if (error instanceof Error) errorMessage = error.message;
+            new Notice(`Error during Quick Import of item ${itemId}: ${errorMessage}`, 10000);
+            console.error(`Error quick importing Raindrop ID ${itemId}:`, error);
+        }
+    }
+}
+Message = error.message;
             new Notice(`Error during Quick Import of item ${itemId}: ${errorMessage}`, 10000);
             console.error(`Error quick importing Raindrop ID ${itemId}:`, error);
         }

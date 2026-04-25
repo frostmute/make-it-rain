@@ -201,7 +201,6 @@ export async function fetchWithRetry(
     delayBetweenRetries: number = 1000
 ): Promise<any> {
     // Normalize parameters to handle both calling patterns
-    let app: App | undefined;
     let url: string;
     let requestOptions: RequestInit;
     let rateLimiter: RateLimiter;
@@ -218,7 +217,6 @@ export async function fetchWithRetry(
         }
     } else {
         // New pattern: (app, url, options, rateLimiter, maxRetries?, delay?)
-        app = appOrUrl;
         url = urlOrOptions as string;
         requestOptions = optionsOrRateLimiter as RequestInit;
         rateLimiter = rateLimiterOrMaxRetries as RateLimiter;
@@ -261,11 +259,9 @@ export async function fetchWithRetry(
  * @param response - The raw API response
  * @returns The collection data or null if invalid response
  */
-export function extractCollectionData(response: any): any {
-    const isValidResponse = response && response.result === true && response.item;
-    
-    if (isValidResponse) {
-        return response.item as RaindropCollection;
+export function extractCollectionData(response: unknown): RaindropCollection | null {
+    if (response && typeof response === 'object' && 'result' in response && response.result === true && 'item' in response) {
+        return (response as any).item as RaindropCollection;
     }
     
     console.error('Failed to fetch collection info:', response);

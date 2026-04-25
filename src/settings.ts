@@ -1,6 +1,6 @@
 import { App, PluginSettingTab, Setting, TextComponent, ButtonComponent, Notice, request, ToggleComponent } from 'obsidian';
 import type RaindropToObsidian from './main';
-import { RaindropTypes, RaindropType } from './types';
+import { RaindropTypes } from './types';
 import { MakeItRainSettings } from './types';
 
 export const DEFAULT_SETTINGS: MakeItRainSettings = {
@@ -501,7 +501,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
 
         const fileNameTemplateSetting = new Setting(containerEl)
             .setName('Filename template')
-            .setDesc('Define the filename for notes when "Use Raindrop Title" is enabled. Placeholders: {{title}}, {{id}}, {{collectionTitle}}, {{date}} (YYYY-MM-DD).')
+            .setDesc('Define the filename for notes when "use raindrop title" is enabled. Placeholders: {{title}}, {{id}}, {{collectionTitle}}, {{date}} (YYYY-MM-DD).')
             .addText((text: TextComponent) => {
                 text.setPlaceholder('{{title}}')
                     .setValue(this.plugin.settings.fileNameTemplate)
@@ -629,7 +629,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                 new Setting(containerEl).setName(`${typeStr.charAt(0).toUpperCase() + typeStr.slice(1)} template`).setHeading();
                 
                 new Setting(containerEl)
-                    .setName(`Enable ${typeStr} Template`)
+                    .setName(`Enable ${typeStr} template`)
                     .setDesc(`Use a custom template for "${typeStr}" items.`)
                     .addToggle((toggle) => {
                         toggle
