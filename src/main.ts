@@ -57,7 +57,8 @@ import {
     formatDateISO,
     formatTags,
     getDomain,
-    raindropType
+    raindropType,
+    escapeRegExp
 } from './utils';
 
 
@@ -75,6 +76,10 @@ const SystemCollections = {
  */
 const TAG_SPACE_REGEX = / /g;
 const TAG_INVALID_CHARS_REGEX = /[#?"*<>:|]/g;
+/**
+ * Regex for file name template placeholders to avoid redundant compilation
+ */
+const FILENAME_PLACEHOLDER_REGEX = /{{(title|id|collectionTitle|date)}}/gi;
 
 
 // Rate limiting and retry utilities are now imported from './utils/apiUtils'
@@ -178,26 +183,31 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
     generateFileName(raindrop: RaindropItem, useRaindropTitleForFileName: boolean): string {
         // Use the template from settings if title is enabled, otherwise use ID
         const fileNameTemplate = useRaindropTitleForFileName ? this.settings.fileNameTemplate : '{{id}}';
-        let fileName = fileNameTemplate;
         
-        const replacePlaceholder = (placeholder: string, value: string) => {
-            const safeValue = sanitizeFileName(value);
-            const regex = new RegExp(`{{${placeholder}}}`, 'gi');
-            fileName = fileName.replace(regex, safeValue);
-        };
-
         try {
-            replacePlaceholder('title', raindrop.title || 'Untitled');
-            replacePlaceholder('id', (raindrop._id || 'unknown_id').toString()); // Use _id consistently
-            replacePlaceholder('collectionTitle', raindrop.collection?.title || 'No Collection');
-
             const createdDate = raindrop.created ? new Date(raindrop.created) : null;
             let formattedDate = 'no_date';
             if (createdDate && !isNaN(createdDate.getTime())) {
                 formattedDate = createdDate.toISOString().split('T')[0];
             }
-            replacePlaceholder('date', formattedDate);
 
+            const replacements: Record<string, string> = {
+                title: sanitizeFileName(raindrop.title || 'Untitled'),
+                id: sanitizeFileName((raindrop._id || 'unknown_id').toString()),
+                collectiontitle: sanitizeFileName(raindrop.collection?.title || 'No Collection'),
+                date: sanitizeFileName(formattedDate)
+            };
+
+            const fileName = fileNameTemplate.replace(FILENAME_PLACEHOLDER_REGEX, (match, placeholder) => {
+                const key = placeholder.toLowerCase();
+                return replacements[key] !== undefined ? replacements[key] : match;
+            });
+
+            const finalFileName = sanitizeFileName(fileName);
+            if (!finalFileName.trim()) {
+                return "Unnamed_Raindrop_" + (raindrop._id || Date.now()); // Use _id consistently
+            }
+            return finalFileName;
         } catch (error) {
             let errorMsg = 'template processing error';
             if (error instanceof Error) errorMsg = error.message;
@@ -205,12 +215,6 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             new Notice("Error generating file name. Check console or template.");
             return "Error_Filename_" + Date.now();
         }
-
-        const finalFileName = sanitizeFileName(fileName);
-        if (!finalFileName.trim()) {
-            return "Unnamed_Raindrop_" + (raindrop._id || Date.now()); // Use _id consistently
-        }
-        return finalFileName;
     }
 
     async saveSettings() {
@@ -483,12 +487,10 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     const results = await Promise.all(tagPromises);
 
                     // Store items in Map using _id as key to automatically handle duplicates
-                    results.forEach(items => {
-                        items.forEach(item => {
-                            if (!uniqueItems.has(item._id)) {
-                                uniqueItems.set(item._id, item);
-                            }
-                        });
+                    results.flat().forEach(item => {
+                        if (!uniqueItems.has(item._id)) {
+                            uniqueItems.set(item._id, item);
+                        }
                     });
 
                     // Convert the Map values back to an array for processing
@@ -736,11 +738,14 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                                 
                                 const sortedChildren = [...folderChildren].sort((a, b) => a.name.localeCompare(b.name));
                                 
-                                for (const child of sortedChildren) {
+                                const listItems: string[] = [];
+                                for (let i = 0; i < sortedChildren.length; i++) {
+                                    const child = sortedChildren[i];
                                     if (child.name !== `${folderName}.md`) {
-                                        content += `- [[${child.name.replace('.md', '')}]]\n`;
+                                        listItems.push(`- [[${child.name.replace('.md', '')}]]\n`);
                                     }
                                 }
+                                content += listItems.join('');
                                 
                                 if (await app.vault.adapter.exists(folderNotePath)) {
                                     await app.vault.adapter.write(folderNotePath, content);
