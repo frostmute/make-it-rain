@@ -41,17 +41,9 @@ const context = await esbuild.context({
 	});
 
 	// Add output for styles.css
-	const styleContext = await esbuild.context({
-	entryPoints: ["src/styles.css"],
-	bundle: true,
-	outfile: "styles.css",
-	logLevel: "info",
-	});
-if (prod) {
+	if (prod) {
 	await context.rebuild();
-	await styleContext.rebuild();
 	process.exit(0);
 } else {
 	await context.watch();
-	await styleContext.watch();
 } 
