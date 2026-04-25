@@ -1144,8 +1144,8 @@ export class RaindropFetchModal extends Modal {
             .setDesc("Choose 'ALL' for items with all specified tags, 'ANY' for items with any.")
             .addDropdown(<span class="fstat-no" title="function not covered" >dropdown </span>=&gt; {
 <span class="cstat-no" title="statement not covered" >                dropdown</span>
-                    .addOption(TagMatchTypes.ALL, 'Match ALL Tags (AND)')
-                    .addOption(TagMatchTypes.ANY, 'Match ANY Tag (OR)')
+                    .addOption(TagMatchTypes.ALL, 'Match all tags (AND)')
+                    .addOption(TagMatchTypes.ANY, 'Match any tag (OR)')
                     .setValue(this.tagMatchType)
                     .onChange(<span class="fstat-no" title="function not covered" >(v</span>alue: string) =&gt; {
 <span class="cstat-no" title="statement not covered" >                        this.tagMatchType = value as 'all' | 'any';</span>
@@ -1164,7 +1164,7 @@ export class RaindropFetchModal extends Modal {
             .setName('Filter by content type')
             .setDesc('Select the type of Raindrops to fetch.')
             .addDropdown(<span class="fstat-no" title="function not covered" >dropdown </span>=&gt; {
-<span class="cstat-no" title="statement not covered" >                dropdown.addOption(FilterTypes.ALL, 'All Types');</span>
+<span class="cstat-no" title="statement not covered" >                dropdown.addOption(FilterTypes.ALL, 'All types');</span>
 <span class="cstat-no" title="statement not covered" >                Object.values(RaindropTypes).forEach(<span class="fstat-no" title="function not covered" >type </span>=&gt; {</span>
 <span class="cstat-no" title="statement not covered" >                    dropdown.addOption(type, type.charAt(0).toUpperCase() + type.slice(1));</span>
                 });
@@ -1239,8 +1239,8 @@ export class RaindropFetchModal extends Modal {
 <span class="cstat-no" title="statement not covered" >                        <span class="missing-if-branch" title="if path not taken" >I</span>if (value &amp;&amp; this.updateExisting) {</span>
 <span class="cstat-no" title="statement not covered" >                            this.updateExisting = false;</span>
                             // Visually update the other toggle if we can access it
-                            const updateExistingInput = <span class="cstat-no" title="statement not covered" >contentEl.querySelector('.update-existing-toggle input[type="checkbox"]') as HTMLInputElement;</span>
-<span class="cstat-no" title="statement not covered" >                            <span class="missing-if-branch" title="if path not taken" >I</span>if (updateExistingInput) <span class="cstat-no" title="statement not covered" >updateExistingInput.checked = false;</span></span>
+                            const updateExistingInput = <span class="cstat-no" title="statement not covered" >contentEl.querySelector('.update-existing-toggle input[type="checkbox"]');</span>
+<span class="cstat-no" title="statement not covered" >                            <span class="missing-if-branch" title="if path not taken" >I</span>if (updateExistingInput) (<span class="cstat-no" title="statement not covered" >updateExistingInput as HTMLInputElement).checked = false;</span></span>
                         }
                     });
             });
@@ -1307,7 +1307,7 @@ export class RaindropFetchModal extends Modal {
         // --- Action Buttons ---
         const buttonsEl = <span class="cstat-no" title="statement not covered" >contentEl.createDiv({ cls: 'modal-button-container' });</span>
 <span class="cstat-no" title="statement not covered" >        new ButtonComponent(buttonsEl)</span>
-            .setButtonText('Fetch Raindrops')
+            .setButtonText('Fetch raindrops')
                     .setCta()
                     .onClick(<span class="fstat-no" title="function not covered" >async () =</span>&gt;<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" > {</span></span>
                         const options: ModalFetchOptions = <span class="cstat-no" title="statement not covered" >{</span>
@@ -1403,7 +1403,7 @@ export class QuickImportModal extends Modal {
 &nbsp;
         const buttonsEl = <span class="cstat-no" title="statement not covered" >contentEl.createDiv({ cls: 'modal-button-container' });</span>
 <span class="cstat-no" title="statement not covered" >        new ButtonComponent(buttonsEl)</span>
-            .setButtonText('Fetch &amp; Create Note')
+            .setButtonText('Fetch and create note')
             .setCta()
             .onClick(<span class="fstat-no" title="function not covered" >async () =</span>&gt;<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" > {</span></span>
 <span class="cstat-no" title="statement not covered" >                <span class="missing-if-branch" title="if path not taken" >I</span>if (!this.itemUrlOrId) {</span>
@@ -1450,7 +1450,7 @@ export class QuickImportModal extends Modal {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-04-23T16:33:27.785Z
+                at 2026-04-25T20:18:07.574Z
             </div>
         <script src="../prettify.js"></script>
         <script>

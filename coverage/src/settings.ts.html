@@ -23,9 +23,9 @@
         <div class='clearfix'>
 
             <div class='fl pad1y space-right2'>
-                <span class="strong">3.75% </span>
+                <span class="strong">3.79% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>6/160</span>
+                <span class='fraction'>6/158</span>
             </div>
 
 
@@ -44,9 +44,9 @@
 
 
             <div class='fl pad1y space-right2'>
-                <span class="strong">3.79% </span>
+                <span class="strong">3.84% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>6/158</span>
+                <span class='fraction'>6/156</span>
             </div>
 
 
@@ -1271,6 +1271,24 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1281,24 +1299,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1306,7 +1306,7 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1577,7 +1577,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { App, PluginSettingTab, Setting, TextComponent, ButtonComponent, Notice, request, ToggleComponent } from 'obsidian';
 import type RaindropToObsidian from './main';
-import { RaindropTypes, RaindropType } from './types';
+import { RaindropTypes } from './types';
 import { MakeItRainSettings } from './types';
 &nbsp;
 export const DEFAULT_SETTINGS: MakeItRainSettings = {
@@ -2027,10 +2027,10 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
         const { containerEl } = <span class="cstat-no" title="statement not covered" >this;</span>
 <span class="cstat-no" title="statement not covered" >        containerEl.empty();</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >        new Setting(containerEl).setName('Make it rain settings').setHeading();</span>
+&nbsp;
 &nbsp;
         // --- API Configuration Section ---
-<span class="cstat-no" title="statement not covered" >        new Setting(containerEl).setName('Raindrop.io API configuration').setHeading();</span>
+<span class="cstat-no" title="statement not covered" >        new Setting(containerEl).setName('API configuration').setHeading();</span>
         const apiTokenSetting = <span class="cstat-no" title="statement not covered" >new Setting(containerEl)</span>
             .setName('Raindrop.io API token')
             .setDesc('Create a "test token" from your Raindrop.io apps settings.')
@@ -2045,7 +2045,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
 <span class="cstat-no" title="statement not covered" >                text.inputEl.addClass('make-it-rain-full-width');</span>
             })
             .addButton(<span class="fstat-no" title="function not covered" >(b</span>utton: ButtonComponent) =&gt; {
-<span class="cstat-no" title="statement not covered" >                button.setButtonText("Verify Token")</span>
+<span class="cstat-no" title="statement not covered" >                button.setButtonText("Verify token")</span>
                     .setIcon("checkmark")
                     .setCta()
                     .onClick(<span class="fstat-no" title="function not covered" >async () =</span>&gt;<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" > {</span></span>
@@ -2062,7 +2062,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
 <span class="cstat-no" title="statement not covered" >        apiTokenHelpLink.setAttr('target', '_blank');</span>
 &nbsp;
         // --- General Import Settings Section ---
-<span class="cstat-no" title="statement not covered" >        new Setting(containerEl).setName('General import settings').setHeading();</span>
+&nbsp;
 <span class="cstat-no" title="statement not covered" >        new Setting(containerEl)</span>
             .setName('Default vault save location')
             .setDesc('Specify the default folder for imported notes (e.g., Imports/Raindrops). Leave blank for vault root.')
@@ -2078,7 +2078,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
 &nbsp;
         const fileNameTemplateSetting = <span class="cstat-no" title="statement not covered" >new Setting(containerEl)</span>
             .setName('Filename template')
-            .setDesc('Define the filename for notes when "Use Raindrop Title" is enabled. Placeholders: {{title}}, {{id}}, {{collectionTitle}}, {{date}} (YYYY-MM-DD).')
+            .setDesc('Define the filename for notes when "use raindrop title" is enabled. Placeholders: {{title}}, {{id}}, {{collectionTitle}}, {{date}} (YYYY-MM-DD).')
             .addText(<span class="fstat-no" title="function not covered" >(t</span>ext: TextComponent) =&gt; {
 <span class="cstat-no" title="statement not covered" >                text.setPlaceholder('{{title}}')</span>
                     .setValue(this.plugin.settings.fileNameTemplate)
@@ -2206,7 +2206,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
 <span class="cstat-no" title="statement not covered" >                new Setting(containerEl).setName(`${typeStr.charAt(0).toUpperCase() + typeStr.slice(1)} template`).setHeading();</span>
 
 <span class="cstat-no" title="statement not covered" >                new Setting(containerEl)</span>
-                    .setName(`Enable ${typeStr} Template`)
+                    .setName(`Enable ${typeStr} template`)
                     .setDesc(`Use a custom template for "${typeStr}" items.`)
                     .addToggle(<span class="fstat-no" title="function not covered" >(t</span>oggle) =&gt; {
 <span class="cstat-no" title="statement not covered" >                        toggle</span>
@@ -2338,7 +2338,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-04-23T16:33:27.813Z
+                at 2026-04-25T20:18:07.603Z
             </div>
         <script src="../prettify.js"></script>
         <script>
