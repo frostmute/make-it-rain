@@ -427,10 +427,10 @@ describe('apiUtils', () => {
 
             const data = extractCollectionData(response);
 
-            expect(data._id).toBe(123);
-            expect(data.title).toBe('Tech Articles');
-            expect(data.parent).toEqual({ $id: 100 });
-            expect(data.count).toBe(42);
+            expect(data!._id).toBe(123);
+            expect(data!.title).toBe('Tech Articles');
+            expect(data!.parent).toEqual({ $id: 100 });
+            expect(data!.count).toBe(42);
         });
     });
 

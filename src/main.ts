@@ -89,11 +89,7 @@ const TAG_INVALID_CHARS_REGEX = /[#?"*<>:|]/g;
  * Validates the parameters for the fetch operation
  */
     
-    const areOptionsValid = options && typeof options === 'object';
-    if (!areOptionsValid) {
-        throw new Error('Request options must be an object');
-    }
-}
+/* removed syntax error */
 
 /**
  * Collection API interaction - functional approach
@@ -125,11 +121,7 @@ const TAG_INVALID_CHARS_REGEX = /[#?"*<>:|]/g;
  */
         // Non-fatal error - we can continue without collection info
         // The items will be placed in the base folder instead
-        const errorMessage = error instanceof Error ? error.message : 'unknown error';
-        console.error(`Error fetching collection ${collectionId}: ${errorMessage}`);
-        return null;
-    }
-}
+/* removed syntax error */
 
 // Function moved inside the RaindropToObsidian class
 
@@ -994,8 +986,8 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     let fileExt = 'pdf';
                     if (fileExtFromMime) {
                         fileExt = fileExtFromMime;
-                    } else if (raindrop.file && raindrop.file.name) {
-                        const parts = raindrop.file.name.split('.');
+                    } else if (raindrop.file && typeof raindrop.file === 'object' && 'name' in raindrop.file && typeof (raindrop.file as any).name === 'string') {
+                        const parts = ((raindrop.file as any).name as string).split('.');
                         if (parts.length > 1) {
                             fileExt = parts.pop()?.toLowerCase() || 'pdf';
                         }
