@@ -260,6 +260,24 @@ const mockNormalizePath = jest.fn((path: string) => {
     return path.replace(/\\/g, '/').replace(/\/+/g, '/');
 });
 
+// Mock TFile class
+class MockTFile {
+    path: any;
+    name: any;
+    basename: any;
+    extension: any;
+    vault: any;
+    parent: any;
+    stat: any;
+}
+
+// Mock requestUrl function
+const mockRequestUrl = jest.fn().mockResolvedValue({
+    status: 200,
+    arrayBuffer: new ArrayBuffer(0),
+    json: {}
+});
+
 // Export mocks to global scope
 (global as any).obsidian = {
     Notice: MockNotice,
@@ -267,7 +285,9 @@ const mockNormalizePath = jest.fn((path: string) => {
     Plugin: MockPlugin,
     PluginSettingTab: MockPluginSettingTab,
     Setting: MockSetting,
+    TFile: MockTFile,
     request: mockRequest,
+    requestUrl: mockRequestUrl,
     normalizePath: mockNormalizePath,
     App: mockApp
 };
@@ -279,7 +299,9 @@ jest.mock('obsidian', () => ({
     Plugin: MockPlugin,
     PluginSettingTab: MockPluginSettingTab,
     Setting: MockSetting,
+    TFile: MockTFile,
     request: mockRequest,
+    requestUrl: mockRequestUrl,
     normalizePath: mockNormalizePath,
     App: jest.fn(() => mockApp)
 }), { virtual: true });

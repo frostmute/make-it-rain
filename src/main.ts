@@ -16,7 +16,7 @@
  * and immutable data structures to improve code reliability and testability.
  */
 
-import { App, Notice, Plugin, PluginManifest, normalizePath } from 'obsidian';
+import { App, Notice, Plugin, PluginManifest, TFile, normalizePath } from 'obsidian';
 import { requestUrl, RequestUrlParam } from 'obsidian';
 import { 
     MakeItRainSettings, 
@@ -78,54 +78,6 @@ const TAG_INVALID_CHARS_REGEX = /[#?"*<>:|]/g;
 
 
 // Rate limiting and retry utilities are now imported from './utils/apiUtils'
-
-
-
-/**
-// All API utility functions moved to apiUtils.ts and imported via index.ts
-}
-
-/**
- * Validates the parameters for the fetch operation
- */
-    
-/* removed syntax error */
-
-/**
- * Collection API interaction - functional approach
- */
-
-// Function moved to apiUtils.ts and imported via index.ts
-
-// Function moved to apiUtils.ts and imported via index.ts
-
-// Function moved to apiUtils.ts and imported via index.ts
-
-/**
- * Fetches collection information with error handling and rate limiting
- * Uses functional composition by breaking the process into smaller, focused operations
- * @param app - The Obsidian app instance
- * @param collectionId - The ID of the collection to fetch
- * @param apiToken - The API token for authentication
- * @param rateLimiter - Rate limiter to prevent API throttling
- * @returns Promise resolving to collection data or null if unavailable
- */
-/**
- * Fetches collection information from Raindrop.io API
- * Utilizes utility functions from apiUtils module for better modularity
- * @param app - Obsidian app instance
- * @param collectionId - Raindrop collection ID
- * @param apiToken - Raindrop API token
- * @param rateLimiter - Rate limiter instance
- * @returns Collection information or null if not found
- */
-        // Non-fatal error - we can continue without collection info
-        // The items will be placed in the base folder instead
-/* removed syntax error */
-
-// Function moved inside the RaindropToObsidian class
-
-// Modals moved to src/modals.ts
 
 export default class RaindropToObsidian extends Plugin implements IRaindropToObsidian {
     settings: MakeItRainSettings;
@@ -656,13 +608,12 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                         new Notice(`No raindrops found matching type '${options.filterType}'.`, 5000);
                         loadingNotice.hide();
                         return;
-                }
-            } else {
-                loadingNotice.setMessage(`Found ${allData.length} raindrops. Processing...`); // Update notice message
+                    }
+                } else {
+                    loadingNotice.setMessage(`Found ${allData.length} raindrops. Processing...`);
                 }
 
                 // The loadingNotice will be hidden in processRaindrops
-                // Pass all necessary data including collectionsData, resolvedCollectionIds, and collectionIdToNameMap
                 await this.processRaindrops(filteredData, options.vaultPath, options.appendTagsToNotes, options.useRaindropTitleForFileName, loadingNotice, options, collectionsData, resolvedCollectionIds, collectionIdToNameMap);
             }
 
@@ -885,11 +836,23 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             // Use normalizePath for the final file path
             const filePath = normalizePath(`${individualNoteTargetFolderPath}/${generatedFilename}.md`);
 
+            // Handle existing files: Skip or Update logic
+            const fileExists = await app.vault.adapter.exists(filePath);
+            if (fileExists) {
+                if (options.fetchOnlyNew && !options.updateExisting) {
+                    return { success: true, type: 'skipped' };
+                }
+                if (!options.updateExisting) {
+                    return { success: true, type: 'skipped' };
+                }
+                // If we are here and fileExists is true, we will update (overwriting)
+            }
+
             // Update loading notice with current processing item
             const raindropTitle = raindrop.title || 'Untitled';
             loadingNotice.setMessage(`Processing '${raindropTitle}'... (${processed}/${total})`);
 
-            const processOutcome: 'created' | 'updated' | 'skipped' = 'created';
+            const processOutcome: 'created' | 'updated' | 'skipped' = fileExists ? 'updated' : 'created';
 
             // Generate template data
             const templateData: Record<string, any> = {
@@ -900,7 +863,8 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 link: raindrop.link, // URLs generally don't need YAML escaping unless they have special chars
                 cover: raindrop.cover || '', // URLs generally don't need YAML escaping
                 created: raindrop.created,
-                lastupdate: raindrop.lastUpdate, // Changed from lastUpdate
+                lastUpdate: raindrop.lastUpdate,
+                lastupdate: raindrop.lastUpdate,
                 type: raindrop.type,
                 // Flattened collection data
                 collectionId: raindrop.collection?.$id || 0,
@@ -1076,17 +1040,15 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     }
                 }
 
+                let finalContent = '';
                 if (this.settings.isTemplateSystemEnabled) {
                     const template = this.getTemplateForType(raindrop.type as RaindropType, options);
-                    const fileContent = this.renderTemplate(template, enhancedDataForRender);
-                    await app.vault.create(filePath, fileContent);
-                    return { success: true, type: processOutcome };
+                    finalContent = this.renderTemplate(template, enhancedDataForRender);
                 } else {
                     // Fallback to basic format if template system is disabled
-                    // Logic moved from createNoteFromRaindrop
                     const { 
-                        id, title, excerpt, note, link, cover, created, lastUpdate: rdLastUpdate, type, tags // Keep raindrop.lastUpdate as rdLastUpdate for source
-                    } = raindrop; // Use raindrop directly for source data here to avoid confusion with templateData.lastupdate
+                        _id, title, excerpt, note, link, cover, created, lastUpdate: rdLastUpdate, type, tags 
+                    } = raindrop; 
 
                     let descriptionYaml = '';
                     if (excerpt) {
@@ -1100,7 +1062,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     }
 
                     let frontmatter = `---\n`;
-                    frontmatter += `id: ${id}\n`;
+                    frontmatter += `id: ${_id}\n`;
                     frontmatter += `title: "${title.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"\n`;
                     frontmatter += `${descriptionYaml}\n`;
                     frontmatter += `source: ${link}\n`;
@@ -1108,7 +1070,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     frontmatter += `created: ${created}\n`;
                     frontmatter += `lastupdate: ${rdLastUpdate}\n`;
                     
-                    if (templateData.collectionId) { // Use flattened collectionId from templateData
+                    if (templateData.collectionId) {
                         frontmatter += `collectionId: ${templateData.collectionId}\n`;
                         frontmatter += `collectionTitle: "${escapeYamlString(templateData.collectionTitle)}"\n`;
                         frontmatter += `collectionPath: "${escapeYamlString(templateData.collectionPath)}"\n`;
@@ -1126,54 +1088,53 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     if (cover) {
                         frontmatter += `${this.settings.bannerFieldName}: ${cover}\n`;
                     }
-                    frontmatter += `---\n\n`; // Corrected: Actual newlines here
+                    frontmatter += `---\n\n`;
 
-                    // Construct note content
                     let noteBody = '';
                     const altText = sanitizeFileName(title) || 'Cover Image';
                     if (cover) {
-                        noteBody += `![${altText}](${cover})\n\n`; // Corrected
+                        noteBody += `![${altText}](${cover})\n\n`;
                     }
-                    noteBody += `# ${title}\n\n`; // Corrected
+                    noteBody += `# ${title}\n\n`;
                     if (excerpt) {
-                        noteBody += `## Description\n${excerpt}\n\n`; // Corrected
+                        noteBody += `## Description\n${excerpt}\n\n`;
                     }
                     if (templateData.note) { 
-                         noteBody += `## Notes\n${templateData.note}\n\n`; // Corrected
+                         noteBody += `## Notes\n${templateData.note}\n\n`;
                     }
 
                     if (templateData.highlights && templateData.highlights.length > 0) {
-                        noteBody += '## Highlights\n'; // Corrected
+                        noteBody += '## Highlights\n';
                         templateData.highlights.forEach((highlight: any) => {
-                            noteBody += `- ${highlight.text.replace(/\r\n|\r|\n/g, ' ')}\n`; // Corrected
+                            noteBody += `- ${highlight.text.replace(/\r\n|\r|\n/g, ' ')}\n`;
                             if (highlight.note) {
-                                noteBody += `  *Note:* ${highlight.note.replace(/\r\n|\r|\n/g, ' ')}\n`; // Corrected
+                                noteBody += `  *Note:* ${highlight.note.replace(/\r\n|\r|\n/g, ' ')}\n`;
                             }
                         });
-                        noteBody += '\n'; // Corrected
+                        noteBody += '\n';
                     }
                     
                     if (localEmbedLink) {
                         noteBody += `\n## Local File\n${localEmbedLink}\n\n`;
                     }
                     
-                    const basicContent = frontmatter + noteBody;
-                    await app.vault.create(filePath, basicContent);
-                    return { success: true, type: processOutcome };
+                    finalContent = frontmatter + noteBody;
                 }
-            } catch (error) {
-                // Make the check case-insensitive and check for the core part of the message
-                const isFileExistsError = error instanceof Error && 
-                                          error.message && 
-                                          error.message.toLowerCase().includes("file already exists");
 
-                if (isFileExistsError) {
-                    console.warn(`Attempted to create file ${filePath} but it already exists. This was not handled by update/skip logic (e.g., neither 'update existing' nor 'fetch only new' was applicable or led to a skip). File will be skipped. Options: updateExisting=${options.updateExisting}, fetchOnlyNew=${options.fetchOnlyNew}`);
-                    return { success: true, type: 'skipped' };
+                // Write the content (create or modify)
+                const existingFile = app.vault.getAbstractFileByPath(filePath);
+                if (existingFile instanceof TFile) {
+                    await app.vault.modify(existingFile, finalContent);
+                } else {
+                    await app.vault.create(filePath, finalContent);
                 }
-                // Log other errors from app.vault.create or other unexpected issues within this try block
+                
+                return { success: true, type: processOutcome };
+
+            } catch (error) {
+                // Log errors from file operations
                 console.error(`Error during file operation for ${generatedFilename} at path ${filePath}:`, error);
-                return { success: false, type: 'skipped' }; // Indicate failure but allow batch processing to continue
+                return { success: false, type: 'skipped' }; 
             }
         } catch (error) {
             console.error('Unexpected error in processRaindrop for item ID ' + raindrop._id + ':', error);
