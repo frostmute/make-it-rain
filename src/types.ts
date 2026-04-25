@@ -93,7 +93,12 @@ export interface RaindropItem {
         readonly created: string;
     }>;
     readonly type: RaindropType;
-    readonly [key: string]: any;
+    readonly file?: {
+        readonly name: string;
+        readonly size: number;
+        readonly type: string;
+    };
+    readonly [key: string]: unknown;
 }
 
 export interface RaindropResponse {
@@ -122,7 +127,7 @@ export interface RaindropCollection {
     readonly public?: boolean;
     readonly sort?: number;
     readonly view?: 'list' | 'simple' | 'grid' | 'masonry';
-    readonly [key: string]: any;
+    readonly [key: string]: unknown;
 }
 
 export interface CollectionResponse {

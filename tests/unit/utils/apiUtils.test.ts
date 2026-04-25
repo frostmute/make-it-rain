@@ -178,14 +178,14 @@ describe('apiUtils', () => {
     describe('parseApiResponse', () => {
         it('should parse JSON string response', () => {
             const jsonString = '{"result": true, "items": []}';
-            const parsed = parseApiResponse(jsonString);
+            const parsed = parseApiResponse(jsonString) as any;
 
             expect(parsed).toEqual({ result: true, items: [] });
         });
 
         it('should return object if already parsed', () => {
             const obj = { result: true, items: [] };
-            const parsed = parseApiResponse(obj);
+            const parsed = parseApiResponse(obj) as any;
 
             expect(parsed).toEqual(obj);
             expect(parsed).toBe(obj); // Same reference
@@ -201,7 +201,7 @@ describe('apiUtils', () => {
                 count: 2
             });
 
-            const parsed = parseApiResponse(jsonString);
+            const parsed = parseApiResponse(jsonString) as any;
 
             expect(parsed.result).toBe(true);
             expect(parsed.items).toHaveLength(2);
@@ -608,7 +608,7 @@ describe('apiUtils', () => {
                 'https://api.example.com',
                 { method: 'GET', headers: {} },
                 mockRateLimiter
-            );
+            ) as any;
 
             expect(result).toEqual(complexResponse);
             expect(result.items).toHaveLength(2);
