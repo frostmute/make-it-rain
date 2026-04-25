@@ -76,6 +76,10 @@ const SystemCollections = {
  */
 const TAG_SPACE_REGEX = / /g;
 const TAG_INVALID_CHARS_REGEX = /[#?"*<>:|]/g;
+/**
+ * Regex for file name template placeholders to avoid redundant compilation
+ */
+const FILENAME_PLACEHOLDER_REGEX = /{{(title|id|collectionTitle|date)}}/gi;
 
 
 // Rate limiting and retry utilities are now imported from './utils/apiUtils'
@@ -179,26 +183,31 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
     generateFileName(raindrop: RaindropItem, useRaindropTitleForFileName: boolean): string {
         // Use the template from settings if title is enabled, otherwise use ID
         const fileNameTemplate = useRaindropTitleForFileName ? this.settings.fileNameTemplate : '{{id}}';
-        let fileName = fileNameTemplate;
         
-        const replacePlaceholder = (placeholder: string, value: string) => {
-            const safeValue = sanitizeFileName(value);
-            const regex = new RegExp(`{{${escapeRegExp(placeholder)}}}`, 'gi');
-            fileName = fileName.replace(regex, safeValue);
-        };
-
         try {
-            replacePlaceholder('title', raindrop.title || 'Untitled');
-            replacePlaceholder('id', (raindrop._id || 'unknown_id').toString()); // Use _id consistently
-            replacePlaceholder('collectionTitle', raindrop.collection?.title || 'No Collection');
-
             const createdDate = raindrop.created ? new Date(raindrop.created) : null;
             let formattedDate = 'no_date';
             if (createdDate && !isNaN(createdDate.getTime())) {
                 formattedDate = createdDate.toISOString().split('T')[0];
             }
-            replacePlaceholder('date', formattedDate);
 
+            const replacements: Record<string, string> = {
+                title: sanitizeFileName(raindrop.title || 'Untitled'),
+                id: sanitizeFileName((raindrop._id || 'unknown_id').toString()),
+                collectiontitle: sanitizeFileName(raindrop.collection?.title || 'No Collection'),
+                date: sanitizeFileName(formattedDate)
+            };
+
+            const fileName = fileNameTemplate.replace(FILENAME_PLACEHOLDER_REGEX, (match, placeholder) => {
+                const key = placeholder.toLowerCase();
+                return replacements[key] !== undefined ? replacements[key] : match;
+            });
+
+            const finalFileName = sanitizeFileName(fileName);
+            if (!finalFileName.trim()) {
+                return "Unnamed_Raindrop_" + (raindrop._id || Date.now()); // Use _id consistently
+            }
+            return finalFileName;
         } catch (error) {
             let errorMsg = 'template processing error';
             if (error instanceof Error) errorMsg = error.message;
@@ -206,12 +215,6 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             new Notice("Error generating file name. Check console or template.");
             return "Error_Filename_" + Date.now();
         }
-
-        const finalFileName = sanitizeFileName(fileName);
-        if (!finalFileName.trim()) {
-            return "Unnamed_Raindrop_" + (raindrop._id || Date.now()); // Use _id consistently
-        }
-        return finalFileName;
     }
 
     async saveSettings() {
