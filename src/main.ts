@@ -742,11 +742,14 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                                 
                                 const sortedChildren = [...folderChildren].sort((a, b) => a.name.localeCompare(b.name));
                                 
-                                for (const child of sortedChildren) {
+                                const listItems: string[] = [];
+                                for (let i = 0; i < sortedChildren.length; i++) {
+                                    const child = sortedChildren[i];
                                     if (child.name !== `${folderName}.md`) {
-                                        content += `- [[${child.name.replace('.md', '')}]]\n`;
+                                        listItems.push(`- [[${child.name.replace('.md', '')}]]\n`);
                                     }
                                 }
+                                content += listItems.join('');
                                 
                                 if (await app.vault.adapter.exists(folderNotePath)) {
                                     await app.vault.adapter.write(folderNotePath, content);
