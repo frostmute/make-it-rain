@@ -43,3 +43,12 @@ export function raindropType(type: string): string {
     };
     return types[type as keyof typeof types] || type;
 }
+
+/**
+ * Escapes special characters in a string for use in a regular expression
+ * @param str - The string to escape
+ * @returns The escaped string
+ */
+export function escapeRegExp(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
