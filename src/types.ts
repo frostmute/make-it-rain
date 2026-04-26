@@ -94,11 +94,39 @@ export interface RaindropItem {
     }>;
     readonly type: RaindropType;
     readonly file?: {
-        readonly name: string;
-        readonly size: number;
-        readonly type: string;
+        readonly name?: string;
+        readonly size?: number;
+        readonly type?: string;
     };
     readonly [key: string]: unknown;
+}
+
+export interface TemplateData {
+    _id: number;
+    title: string;
+    excerpt: string;
+    note: string;
+    link: string;
+    cover: string;
+    created: string;
+    lastupdate: string;
+    type: RaindropType;
+    collectionId: number;
+    collectionTitle: string;
+    collectionPath: string;
+    collectionParentId?: number;
+    tags: string[];
+    highlights: {
+        text: string;
+        note?: string;
+        color?: string;
+        created: string;
+    }[];
+    bannerFieldName: string;
+    url: string;
+    domain?: string;
+    renderedType?: string;
+    [key: string]: unknown; // Allow for custom fields if needed, but primary fields are typed
 }
 
 export interface RaindropResponse {

@@ -9,7 +9,7 @@
 
 # Make It Rain
 
-**Seamlessly import your [Raindrop.io](https://raindrop.io) bookmarks into [Obsidian](https://obsidian.md/)**
+**Pull your Raindrop.io bookmarks with flexible filtering, customization, and location options.**
 
 Transform your web clippings, articles, and research into a powerful knowledge base.
 

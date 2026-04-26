@@ -1,6 +1,6 @@
 /**
- * Make It Rain: Raindrop.io Integration for Obsidian
- * ================================================
+ * Make It Rain: Pull your Raindrop.io bookmarks with flexible filtering, customization, and location options.
+ * ========================================================================================================
  * 
  * This plugin allows users to fetch bookmarks from Raindrop.io and create Markdown notes from them.
  * The code follows a modular architecture with utility functions separated into dedicated modules
@@ -1273,7 +1273,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             return;
         }
         if (!itemId) {
-            new Notice('Invalid Item ID provided for Quick Import.', 5000);
+            new Notice('Invalid item ID provided for quick import.', 5000);
             return;
         }
 

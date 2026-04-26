@@ -44,10 +44,6 @@ export function createRateLimiter(maxRequestsPerMinute = 60, delayBetweenRequest
     let requestCount = 0;
     let resetTime = Date.now() + 60000; // 1 minute window
     
-    /**
-     * Checks if we're within rate limits and handles delays if needed
-     */
-
     let queuePromise: Promise<void> = Promise.resolve();
 
     /**
@@ -68,7 +64,7 @@ export function createRateLimiter(maxRequestsPerMinute = 60, delayBetweenRequest
             // If we've hit the rate limit, wait for the reset
             if (requestCount >= maxRequestsPerMinute) {
                 const waitTime = resetTime - now;
-                console.debug(`Rate limit reached. Waiting ${waitTime}ms before next request.`);
+                console.log(`Rate limit reached. Waiting ${waitTime}ms before next request.`);
                 await new Promise(resolve => setTimeout(resolve, waitTime));
                 // Reset after waiting
                 resetTime = Date.now() + 60000;
@@ -94,7 +90,7 @@ export function createRateLimiter(maxRequestsPerMinute = 60, delayBetweenRequest
     const resetCounter = (): void => {
         resetTime = Date.now() + 60000;
         requestCount = 0;
-        console.debug('Rate limiter counter reset.');
+        console.log('Rate limiter counter reset.');
     };
     
     return { checkLimit, resetCounter };
@@ -157,17 +153,19 @@ export async function handleRequestError(
     delayBetweenRetries: number
 ): Promise<boolean> {
     const isLastAttempt = attemptNumber >= maxRetries - 1;
+    const errorStatus = (error as any)?.status;
+    const errorMessage = (error as any)?.message;
     
     // Handle rate limiting (HTTP 429)
-    if (error && typeof error === 'object' && ('status' in error && error.status === 429 || ('message' in error && typeof error.message === 'string' && error.message.includes('rate limit')))) {
-        console.debug('Rate limit hit, resetting counter and waiting...');
+    if (errorStatus === 429 || (errorMessage && errorMessage.includes('rate limit'))) {
+        console.log('Rate limit hit, resetting counter and waiting...');
         rateLimiter.resetCounter();
         await new Promise(resolve => setTimeout(resolve, delayBetweenRetries * 2)); // Longer wait for rate limits
         return true; // We handled the error, continue with retry
     }
     
     // For other errors, log and possibly retry
-    console.error(`Error in API request (attempt ${attemptNumber + 1}/${maxRetries}):`, error instanceof Error ? error.message : String(error));
+    console.error(`Error in API request (attempt ${attemptNumber + 1}/${maxRetries}):`, error);
     
     if (!isLastAttempt) {
         // Wait and retry for non-rate limit errors
@@ -260,9 +258,12 @@ export async function fetchWithRetry(
  * @param response - The raw API response
  * @returns The collection data or null if invalid response
  */
-export function extractCollectionData(response: unknown): RaindropCollection | null {
-    if (response && typeof response === 'object' && 'result' in response && response.result === true && 'item' in response) {
-        return (response as Record<string, unknown>).item as RaindropCollection;
+export function extractCollectionData(response: unknown): unknown {
+    const data = response as { result?: boolean, item?: unknown };
+    const isValidResponse = data && data.result && data.item;
+    
+    if (isValidResponse) {
+        return data.item;
     }
     
     console.error('Failed to fetch collection info:', response);
@@ -300,4 +301,3 @@ export function getFullPathSegments(
 
     return segments;
 }
-

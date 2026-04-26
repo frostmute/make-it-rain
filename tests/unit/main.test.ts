@@ -14,7 +14,7 @@ describe('RaindropToObsidian', () => {
             author: 'frostmute',
             version: '1.7.2',
             minAppVersion: '0.15.0',
-            description: 'Raindrop.io Integration'
+            description: 'Pull your Raindrop.io bookmarks with flexible filtering, customization, and location options.'
         } as PluginManifest;
 
         plugin = new RaindropToObsidian(mockApp as unknown as App, manifest);

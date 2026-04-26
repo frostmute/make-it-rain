@@ -480,11 +480,12 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
             href: 'https://frostmute.github.io/make-it-rain/configuration#api-token',
             text: ' (?)',
             cls: 'make-it-rain-help-link',
-            title: 'How to get your API Token'
+            title: 'How to get your API token'
         });
         apiTokenHelpLink.setAttr('target', '_blank');
 
-        // --- General Import Settings Section ---
+        // --- Import settings Section ---
+        new Setting(containerEl).setName('Import settings').setHeading();
 
         new Setting(containerEl)
             .setName('Default vault save location')
@@ -516,7 +517,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
             href: 'https://frostmute.github.io/make-it-rain/configuration#filename-template',
             text: ' (?)',
             cls: 'make-it-rain-help-link',
-            title: 'Documentation for Filename Template'
+            title: 'Documentation for filename template'
         });
         fileNameTemplateHelpLink.setAttr('target', '_blank');
 
@@ -535,7 +536,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName('Download files locally')
-            .setDesc('If a raindrop is a Document, Image, Video, or Audio file, automatically download the raw file directly into your vault.')
+            .setDesc('If a raindrop is a document, image, video, or audio file, automatically download the raw file directly into your vault.')
             .addToggle((toggle: ToggleComponent) => {
                 toggle.setValue(this.plugin.settings.downloadFiles)
                     .onChange(async (value: boolean) => {
@@ -555,11 +556,11 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                     });
             });
 
-        // --- UI Settings Section ---
+        // --- User interface Section ---
         new Setting(containerEl).setName('User interface').setHeading();
         new Setting(containerEl)
             .setName('Show ribbon icon')
-            .setDesc('Toggle the Make It Rain ribbon icon in the Obsidian sidebar.')
+            .setDesc('Toggle the ribbon icon in the Obsidian sidebar.')
             .addToggle((toggle: ToggleComponent) => {
                 toggle.setValue(this.plugin.settings.showRibbonIcon)
                     .onChange(async (value: boolean) => {
@@ -571,7 +572,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
 
         containerEl.createEl('hr');
 
-        // --- Template System Section ---
+        // --- Template system Section ---
         new Setting(containerEl).setName('Template system').setHeading();
         new Setting(containerEl)
             .setName('Enable template system')
@@ -737,12 +738,12 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
             }
 
             if (data.result) {
-                new Notice('API Token is valid!', 5000);
+                new Notice('API token is valid!', 5000);
             } else {
                 // Handle specific API error messages if available
                 const errorMessage = data.message || data.error || 'Invalid API token or connection issue.';
-                new Notice(`API Token verification failed: ${errorMessage}`, 10000);
-                console.error('API Token verification failed:', errorMessage);
+                new Notice(`API token verification failed: ${errorMessage}`, 10000);
+                console.error('API token verification failed:', errorMessage);
             }
         } catch (error) {
             let errorMsg = 'An error occurred during token verification.';

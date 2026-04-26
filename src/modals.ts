@@ -35,9 +35,9 @@ export class RaindropFetchModal extends Modal {
         contentEl.empty();
         contentEl.addClass('make-it-rain-modal'); // For potential future styling
 
-        new Setting(contentEl).setName('Make it rain: fetch options').setHeading();
+        new Setting(contentEl).setName('Fetch options').setHeading();
 
-        // --- Fetch Criteria Section ---
+        // --- Fetch criteria Section ---
         new Setting(contentEl).setName('Fetch criteria').setHeading();
 
         new Setting(contentEl)
@@ -45,7 +45,7 @@ export class RaindropFetchModal extends Modal {
             .setDesc('Override default save folder for this fetch. Leave blank for default.')
             .setClass('setting-item-stacked') // Added class
             .addText((text: TextComponent) => {
-                text.setPlaceholder(this.plugin.settings.defaultFolder || 'Vault Root')
+                text.setPlaceholder(this.plugin.settings.defaultFolder || 'Vault root')
                     .setValue(this.vaultPath)
                     .onChange((value: string) => {
                         this.vaultPath = value;
@@ -56,11 +56,11 @@ export class RaindropFetchModal extends Modal {
         let collectionsTextComponent: TextComponent;
         new Setting(contentEl)
             .setName('Filter by collections')
-            .setDesc('Comma-separated Raindrop Collection IDs or Names. Click a collection below to add its name. If typing names manually, use IDs for duplicate collection names to ensure accuracy.')
+            .setDesc('Comma-separated collection IDs or names. Click a collection below to add its name. If typing names manually, use IDs for duplicate collection names to ensure accuracy.')
             .setClass('setting-item-stacked') // Added class
             .addText((text: TextComponent) => {
                 collectionsTextComponent = text; // Store reference to update it later
-                text.setPlaceholder('e.g., 12345, My Work, Work > Articles')
+                text.setPlaceholder('e.g., 12345, My work, Work > Articles')
                     .setValue(this.collections)
                     .onChange((value: string) => {
                         this.collections = value;
@@ -69,14 +69,14 @@ export class RaindropFetchModal extends Modal {
             });
 
         // --- UI for Selectable Collections ---
-        const collectionsContainer = contentEl.createDiv({ cls: 'make-it-rain-collections-list-container' });
+        const collectionsContainer = contentEl.createDiv({ cls: 'make-it-rain-collections-container' });
 
         const loadingCollectionsEl = collectionsContainer.createEl('p', { text: 'Loading your collections...', cls: 'make-it-rain-loading-collections' });
 
         this.plugin.fetchAllUserCollections().then(fetchedCollections => {
             loadingCollectionsEl.remove(); // Remove loading message
             if (fetchedCollections && fetchedCollections.length > 0) {
-                const listEl = collectionsContainer.createEl('ul');
+                const listEl = collectionsContainer.createEl('ul', { cls: 'make-it-rain-collection-list' });
 
                 // Helper to build display paths and map collections by ID
                 const collectionMap = new Map<number, RaindropCollection>();
@@ -133,7 +133,7 @@ export class RaindropFetchModal extends Modal {
 
         new Setting(contentEl)
             .setName('Include subcollections')
-            .setDesc('If filtering by Collections, also fetch from their subcollections.')
+            .setDesc('If filtering by collections, also fetch from their subcollections.')
             .addToggle((toggle: ToggleComponent) => {
                 toggle.setValue(this.includeSubcollections)
                     .onChange((value: boolean) => {
@@ -143,7 +143,7 @@ export class RaindropFetchModal extends Modal {
 
         new Setting(contentEl)
             .setName('Filter by tags')
-            .setDesc('Comma-separated Raindrop tag names.')
+            .setDesc('Comma-separated raindrop tag names.')
             .setClass('setting-item-stacked') // Added class
             .addText((text: TextComponent) => {
                 text.setPlaceholder('e.g., obsidian, productivity, to-read')
@@ -171,13 +171,13 @@ export class RaindropFetchModal extends Modal {
             href: 'https://frostmute.github.io/make-it-rain/usage#tag-match-type', // Placeholder URL
             text: ' (?)',
             cls: 'make-it-rain-help-link',
-            title: 'Documentation for Tag Match Type'
+            title: 'Documentation for tag match type'
         });
         tagMatchHelpLink.setAttr('target', '_blank');
 
         new Setting(contentEl)
             .setName('Filter by content type')
-            .setDesc('Select the type of Raindrops to fetch.')
+            .setDesc('Select the type of raindrops to fetch.')
             .addDropdown(dropdown => {
                 dropdown.addOption(FilterTypes.ALL, 'All types');
                 Object.values(RaindropTypes).forEach(type => {
@@ -226,9 +226,9 @@ export class RaindropFetchModal extends Modal {
                     }
                     appendTagsDescEl.textContent = hintText;
                     if (hasIssues) {
-                        appendTagsDescEl.addClass('make-it-rain-warning-text');
+                        appendTagsDescEl.addClass('make-it-rain-input-hint-warning');
                     } else {
-                        appendTagsDescEl.removeClass('make-it-rain-warning-text');
+                        appendTagsDescEl.removeClass('make-it-rain-input-hint-warning');
                     }
                 });
             text.inputEl.addClass('make-it-rain-full-width');
@@ -236,7 +236,7 @@ export class RaindropFetchModal extends Modal {
 
         new Setting(contentEl)
             .setName('Use raindrop title for filename')
-            .setDesc('If off, Raindrop ID will be used. Uses filename template from settings.')
+            .setDesc('If off, raindrop ID will be used. Uses filename template from settings.')
             .addToggle((toggle: ToggleComponent) => {
                 toggle.setValue(this.useRaindropTitleForFileName)
                     .onChange((value: boolean) => {
@@ -246,7 +246,7 @@ export class RaindropFetchModal extends Modal {
 
         const fetchOnlyNewToggle = new Setting(contentEl)
             .setName('Fetch only new items')
-            .setDesc('Skip Raindrops if a note with the same filename already exists.')
+            .setDesc('Skip raindrops if a note with the same filename already exists.')
             .addToggle((toggle: ToggleComponent) => {
                 toggle.setValue(this.fetchOnlyNew)
                     .onChange((value: boolean) => {
@@ -262,7 +262,7 @@ export class RaindropFetchModal extends Modal {
 
         new Setting(contentEl)
             .setName('Update existing notes')
-            .setDesc('Update notes if Raindrop item changed (based on ID & last_update). Overrides "Fetch only new".')
+            .setDesc('Update notes if raindrop item changed (based on ID & last_update). Overrides "Fetch only new".')
             .setClass('update-existing-toggle') // Add a class for querying
             .addToggle((toggle: ToggleComponent) => {
                 toggle.setValue(this.updateExisting)
@@ -394,7 +394,7 @@ export class QuickImportModal extends Modal {
             .setName('Vault save location (optional)')
             .setDesc('Override default save folder. Leave blank for plugin default.')
             .addText((text: TextComponent) => {
-                text.setPlaceholder(this.plugin.settings.defaultFolder || 'Vault Root')
+                text.setPlaceholder(this.plugin.settings.defaultFolder || 'Vault root')
                     .setValue(this.vaultPath)
                     .onChange((value: string) => {
                         this.vaultPath = value.trim();
@@ -422,7 +422,7 @@ export class QuickImportModal extends Modal {
             .setCta()
             .onClick(async () => {
                 if (!this.itemUrlOrId) {
-                    new Notice('Please enter a Raindrop URL or ID.', 5000);
+                    new Notice('Please enter a raindrop URL or ID.', 5000);
                     return;
                 }
 

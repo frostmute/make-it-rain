@@ -1,6 +1,6 @@
 # Make It Rain - Documentation
 
-> **Seamlessly import your [Raindrop.io](https://raindrop.io) bookmarks into [Obsidian.md](https://obsidian.md/)**
+> **Pull your Raindrop.io bookmarks with flexible filtering, customization, and location options.**
 
 Welcome to Make It Rain! This documentation will help you get the most out of the plugin, whether you're a first-time user or an advanced contributor.
 
