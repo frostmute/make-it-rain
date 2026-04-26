@@ -32,7 +32,7 @@ export function isPlainObject(value: unknown): value is Record<string, unknown> 
  * @param seen - Set of seen objects to handle circular references
  * @returns Properly formatted and escaped YAML string
  */
-export function formatYamlValue(value: unknown, indentLevel: number = 0, seen: Set<unknown> = new Set()): string {
+export function formatYamlValue(value: unknown, indentLevel: number = 0, seen?: Set<unknown>): string {
   const indent = "  ".repeat(indentLevel);
 
   // Handle null/undefined
@@ -97,13 +97,15 @@ export function formatYamlValue(value: unknown, indentLevel: number = 0, seen: S
     if (value.length === 0) {
       return "[]";
     }
-    if (seen.has(value)) {
+
+    const currentSeen = seen || new Set<unknown>();
+    if (currentSeen.has(value)) {
       return '"[Circular Reference]"';
     }
-    seen.add(value);
+    currentSeen.add(value);
 
-    const items = value.map((item) => `${indent}- ${formatYamlValue(item, indentLevel + 1, seen)}`);
-    seen.delete(value);
+    const items = value.map((item) => `${indent}- ${formatYamlValue(item, indentLevel + 1, currentSeen)}`);
+    currentSeen.delete(value);
     return "\n" + items.join("\n");
   }
 
@@ -113,18 +115,20 @@ export function formatYamlValue(value: unknown, indentLevel: number = 0, seen: S
     if (keys.length === 0) {
       return "{}";
     }
-    if (seen.has(value)) {
+
+    const currentSeen = seen || new Set<unknown>();
+    if (currentSeen.has(value)) {
       return '"[Circular Reference]"';
     }
-    seen.add(value);
+    currentSeen.add(value);
 
     const formattedKeys = keys.map((key) => {
-      const formattedValue = formatYamlValue(value[key as keyof typeof value], indentLevel + 1, seen);
+      const formattedValue = formatYamlValue(value[key as keyof typeof value], indentLevel + 1, currentSeen);
       return formattedValue.startsWith("\n")
         ? `${indent}${key}:${formattedValue}`
         : `${indent}${key}: ${formattedValue}`;
     });
-    seen.delete(value);
+    currentSeen.delete(value);
     return "\n" + formattedKeys.join("\n");
   }
 
