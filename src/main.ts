@@ -646,6 +646,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
     ): Promise<void> {
         const { app } = this;
         const settingsFMTags = appendTagsToNotes.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag !== '');
+        const preformattedSettingsTagsStr = settingsFMTags.map(tag => `  - ${tag.trim().replace(TAG_SPACE_REGEX, '_').replace(TAG_INVALID_CHARS_REGEX, '')}`).join('\n');
 
         if (vaultPath === undefined) vaultPath = this.settings.defaultFolder;
         // Normalize the base target folder path once
@@ -686,6 +687,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                             raindrop,
                             baseTargetFolderPath,
                             settingsFMTags,
+                            preformattedSettingsTagsStr,
                             options,
                             loadingNotice,
                             processed,
@@ -792,6 +794,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         raindrop: RaindropItem,
         baseTargetFolderPath: string, // Already normalized
         settingsFMTags: string[],
+        preformattedSettingsTagsStr: string,
         options: ModalFetchOptions,
         loadingNotice: Notice,
         processed: number,
@@ -1090,9 +1093,22 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     }
                     
                     frontmatter += `tags:\n`;
-                    const finalTags = [...(tags || []), ...settingsFMTags].map((tag: string) => `  - ${tag.trim().replace(TAG_SPACE_REGEX, '_').replace(TAG_INVALID_CHARS_REGEX, '')}`).join('\n');
-                    if (finalTags) {
-                        frontmatter += `${finalTags}\n`;
+                    let finalTagsStr = '';
+                    if (tags && tags.length > 0) {
+                        for (let i = 0, len = tags.length; i < len; i++) {
+                            if (i > 0) finalTagsStr += '\n';
+                            finalTagsStr += `  - ${tags[i].trim().replace(TAG_SPACE_REGEX, '_').replace(TAG_INVALID_CHARS_REGEX, '')}`;
+                        }
+                    }
+                    if (preformattedSettingsTagsStr) {
+                        if (finalTagsStr) {
+                            finalTagsStr += '\n' + preformattedSettingsTagsStr;
+                        } else {
+                            finalTagsStr = preformattedSettingsTagsStr;
+                        }
+                    }
+                    if (finalTagsStr) {
+                        frontmatter += `${finalTagsStr}\n`;
                     }
                     
                     if (cover) {
