@@ -42,10 +42,7 @@ import {
     // API utilities
     RateLimiter,
     createRateLimiter,
-    createAuthenticatedRequestOptions,
-    buildCollectionApiUrl,
     fetchWithRetry,
-    extractCollectionData,
     getFullPathSegments,
     
     // YAML utilities
@@ -57,8 +54,7 @@ import {
     formatDateISO,
     formatTags,
     getDomain,
-    raindropType,
-    escapeRegExp
+    raindropType
 } from './utils';
 
 
@@ -83,6 +79,17 @@ const FILENAME_PLACEHOLDER_REGEX = /{{(title|id|collectionTitle|date)}}/gi;
 
 
 // Rate limiting and retry utilities are now imported from './utils/apiUtils'
+
+
+/**
+ * Collection API interaction - functional approach
+ */
+
+// Function moved to apiUtils.ts and imported via index.ts
+
+// Function moved to apiUtils.ts and imported via index.ts
+
+// Function moved to apiUtils.ts and imported via index.ts
 
 export default class RaindropToObsidian extends Plugin implements IRaindropToObsidian {
     settings: MakeItRainSettings;
@@ -183,7 +190,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
     generateFileName(raindrop: RaindropItem, useRaindropTitleForFileName: boolean): string {
         // Use the template from settings if title is enabled, otherwise use ID
         const fileNameTemplate = useRaindropTitleForFileName ? this.settings.fileNameTemplate : '{{id}}';
-        
+
         try {
             const createdDate = raindrop.created ? new Date(raindrop.created) : null;
             let formattedDate = 'no_date';
@@ -194,7 +201,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             const replacements: Record<string, string> = {
                 title: sanitizeFileName(raindrop.title || 'Untitled'),
                 id: sanitizeFileName((raindrop._id || 'unknown_id').toString()),
-                collectiontitle: sanitizeFileName(raindrop.collection?.title || 'No Collection'),
+                collectiontitle: sanitizeFileName(raindrop.collection?.title || 'no collection'),
                 date: sanitizeFileName(formattedDate)
             };
 
@@ -260,7 +267,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
 
         try {
             let allData: RaindropItem[] = [];
-            const perPage = 50; // Max items per page allowed by Raindrop.io API
+            const perPage = 50 // Max items per page allowed by Raindrop.io API
 
             // Add error handling for API token
             if (!this.settings.apiToken) {
@@ -613,7 +620,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 }
 
                 // The loadingNotice will be hidden in processRaindrops
-                await this.processRaindrops(filteredData, options.vaultPath, options.appendTagsToNotes, options.useRaindropTitleForFileName, loadingNotice, options, collectionsData, resolvedCollectionIds, collectionIdToNameMap);
+                await this.processRaindrops(filteredData, options.vaultPath, options.appendTagsToNotes, options.useRaindropTitleForFileName, loadingNotice, options, collectionsData, collectionIdToNameMap);
             }
 
         } catch (error) {
@@ -622,7 +629,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             if (error instanceof Error) errorMessage = error.message;
             else if (typeof error === 'string') errorMessage = error;
             new Notice(`Error fetching raindrops: ${errorMessage}`, 10000);
-            console.error('Error fetching Raindrop API:', error);
+            console.error('Error fetching raindrop API:', error);
         }
     }
 
@@ -634,7 +641,6 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         loadingNotice: Notice,
         options: ModalFetchOptions,
         collectionsData?: CollectionResponse,
-        resolvedCollectionIds: number[] = [],
         collectionIdToNameMap: Map<number, string> = new Map<number, string>(),
         verifiedFolderPaths: Set<string> = new Set<string>()
     ): Promise<void> {
@@ -746,7 +752,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                                     }
                                 }
                                 content += listItems.join('');
-                                
+
                                 if (await app.vault.adapter.exists(folderNotePath)) {
                                     await app.vault.adapter.write(folderNotePath, content);
                                 } else {
@@ -1051,8 +1057,8 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 } else {
                     // Fallback to basic format if template system is disabled
                     const { 
-                        _id, title, excerpt, note, link, cover, created, lastUpdate: rdLastUpdate, type, tags 
-                    } = raindrop; 
+                        _id, title, excerpt, link, cover, created, lastUpdate: rdLastUpdate, type, tags
+                    } = raindrop;
 
                     let descriptionYaml = '';
                     if (excerpt) {
@@ -1095,7 +1101,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     frontmatter += `---\n\n`;
 
                     let noteBody = '';
-                    const altText = sanitizeFileName(title) || 'Cover Image';
+                    const altText = sanitizeFileName(title) || 'Cover image';
                     if (cover) {
                         noteBody += `![${altText}](${cover})\n\n`;
                     }
@@ -1141,13 +1147,13 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 } else {
                     await app.vault.create(filePath, finalContent);
                 }
-                
+
                 return { success: true, type: processOutcome };
 
             } catch (error) {
                 // Log errors from file operations
                 console.error(`Error during file operation for ${generatedFilename} at path ${filePath}:`, error);
-                return { success: false, type: 'skipped' }; 
+                return { success: false, type: 'skipped' };
             }
         } catch (error) {
             console.error('Unexpected error in processRaindrop for item ID ' + raindrop._id + ':', error);
@@ -1356,7 +1362,6 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 loadingNotice, // Pass the notice
                 singleItemOptions,
                 collectionsData, // Pass fetched collections data for path context
-                [], // resolvedCollectionIds not directly applicable
                 collectionIdToNameMap // Pass map for titles
             );
             // The processRaindrops method will hide the notice upon completion.

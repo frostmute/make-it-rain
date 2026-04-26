@@ -1,4 +1,3 @@
-
 /**
  * Format Utilities for Make It Rain
  */
@@ -33,7 +32,7 @@ export function getDomain(url: string): string {
 
 export function raindropType(type: string): string {
     const types = {
-        link: 'Web Link',
+        link: 'web link',
         article: 'Article',
         image: 'Image',
         video: 'Video',

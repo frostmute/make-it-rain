@@ -374,7 +374,7 @@ export class QuickImportModal extends Modal {
         new Setting(contentEl).setName('Quick import raindrop').setHeading();
 
         new Setting(contentEl)
-            .setName('Raindrop URL or ID')
+            .setName('raindrop url or id')
             .setDesc(
                 'How to find: In the Raindrop.io app, click "Edit" on the specific item (or look for a similar action that opens the item in a detailed/edit view). ' +
                 'The URL in your browser\'s address bar should look like ".../item/[ID]/edit" or similar. ' +

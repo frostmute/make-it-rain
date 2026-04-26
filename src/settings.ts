@@ -687,7 +687,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
 
         const p2 = footer.createEl('p');
         p2.appendText('Developed by ');
-        const a1 = p2.createEl('a', { href: 'https://github.com/frostmute', text: 'frostmute (Jonathan Wagner)' });
+        const a1 = p2.createEl('a', { href: 'https://github.com/frostmute', text: 'frostmute (jonathan wagner)' });
         a1.setAttr('target', '_blank');
         p2.appendText('.');
 
@@ -754,4 +754,3 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
         }
     }
 }
-

@@ -86,12 +86,7 @@ export interface RaindropItem {
         readonly $id: number;
         readonly title: string;
     };
-    readonly highlights?: ReadonlyArray<{
-        readonly text: string;
-        readonly note?: string;
-        readonly color?: string;
-        readonly created: string;
-    }>;
+    readonly highlights?: ReadonlyArray<RaindropHighlight>;
     readonly type: RaindropType;
     readonly file?: {
         readonly name?: string;
@@ -170,4 +165,11 @@ export interface IRaindropToObsidian {
     updateRibbonIcon(): void;
     fetchAllUserCollections(): Promise<RaindropCollection[]>;
     fetchSingleRaindrop(itemId: number, vaultPath?: string, appendTags?: string): Promise<void>;
-} 
+}
+
+export type RaindropHighlight = {
+    readonly text: string;
+    readonly note?: string;
+    readonly color?: string;
+    readonly created: string;
+};
