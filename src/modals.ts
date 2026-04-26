@@ -30,6 +30,7 @@ export class RaindropFetchModal extends Modal {
         this.vaultPath = this.plugin.settings.defaultFolder;
     }
 
+
     onOpen() {
         const { contentEl } = this;
         contentEl.empty();
@@ -37,7 +38,16 @@ export class RaindropFetchModal extends Modal {
 
         new Setting(contentEl).setName('Fetch options').setHeading();
 
-        // --- Fetch criteria Section ---
+        this.buildFetchCriteriaSection(contentEl);
+        this.buildNoteOptionsSection(contentEl);
+        this.buildTemplateOptionsSection(contentEl);
+
+        contentEl.createEl('hr');
+
+        this.buildActionButtons(contentEl);
+    }
+
+    private buildFetchCriteriaSection(contentEl: HTMLElement) {
         new Setting(contentEl).setName('Fetch criteria').setHeading();
 
         new Setting(contentEl)
@@ -188,8 +198,9 @@ export class RaindropFetchModal extends Modal {
                         this.filterType = value as RaindropType | 'all';
                     });
             });
+    }
 
-        // --- Note Options Section ---
+    private buildNoteOptionsSection(contentEl: HTMLElement) {
         new Setting(contentEl).setName('Note options').setHeading();
         
         const appendTagsSetting = new Setting(contentEl)
@@ -276,8 +287,9 @@ export class RaindropFetchModal extends Modal {
                         }
                     });
             });
+    }
 
-        // --- Template Options Section ---
+    private buildTemplateOptionsSection(contentEl: HTMLElement) {
         if (this.plugin.settings.isTemplateSystemEnabled) {
             new Setting(contentEl).setName('Template overrides (optional)').setHeading();
             
@@ -316,10 +328,9 @@ export class RaindropFetchModal extends Modal {
                 cls: 'setting-item-description'
             });
         }
+    }
 
-        contentEl.createEl('hr');
-
-        // --- Action Buttons ---
+    private buildActionButtons(contentEl: HTMLElement) {
         const buttonsEl = contentEl.createDiv({ cls: 'modal-button-container' });
         new ButtonComponent(buttonsEl)
             .setButtonText('Fetch raindrops')
