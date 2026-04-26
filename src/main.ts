@@ -54,7 +54,8 @@ import {
     formatDateISO,
     formatTags,
     getDomain,
-    raindropType
+    raindropType,
+    sanitizeMarkdownContent
 } from './utils';
 
 
@@ -1105,12 +1106,12 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     if (cover) {
                         noteBody += `![${altText}](${cover})\n\n`;
                     }
-                    noteBody += `# ${title}\n\n`;
+                    noteBody += `# ${sanitizeMarkdownContent(title)}\n\n`;
                     if (excerpt) {
-                        noteBody += `## Description\n${excerpt}\n\n`;
+                        noteBody += `## Description\n${sanitizeMarkdownContent(excerpt)}\n\n`;
                     }
                     if (templateData.note) { 
-                         noteBody += `## Notes\n${templateData.note}\n\n`;
+                         noteBody += `## Notes\n${sanitizeMarkdownContent(templateData.note)}\n\n`;
                     }
 
                     if (templateData.highlights && Array.isArray(templateData.highlights) && templateData.highlights.length > 0) {
@@ -1123,9 +1124,9 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                             const text = typeof h.text === 'string' ? h.text : '';
                             const note = typeof h.note === 'string' ? h.note : '';
 
-                            parts.push(`- ${text.replace(NEWLINE_REGEX, ' ')}\n`);
+                            parts.push(`- ${sanitizeMarkdownContent(text).replace(NEWLINE_REGEX, ' ')}\n`);
                             if (note) {
-                                parts.push(`  *Note:* ${note.replace(NEWLINE_REGEX, ' ')}\n`);
+                                parts.push(`  *Note:* ${sanitizeMarkdownContent(note).replace(NEWLINE_REGEX, ' ')}\n`);
                             }
                         }
                         parts.push('\n');
