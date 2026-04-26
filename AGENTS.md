@@ -12,12 +12,14 @@ Make It Rain is an Obsidian plugin that imports Raindrop.io bookmarks into struc
 ## Key Components
 
 ### Core Files
+
 - `src/main.ts`: Main plugin class handling initialization, settings, and import orchestration
 - `src/modals.ts`: UI modals for bulk import and quick single-item import
 - `src/settings.ts`: Plugin configuration and settings tab
 - `src/types.ts`: TypeScript interfaces for Raindrop API responses and plugin settings
 
 ### Utility Modules (`src/utils/`)
+
 - `apiUtils.ts`: Rate limiting, authentication, API request handling
 - `fileUtils.ts`: File system operations, path sanitization, folder creation
 - `yamlUtils.ts`: YAML frontmatter generation with proper escaping
@@ -26,6 +28,7 @@ Make It Rain is an Obsidian plugin that imports Raindrop.io bookmarks into struc
 ## Critical Workflows
 
 ### Development
+
 ```bash
 npm run dev          # Watch mode with esbuild
 npm run build        # Production build (TypeScript check + esbuild)
@@ -33,6 +36,7 @@ npm run copy-to-vault # Copy built files to Obsidian vault (hardcoded path)
 ```
 
 ### Testing
+
 ```bash
 npm test             # Run Jest test suite
 npm run test:watch   # Watch mode for tests
@@ -40,6 +44,7 @@ npm run test:coverage # Generate coverage reports
 ```
 
 ### Release
+
 ```bash
 npm run version      # Bump version in manifest.json and versions.json
 ```
@@ -47,13 +52,16 @@ npm run version      # Bump version in manifest.json and versions.json
 ## Project-Specific Patterns
 
 ### Template System
+
 Custom Handlebars-like syntax implemented in `renderTemplate()` method:
+
 - `{{variable}}`: Simple variable substitution
 - `{{#if condition}}...{{/if}}`: Conditional blocks
 - `{{#each array}}...{{/each}}`: Iteration over arrays
 - Helpers: `{{formatDate}}`, `{{formatTags}}`, `{{raindropType}}`
 
 Example template:
+
 ```
 # {{title}}
 {{#if excerpt}}
@@ -63,31 +71,40 @@ Example template:
 ```
 
 ### File Naming
+
 Template-based with placeholders:
+
 - `{{title}}`: Raindrop title (sanitized)
 - `{{id}}`: Unique Raindrop ID
 - `{{date}}`: Creation date (YYYY-MM-DD)
 - `{{collectionTitle}}`: Collection name
 
 ### Tag Processing
+
 Tags are normalized by:
+
 1. Converting spaces to underscores
 2. Removing invalid YAML characters: `#[?"*<>:|]`
 
 ### Collection Hierarchy
+
 Collections are fetched in parallel (root + nested) and cached for 5 minutes. Paths are built by traversing parent-child relationships to create nested folder structures.
 
 ### Rate Limiting
+
 Configurable rate limiter (default 60 req/min) with automatic delays between API calls. Uses `setTimeout` for delays, tested with Jest fake timers.
 
 ### File Downloads
+
 For native Raindrop uploads:
+
 - Detects via `raindrop.link` containing `/v2/` and `/file`
 - Downloads via authenticated API endpoint
 - Validates file type via MIME types and magic bytes
 - Creates debug files on download failures
 
 ### Error Handling
+
 - API errors show user notices but continue processing
 - File operation failures are logged but don't stop batch imports
 - Network timeouts and rate limits trigger automatic retries
@@ -95,15 +112,18 @@ For native Raindrop uploads:
 ## Integration Points
 
 ### External APIs
+
 - **Raindrop.io REST API v1**: Collections, raindrops, file downloads
 - Authentication via Bearer token in Authorization header
 
 ### Obsidian APIs
+
 - `app.vault`: File creation, binary downloads, path operations
 - `app.vault.adapter`: Direct file system access for existence checks
 - `normalizePath()`: Cross-platform path handling
 
 ### Build System
+
 - **esbuild**: Bundles TypeScript to CommonJS, excludes Obsidian and builtins
 - **TypeScript**: Strict checking before build
 - Output: `main.js`, `manifest.json`, `styles.css` in project root
@@ -111,16 +131,19 @@ For native Raindrop uploads:
 ## Testing Patterns
 
 ### Mock Setup
+
 - Obsidian API automatically mocked in `tests/setup.ts`
 - Raindrop data mocked in `tests/mocks/raindropData.ts`
 - Use `mockApp`, `mockRequest` from setup for vault operations
 
 ### Test Structure
+
 - Unit tests mirror source structure in `tests/unit/utils/`
 - Integration tests in `tests/integration/` for end-to-end flows
 - Jest with jsdom environment, ts-jest for TypeScript
 
 ### Common Test Patterns
+
 ```typescript
 // Mock API responses
 mockRequest.mockResolvedValue(JSON.stringify(mockResponse));
@@ -135,9 +158,11 @@ await expect(asyncFunction()).rejects.toThrow('error message');
 ## Configuration
 
 ### Settings Structure
+
 Plugin settings include API token, templates, file naming, download options, and UI preferences. Templates are stored per content type with toggle controls.
 
 ### Environment Variables
+
 - `npm_package_version`: Used by version bump script
 - Hardcoded vault path in copy script: `/home/frost/Endeavor/.obsidian/plugins/make-it-rain/`
 
