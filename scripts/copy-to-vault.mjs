@@ -15,8 +15,17 @@ if (!existsSync(targetVaultPath)) {
 
 // Copy each file to the target vault
 for (const file of sourceFiles) {
-    // All source files are now in the 'build/' directory
-    const sourcePath = `build/${file}`;
+    // Try build directory first, then root
+    let sourcePath = `build/${file}`;
+    if (!existsSync(sourcePath)) {
+        sourcePath = file;
+    }
+    
+    if (!existsSync(sourcePath)) {
+        console.error(`Error: Source file ${file} not found in build/ or root.`);
+        continue;
+    }
+
     const targetPath = `${targetVaultPath}${file}`;
     
     // Ensure the target directory exists
@@ -27,7 +36,7 @@ for (const file of sourceFiles) {
     
     try {
         copyFileSync(sourcePath, targetPath);
-        console.log(`Copied ${file} to ${targetPath}`);
+        console.log(`Copied ${file} (from ${sourcePath}) to ${targetPath}`);
     } catch (error) {
         console.error(`Error copying ${file}:`, error);
     }

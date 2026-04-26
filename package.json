@@ -34,7 +34,6 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-obsidianmd": "^0.2.4",
     "eslint-plugin-prettier": "^5.5.5",
-    "eslint-plugin-obsidianmd": "^0.0.1",
     "eslint-plugin-sentence-case": "^0.0.6",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",

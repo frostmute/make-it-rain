@@ -89,7 +89,7 @@ export function createRateLimiter(maxRequestsPerMinute = 60, delayBetweenRequest
     const resetCounter = (): void => {
         resetTime = Date.now() + 60000;
         requestCount = 0;
-        console.log('Rate limiter counter reset.');
+        console.debug('Rate limiter counter reset.');
     };
     
     return { checkLimit, resetCounter };
