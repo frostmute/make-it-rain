@@ -64,7 +64,7 @@ export function createRateLimiter(maxRequestsPerMinute = 60, delayBetweenRequest
             // If we've hit the rate limit, wait for the reset
             if (requestCount >= maxRequestsPerMinute) {
                 const waitTime = resetTime - now;
-                console.log(`Rate limit reached. Waiting ${waitTime}ms before next request.`);
+                console.warn(`Rate limit reached. Waiting ${waitTime}ms before next request.`);
                 await new Promise(resolve => setTimeout(resolve, waitTime));
                 // Reset after waiting
                 resetTime = Date.now() + 60000;
@@ -90,7 +90,7 @@ export function createRateLimiter(maxRequestsPerMinute = 60, delayBetweenRequest
     const resetCounter = (): void => {
         resetTime = Date.now() + 60000;
         requestCount = 0;
-        console.log('Rate limiter counter reset.');
+        console.warn('Rate limiter counter reset.');
     };
     
     return { checkLimit, resetCounter };
@@ -158,7 +158,7 @@ export async function handleRequestError(
     
     // Handle rate limiting (HTTP 429)
     if (errorStatus === 429 || (errorMessage && errorMessage.includes('rate limit'))) {
-        console.log('Rate limit hit, resetting counter and waiting...');
+        console.warn('Rate limit hit, resetting counter and waiting...');
         rateLimiter.resetCounter();
         await new Promise(resolve => setTimeout(resolve, delayBetweenRetries * 2)); // Longer wait for rate limits
         return true; // We handled the error, continue with retry
@@ -220,10 +220,10 @@ export async function fetchWithRetry(
         rateLimiter = rateLimiterOrMaxRetries as RateLimiter;
     }
     
-    // Try up to maxRetries times
-    let attemptNumber = 0;
-    // eslint-disable-next-line no-constant-condition -- Intentional infinite loop for retry logic
-    while (true) {
+// Try up to maxRetries times
+let attemptNumber = 0;
+// Intentional infinite loop for retry logic
+while (true) {
         const isLastAttempt = attemptNumber >= maxRetries - 1;
         
         try {
