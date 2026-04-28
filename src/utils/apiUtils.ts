@@ -1,6 +1,5 @@
 import { App, request } from 'obsidian';
 import { sanitizeFileName } from './fileUtils';
-import { RaindropCollection } from '../types';
 
 
 /**
@@ -90,8 +89,8 @@ export function createRateLimiter(maxRequestsPerMinute = 60, delayBetweenRequest
     const resetCounter = (): void => {
         resetTime = Date.now() + 60000;
         requestCount = 0;
-        console.warn('Rate limiter counter reset.');
-    };
+console.warn('Rate limiter counter reset.');
+};
     
     return { checkLimit, resetCounter };
 }
@@ -153,8 +152,8 @@ export async function handleRequestError(
     delayBetweenRetries: number
 ): Promise<boolean> {
     const isLastAttempt = attemptNumber >= maxRetries - 1;
-    const errorStatus = (error as any)?.status;
-    const errorMessage = (error as any)?.message;
+    const errorStatus = (error as { status?: number })?.status;
+    const errorMessage = (error as { message?: string })?.message;
     
     // Handle rate limiting (HTTP 429)
     if (errorStatus === 429 || (errorMessage && errorMessage.includes('rate limit'))) {

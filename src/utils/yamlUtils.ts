@@ -98,6 +98,7 @@ export function formatYamlValue(value: unknown, indentLevel: number = 0, seen: S
       return "[]";
     }
     if (seen.has(value)) {
+      // eslint-disable-next-line sentence-case/sentence-case -- Intentional title case for testing consistency
       return '"[Circular Reference]"';
     }
     seen.add(value);
@@ -114,12 +115,13 @@ export function formatYamlValue(value: unknown, indentLevel: number = 0, seen: S
       return "{}";
     }
     if (seen.has(value)) {
+      // eslint-disable-next-line sentence-case/sentence-case -- Intentional title case for testing consistency
       return '"[Circular Reference]"';
     }
     seen.add(value);
 
     const formattedKeys = keys.map((key) => {
-      const formattedValue = formatYamlValue(value[key as keyof typeof value], indentLevel + 1, seen);
+      const formattedValue = formatYamlValue(value[key], indentLevel + 1, seen);
       return formattedValue.startsWith("\n")
         ? `${indent}${key}:${formattedValue}`
         : `${indent}${key}: ${formattedValue}`;

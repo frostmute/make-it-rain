@@ -67,7 +67,7 @@ export async function createFolder(app: App, path: string): Promise<boolean> {
 }
 
 // eslint-disable-next-line no-control-regex -- Necessary to sanitize filenames from all possible control characters
-const INVALID_CHARS_REGEX = /[\u0000-\u001F\u007F\u200B-\u200D\uFEFF\/\\:*?"<>|#%&{}$!@'`+=\[\]\^]/g;
+const INVALID_CHARS_REGEX = /[\u0000-\u001F\u007F\u200B-\u200D\uFEFF/\\:*?"<>|#%&{}$!@'`+=[\]^]/g;
 
 /** Known file extensions to strip from note titles to prevent e.g. "My Book.pdf.md" */
 const KNOWN_FILE_EXTENSIONS = /\.(pdf|epub|mobi|azw3?|djvu|docx?|xlsx?|pptx?|odt|ods|odp|txt|rtf|csv|mp3|mp4|m4a|m4v|wav|ogg|flac|aac|mov|avi|mkv|webm|png|jpe?g|gif|webp|svg|bmp|tiff?|zip|rar|7z|tar|gz)$/i;

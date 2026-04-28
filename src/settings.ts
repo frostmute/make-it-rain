@@ -450,13 +450,11 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
         const { containerEl } = this;
         containerEl.empty();
 
-
-
         // --- API Configuration Section ---
-        new Setting(containerEl).setName('API configuration').setHeading();
+        new Setting(containerEl).setName('API').setHeading();
         const apiTokenSetting = new Setting(containerEl)
             .setName('Raindrop.io API token')
-            .setDesc('Create a "test token" from your Raindrop.io apps settings.')
+            .setDesc('Create a "test token" from your raindrop.io apps settings.')
             .addText((text: TextComponent) => {
                 text.setPlaceholder('Enter your API token')
                     .setValue(this.plugin.settings.apiToken)
@@ -485,7 +483,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
         apiTokenHelpLink.setAttr('target', '_blank');
 
         // --- Import settings Section ---
-        new Setting(containerEl).setName('Import settings').setHeading();
+        new Setting(containerEl).setName('Import').setHeading();
 
         new Setting(containerEl)
             .setName('Default vault save location')
@@ -573,7 +571,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
         containerEl.createEl('hr');
 
         // --- Template system Section ---
-        new Setting(containerEl).setName('Template system').setHeading();
+        new Setting(containerEl).setName('Templates').setHeading();
         new Setting(containerEl)
             .setName('Enable template system')
             .setDesc('Use custom templates for formatting imported notes. If disabled, a basic note structure will be used.')
@@ -615,7 +613,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                         });
                 });
 
-            new Setting(containerEl).setName('Content-type specific templates').setHeading();
+            new Setting(containerEl).setName('Content-type templates').setHeading();
             const contentTypeDesc = containerEl.createEl('p', { cls: 'setting-item-description' });
             contentTypeDesc.appendText('Define specific templates for different Raindrop types. If a type-specific template is enabled and filled, it will be used instead of the default template. If disabled or empty, the default template is used for that type. Visit the ');
             contentTypeDesc.createEl('a', { href: 'https://frostmute.github.io/make-it-rain/template-system/', text: 'documentation' });
@@ -687,7 +685,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
 
         const p2 = footer.createEl('p');
         p2.appendText('Developed by ');
-        const a1 = p2.createEl('a', { href: 'https://github.com/frostmute', text: 'frostmute (Jonathan Wagner)' });
+        const a1 = p2.createEl('a', { href: 'https://github.com/frostmute', text: 'frostmute (jonathan wagner)' });
         a1.setAttr('target', '_blank');
         p2.appendText('.');
 
@@ -754,4 +752,3 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
         }
     }
 }
-
