@@ -226,7 +226,7 @@ export class RaindropFetchModal extends Modal {
         });
 
         new Setting(contentEl)
-            .setName('Use raindrop title for file name')
+            .setName('Use raindrop title for filename')
             .setDesc('Use the title from raindrop.io as the filename. If disabled, the raindrop id will be used.')
             .addToggle((toggle: ToggleComponent) => {
                 toggle.setValue(this.useRaindropTitleForFileName)
@@ -361,7 +361,7 @@ export class QuickImportModal extends Modal {
         new Setting(contentEl).setName('Quick import raindrop').setHeading();
 
         new Setting(contentEl)
-            .setName('Raindrop url or id')
+            .setName('Raindrop URL or ID')
             .setDesc(
                 'How to find: In the raindrop.io app, click "Edit" on the specific item (or look for a similar action that opens the item in a detailed/edit view). ' +
                 'The URL in your browser\'s address bar should look like ".../item/[ID]/edit" or similar. ' +
