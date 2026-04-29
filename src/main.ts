@@ -543,7 +543,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                         try {
                             if (!(await app.vault.adapter.exists(targetPath))) await createFolderStructure(app, targetPath);
                             return true;
-                        } catch (e) { return true; }
+                        } catch { return true; }
                     })();
                     pendingFolderCreations.set(targetPath, createPromise);
                     await createPromise;
@@ -625,8 +625,8 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             else await app.vault.create(filePath, finalContent);
 
             return { success: true, type: processOutcome };
-        } catch (error) {
-            console.error(`Error processing raindrop ${raindrop._id}:`, error);
+        } catch {
+            console.error(`Error processing raindrop ${raindrop._id}`);
             return { success: false, type: 'skipped' };
         }
     }
@@ -648,7 +648,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 })
                 .replace(this.VAR_REGEX, (_, key) => {
                     const value = this.getNestedProperty(context, key.trim());
-                    return typeof value === 'object' && value !== null ? formatYamlValue(value) : String(value ?? '');
+                    return typeof value === 'object' && value !== null ? formatYamlValue(value) : (value !== null && value !== undefined ? String(value) : '');
                 });
         };
         return renderBlock(template, { ...data, domain: getDomain(data.link as string || ''), updated: data.lastupdate || '' });
@@ -677,7 +677,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             this.collectionCache = uniqueCollections;
             this.lastCollectionFetch = now;
             return uniqueCollections;
-        } catch (error) {
+        } catch {
             new Notice('Failed to load your raindrop.io collections for selection.', 7000);
             return this.collectionCache || [];
         }

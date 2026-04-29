@@ -126,7 +126,7 @@ export class RaindropFetchModal extends Modal {
             });
         };
 
-        renderCollections();
+        void renderCollections();
 
         new Setting(contentEl)
             .setName('Include subcollections')
@@ -227,7 +227,7 @@ export class RaindropFetchModal extends Modal {
 
         new Setting(contentEl)
             .setName('Use raindrop title for file name')
-            .setDesc('Use the title from raindrop.io as the filename. If disabled, the raindrop id will be used.')
+            .setDesc('Use the title from Raindrop.io as the filename. If disabled, the raindrop ID will be used.')
             .addToggle((toggle: ToggleComponent) => {
                 toggle.setValue(this.useRaindropTitleForFileName)
                     .onChange((value: boolean) => {
@@ -361,11 +361,11 @@ export class QuickImportModal extends Modal {
         new Setting(contentEl).setName('Quick import raindrop').setHeading();
 
         new Setting(contentEl)
-            .setName('Raindrop url or id')
+            .setName('Raindrop URL or ID')
             .setDesc(
-                'How to find: In the raindrop.io app, click "Edit" on the specific item (or look for a similar action that opens the item in a detailed/edit view). ' +
+                'How to find: In the Raindrop.io app, click "Edit" on the specific item (or look for a similar action that opens the item in a detailed/edit view). ' +
                 'The URL in your browser\'s address bar should look like ".../item/[ID]/edit" or similar. ' +
-                'You can paste this full URL here, or just the numeric id (e.g., 12345678).'
+                'You can paste this full URL here, or just the numeric ID (e.g., 12345678).'
             )
             .setClass('setting-item-stacked')
             .addText((text: TextComponent) => {
