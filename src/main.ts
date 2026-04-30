@@ -807,21 +807,24 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             }
 
             // Generate content
-            let content = `# Aggregated Highlights: #${options.tag}\n\n`;
-            content += `Generated on: ${new Date().toLocaleString()}\n\n`;
+            const lines: string[] = [];
+            lines.push(`# Aggregated Highlights: #${options.tag}\n`);
+            lines.push(`Generated on: ${new Date().toLocaleString()}\n`);
 
             allItems.forEach(item => {
                 if (item.highlights && item.highlights.length > 0) {
-                    content += `## [${item.title}](${item.link})\n`;
+                    lines.push(`## [${item.title}](${item.link})`);
                     item.highlights.forEach(highlight => {
-                        content += `- ${highlight.text.replace(/\r\n|\r|\n/g, ' ')}\n`;
+                        lines.push(`- ${highlight.text.replace(/\r\n|\r|\n/g, ' ')}`);
                         if (highlight.note) {
-                            content += `  - **Note**: ${highlight.note.replace(/\r\n|\r|\n/g, ' ')}\n`;
+                            lines.push(`  - **Note**: ${highlight.note.replace(/\r\n|\r|\n/g, ' ')}`);
                         }
                     });
-                    content += `\n---\n\n`;
+                    lines.push('\n---\n');
                 }
             });
+
+            const content = lines.join('\n');
 
             // Save the note
             const fileName = sanitizeFileName(`Aggregated Highlights - #${options.tag}`);
