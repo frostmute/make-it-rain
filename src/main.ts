@@ -780,7 +780,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 const searchParams = new URLSearchParams({
                     perpage: perPage.toString(),
                     page: page.toString(),
-                    search: `#${options.tag} type:highlight`
+                    search: `#"${options.tag}" type:highlight`
                 });
 
                 const apiUrl = `${baseApiUrl}/raindrops/0?${searchParams.toString()}`;
