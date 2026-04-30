@@ -399,13 +399,13 @@ describe('apiUtils', () => {
         });
 
         it('should return null for null response', () => {
-            const data = extractCollectionData(null);
+            const data = extractCollectionData(null as any);
 
             expect(data).toBeNull();
         });
 
         it('should return null for undefined response', () => {
-            const data = extractCollectionData(undefined);
+            const data = extractCollectionData(undefined as any);
 
             expect(data).toBeNull();
         });
@@ -427,10 +427,10 @@ describe('apiUtils', () => {
 
             const data = extractCollectionData(response);
 
-            expect(data._id).toBe(123);
-            expect(data.title).toBe('Tech Articles');
-            expect(data.parent).toEqual({ $id: 100 });
-            expect(data.count).toBe(42);
+            expect(data!._id).toBe(123);
+            expect(data!.title).toBe('Tech Articles');
+            expect(data!.parent).toEqual({ $id: 100 });
+            expect(data!.count).toBe(42);
         });
     });
 
@@ -651,18 +651,18 @@ describe('apiUtils', () => {
         });
 
         it('should return null for null or undefined response', () => {
-            expect(extractCollectionData(null)).toBeNull();
+            expect(extractCollectionData(null as any)).toBeNull();
             expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to fetch collection info:', null);
 
-            expect(extractCollectionData(undefined)).toBeNull();
+            expect(extractCollectionData(undefined as any)).toBeNull();
             expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to fetch collection info:', undefined);
         });
 
         it('should return null for primitive types', () => {
-            expect(extractCollectionData('string response')).toBeNull();
+            expect(extractCollectionData('string response' as any)).toBeNull();
             expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to fetch collection info:', 'string response');
 
-            expect(extractCollectionData(123)).toBeNull();
+            expect(extractCollectionData(123 as any)).toBeNull();
             expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to fetch collection info:', 123);
         });
     });
