@@ -59,7 +59,7 @@ export class RaindropFetchModal extends Modal {
             .setClass('setting-item-stacked') // Added class
             .addText((text: TextComponent) => {
                 collectionsTextComponent = text; // Store reference to update it later
-                text.setPlaceholder('e.g., 12345, my work, work > articles')
+                text.setPlaceholder('my collection')
                     .setValue(this.collections)
                     .onChange((value: string) => {
                         this.collections = value;
@@ -143,7 +143,7 @@ export class RaindropFetchModal extends Modal {
             .setDesc('Comma-separated raindrop tag names.')
             .setClass('setting-item-stacked') // Added class
             .addText((text: TextComponent) => {
-                text.setPlaceholder('e.g., obsidian, productivity, to-read')
+                text.setPlaceholder('obsidian')
                     .setValue(this.apiFilterTags)
                     .onChange((value: string) => {
                         this.apiFilterTags = value;
@@ -198,11 +198,11 @@ export class RaindropFetchModal extends Modal {
         
         const appendTagsDescEl = appendTagsSetting.descEl.createEl('p', {
             cls: 'make-it-rain-input-hint',
-            text: 'Tip: Start tags with #. Spaces will be converted to underscores during processing.'
+            text: 'Start tags with #. Spaces will be converted to underscores during processing.'
         });
 
         appendTagsSetting.addText((text: TextComponent) => {
-            text.setPlaceholder('e.g., #imported, #raindrop, my tag')
+            text.setPlaceholder('my tag')
                     .setValue(this.appendTagsToNotes)
                 .onChange((value: string) => {
                     this.appendTagsToNotes = value;
@@ -227,7 +227,7 @@ export class RaindropFetchModal extends Modal {
 
         new Setting(contentEl)
             .setName('Use raindrop title for filename')
-            .setDesc('Use the title from raindrop.io as the filename. If disabled, the raindrop id will be used.')
+            .setDesc('Use the title from Raindrop.io as the filename. If disabled, the raindrop ID will be used.')
             .addToggle((toggle: ToggleComponent) => {
                 toggle.setValue(this.useRaindropTitleForFileName)
                     .onChange((value: boolean) => {
@@ -253,7 +253,7 @@ export class RaindropFetchModal extends Modal {
 
         new Setting(contentEl)
             .setName('Update existing notes')
-            .setDesc('Update notes if raindrop item changed (based on id & last_update). Overrides "Fetch only new".')
+            .setDesc('Update notes if Raindrop.io item changed (based on "ID" & "last_update"). Overrides "Fetch only new".')
             .setClass('update-existing-toggle') // Add a class for querying
             .addToggle((toggle: ToggleComponent) => {
                 toggle.setValue(this.updateExisting)

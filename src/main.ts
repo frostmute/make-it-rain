@@ -89,7 +89,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
 
         this.addCommand({
             id: 'quick-import-raindrop',
-            name: 'Quick import raindrop by url/id',
+            name: 'Quick import raindrop by URL or ID',
             callback: () => {
                 new QuickImportModal(this.app, this).open();
             }
@@ -689,7 +689,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             return;
         }
         if (!itemId) {
-            new Notice('Invalid item id provided for quick import.', 5000);
+            new Notice('Invalid item ID provided for quick import.', 5000);
             return;
         }
 
