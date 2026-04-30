@@ -1,6 +1,6 @@
 # Usage Guide
 
-This guide explains how to use the Make It Rain plugin to fetch your Raindrop.io bookmarks into Obsidian.
+This guide explains how to use the Make It Rain plugin to fetch your raindrop.io bookmarks into Obsidian.
 
 ## Getting Started
 
@@ -14,81 +14,81 @@ Before using the plugin, ensure you have:
 
 Make It Rain provides two main ways to import your bookmarks, each with its own modal:
 
-1. **Fetch Raindrops (for bulk/filtered imports)**:
-    * Access via **Command Palette**: Press `Ctrl+P` (or `Cmd+P` on Mac) and search for "Make It Rain: Fetch Raindrops".
+1. **Fetch raindrops (filtered) (for bulk/filtered imports)**:
+    * Access via **Command Palette**: Press `Ctrl+P` (or `Cmd+P` on Mac) and search for "Make It Rain: Fetch raindrops (filtered)".
     * Access via **Ribbon Icon**: Click the raindrop icon in the left sidebar (if enabled in plugin settings).
-2. **Quick Import Raindrop by URL/ID (for single item imports)**:
-    * Access via **Command Palette**: Press `Ctrl+P` (or `Cmd+P` on Mac) and search for "Make It Rain: Quick Import Raindrop by URL/ID".
+2. **Quick import raindrop by url/id (for single item imports)**:
+    * Access via **Command Palette**: Press `Ctrl+P` (or `Cmd+P` on Mac) and search for "Make It Rain: Quick import raindrop by url/id".
 
 ## Fetch Raindrops Modal Options
 
 ![Fetch Modal](../../assets/makeitrain-modal-v171.png)
 
-The "Fetch Raindrops" modal is designed for bulk imports and provides several options for filtering and organizing your raindrops:
+The "Fetch raindrops" modal is designed for bulk imports and provides several options for filtering and organizing your raindrops:
 
 ### Target Location
 
-* **Raindrop Path**: Choose where in your vault to save the imported raindrops.
+* **Vault save location (optional)**: Choose where in your vault to save the imported raindrops.
   * Default is the path specified in your plugin settings.
   * You can change this for each import session.
 
 ### Filter Options
 
-* **Collections**: Select collections from a dynamic, filterable list populated directly from your Raindrop.io account by clicking on them. You can also still enter comma-separated Raindrop.io Collection *IDs or Names* manually into the text field.
+* **Filter by collections**: You can select collections from a dynamic, searchable list.
+  * Use the search box to find specific collections.
+  * Click a collection in the list to add it to the filter.
+  * You can also manually enter comma-separated raindrop.io collection *ids or names* into the text field.
   * Leave empty to fetch from all collections (default behavior if no collections are specified).
-  * Example for manual entry: `Articles, RESEARCH, 12345678`
 
-* **Include Subcollections**: Toggle to include raindrops from subcollections.
-  * When enabled, fetches raindrops from all nested collections, for all selected filters.
+* **Include subcollections**: Toggle to include raindrops from subcollections.
+  * When enabled, fetches raindrops from all nested collections for all selected filters.
   * Maintains proper folder hierarchy in your vault.
 
-* **Filter by Tags**: Enter tags to filter by (comma-separated, case sensitive).
+* **Filter by tags**: Enter tags to filter by (comma-separated, case sensitive).
   * Example: `research, important, to-read`
 
-* **Tag Match Type**: Choose between:
-  * **All**: Raindrops must have all specified tags (AND logic).
-  * **Any**: Raindrops can have any of the specified tags (OR logic).
-  * A `(?)` help icon next to this setting in the plugin provides a direct link to documentation on this feature.
+* **Tag match type**: Choose between:
+  * **Match all tags (and)**: Raindrops must have all specified tags.
+  * **Match any tag (or)**: Raindrops can have any of the specified tags.
 
-* **Filter by Type**: Select a specific content type.
-  * Options: All, Link, Article, Image, Video, Document, Audio.
+* **Filter by type**: Select a specific content type.
+  * Options: All types, Link, Article, Image, Video, Document, Audio, Book.
   * Useful for importing only specific types of content.
 
-  **Note**: If NO filters are selected, all raindrops will be fetched. For large collections, this can take a while... The plugin will show a progress bar and rate limit warnings, if any are encountered. This is normal behavior and the plugin will continue to fetch raindrops until all are fetched. The length of time it takes to fetch all raindrops depends on the number of raindrops in your collection, the size of each raindrop's content, and your internet connection speed.
+  **Note**: If no filters are selected, all raindrops will be fetched. For large collections, this can take a while. The plugin will show a progress bar and rate limit warnings if any are encountered.
 
 ### Import Options
 
-* **Use Raindrop Title for File Name**: Toggle to use raindrop titles as filenames.
+* **Use raindrop title for file name**: Toggle to use raindrop titles as filenames.
   * When enabled: Uses the title (via filename template from settings) for filenames.
-  * When disabled: Uses the raindrop ID for filenames (avoids conflicts).
+  * When disabled: Uses the raindrop id for filenames.
 
-* **Append Tags to Note Frontmatter**: Add custom tags to all imported notes.
+* **Append tags to notes**: Add custom tags to all imported notes.
   * Example: `#imported/raindrop, #web-content`
-  * These tags are added in addition to any tags from Raindrop.io.
+  * These tags are added in addition to any tags from raindrop.io.
 
-* **Fetch Only New Items**: Only import raindrops that don't exist in the target folder.
+* **Fetch only new raindrops**: Only import raindrops that don't exist in the target folder.
   * Useful for incremental imports without duplicates.
 
-* **Update Existing Notes**: Update notes if the source raindrop has changed.
-  * Compares the `last_update` timestamp from Raindrop.io.
+* **Update existing notes**: Update notes if the source raindrop has changed.
+  * Compares the `last_update` timestamp from raindrop.io.
   * Only updates if the raindrop is newer than the existing note.
 
 ### Template Options
 
 If you have enabled the [template system](template-system.md), you'll see additional options:
 
-* **Select Template**: Choose which template to use for generating notes.
-  * Options include "Auto (based on content type)" and any custom templates you've created.
-  * This selection overrides the content-type specific templates for this import session.
+* **Use default template only**: Ignore content-type specific templates and use the default template for all items in this fetch.
+* **Force use of content-type templates**: Use specific content-type templates even if they are disabled in global settings (for this fetch only).
 
 ## Fetching Process (Bulk/Filtered Import)
 
-After configuring your options in the "Fetch Raindrops" modal:
+After configuring your options in the "Fetch raindrops" modal:
 
-1. Click the **Fetch Raindrops** button.
+1. Click the **Fetch raindrops** button.
 2. A loading notice will appear showing progress.
 3. The plugin will:
-   * Fetch collections data from Raindrop.io.
+   * Fetch collections data from raindrop.io.
    * Fetch raindrops based on your filters.
    * Create the necessary folder structure in your vault.
    * Generate notes for each raindrop.
@@ -98,29 +98,29 @@ After configuring your options in the "Fetch Raindrops" modal:
 
 ![Quick Import Modal](../../assets/quick-import-modal.png)
 
-New in v1.7.1 (and improved!), this command allows you to quickly import a single Raindrop item if you know its URL or unique numeric ID. This is ideal for quickly bringing in a specific item without going through the full filtered fetch process.
+This command allows you to quickly import a single raindrop item if you know its URL or unique numeric id.
 
 ### Accessing Quick Import
 
 1. Open the Obsidian **Command Palette** (`Ctrl+P` or `Cmd+P` on Mac).
-2. Search for and select the command: **"Quick Import Raindrop by URL/ID"**.
+2. Search for and select the command: **"Quick import raindrop by url/id"**.
 
 ### Quick Import Modal Options
 
 A simplified modal will appear with the following options:
 
-* **Raindrop URL or ID**:
-  * Paste the full URL of the Raindrop item or just its unique numeric ID.
-  * **How to find**: In the Raindrop.io app, click "Edit" on the specific item (or look for a similar action that opens the item in a detailed/edit view). The URL in your browser's address bar should look like `.../item/[ID]/edit` or similar. You can paste this full URL here, or just the numeric ID (e.g., `123456789`). The input field placeholder and description in the modal also provide this guidance.
-* **Vault Save Location (Optional)**:
-  * Override the default save folder (from plugin settings) for this specific import. Leave blank to use the default.
-* **Append Tags to Notes (Optional)**:
+* **Raindrop url or id**:
+  * Paste the full URL of the raindrop item or just its unique numeric id.
+  * **How to find**: In the raindrop.io app, click "Edit" on the specific item. The URL in your browser's address bar should look like `.../item/[ID]/edit`.
+* **Vault save location (optional)**:
+  * Override the default save folder (from plugin settings) for this specific import.
+* **Append tags to notes (optional)**:
   * Enter comma-separated tags to add to the frontmatter of the created note for this item.
 
 ### Fetching the Single Item
 
-1. Click the **"Fetch & Create Note"** button in the Quick Import modal.
-2. The plugin will fetch the specified Raindrop item and create a note for it based on your template settings.
+1. Click the **Import** button in the quick import modal.
+2. The plugin will fetch the specified raindrop item and create a note for it based on your template settings.
 
 ## Understanding the Results
 
