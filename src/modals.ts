@@ -361,7 +361,7 @@ export class QuickImportModal extends Modal {
         new Setting(contentEl).setName('Quick import raindrop').setHeading();
 
         new Setting(contentEl)
-            .setName('Raindrop URL or ID')
+            .setName('The URL or ID.')
             .setDesc(
                 'How to find: In the raindrop.io app, click "Edit" on the specific item (or look for a similar action that opens the item in a detailed/edit view). ' +
                 'The URL in your browser\'s address bar should look like ".../item/[ID]/edit" or similar. ' +
@@ -394,7 +394,7 @@ export class QuickImportModal extends Modal {
             .setName('Append tags to notes (optional)')
             .setDesc('Comma-separated tags to add to the frontmatter of the created note.')
             .addText((text: TextComponent) => {
-                text.setPlaceholder('e.g., #quickimport, #todo')
+                text.setPlaceholder('#mytag, #anothertag')
                     .setValue(this.appendTagsToNotes)
                     .onChange((value: string) => {
                         this.appendTagsToNotes = value.trim();
@@ -409,7 +409,7 @@ export class QuickImportModal extends Modal {
             .setCta()
             .onClick(async () => {
                 if (!this.itemUrlOrId) {
-                    new Notice('Please enter a raindrop URL or id.');
+                    new Notice('Please enter a raindrop URL or ID.');
                     return;
                 }
 
@@ -422,7 +422,7 @@ export class QuickImportModal extends Modal {
                 }
 
                 if (!itemId) {
-                    new Notice('Could not extract a valid raindrop id from the input.');
+                    new Notice('Could not extract a valid Raindrop ID from the input.');
                     return;
                 }
 

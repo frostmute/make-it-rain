@@ -116,12 +116,11 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 ...savedData,
                 contentTypeTemplates: {
                     ...this.settings.contentTypeTemplates,
-                    ...Object.fromEntries(
-                        Object.entries(savedData.contentTypeTemplates || {}).map(([key, value]) => [
-                            key,
-                            (value as string).trim() === '' ? this.settings.contentTypeTemplates[key as RaindropType] : value
-                        ])
-                    )
+                    ...Object.keys(savedData.contentTypeTemplates || {}).reduce((acc, key) => {
+                        const value = (savedData.contentTypeTemplates as Record<string, string>)[key];
+                        acc[key] = (value as string).trim() === '' ? this.settings.contentTypeTemplates[key as RaindropType] : value;
+                        return acc;
+                    }, {} as Record<string, string>)
                 },
                 contentTypeTemplateToggles: {
                     ...this.settings.contentTypeTemplateToggles,
@@ -357,7 +356,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                         return tagData;
                     });
                     const results = await Promise.all(tagPromises);
-                    results.flat().forEach(item => { if (!uniqueItems.has(item._id)) uniqueItems.set(item._id, item); });
+                    results.flat().forEach((item: RaindropItem) => { if (!uniqueItems.has(item._id)) uniqueItems.set(item._id, item); });
                     allData = Array.from(uniqueItems.values());
                 } else if (searchParameterString) {
                     let hasMore = true;

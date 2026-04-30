@@ -454,7 +454,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
         new Setting(containerEl).setName('API').setHeading();
         const apiTokenSetting = new Setting(containerEl)
             .setName('Raindrop.io API token')
-            .setDesc('Create a "test token" from your Raindrop.io apps settings.')
+            .setDesc('Create a test token in your Raindrop.io integrationsettings.')
             .addText((text: TextComponent) => {
                 text.setPlaceholder('Enter your API token')
                     .setValue(this.plugin.settings.apiToken)
@@ -523,7 +523,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
             .setName('Banner frontmatter field name')
             .setDesc('Customize the frontmatter field name for the banner/cover image (default: banner).')
             .addText((text: TextComponent) => {
-                text.setPlaceholder('banner')
+                text.setPlaceholder('Banner')
                     .setValue(this.plugin.settings.bannerFieldName)
                     .onChange(async (value: string) => {
                         this.plugin.settings.bannerFieldName = value;
@@ -590,7 +590,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                 .setDesc('This template is used if no content-type specific template is active or defined below.')
                 .setClass('setting-item-stacked') // Added class
                 .addTextArea((text) => {
-                    text.setPlaceholder('Enter your default Handlebars template here...')
+                    text.setPlaceholder('Enter your default handlebars template here. Visit the documentation for available variables.')
                         .setValue(this.plugin.settings.defaultTemplate)
                         .onChange(async (value) => {
                             this.plugin.settings.defaultTemplate = value;
@@ -615,12 +615,10 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
 
             new Setting(containerEl).setName('Content-type templates').setHeading();
             const contentTypeDesc = containerEl.createEl('p', { cls: 'setting-item-description' });
-            contentTypeDesc.appendText('Define specific templates for different raindrop types. If a type-specific template is enabled and filled, it will be used instead of the default template. If disabled or empty, the default template is used for that type. Visit the ');
-            contentTypeDesc.createEl('a', { href: 'https://frostmute.github.io/make-it-rain/template-system/', text: 'documentation' });
-            contentTypeDesc.appendText(' for available variables.');
+            contentTypeDesc.appendText('Define specific templates for different raindrop types. If a type-specific template is enabled and filled, it will be used instead of the default template. If disabled or empty, the default template is used for that type. Visit the documentation at https://frostmute.github.io/make-it-rain/template-system/ for available variables and instructions.');
 
 
-            const contentTypes = Object.values(RaindropTypes);
+            const contentTypes = Object.keys(RaindropTypes).map(key => RaindropTypes[key as keyof typeof RaindropTypes]);
             for (const type of contentTypes) {
                 const typeStr = type as string;
                 const typeKey = type as keyof typeof this.plugin.settings.contentTypeTemplates;
@@ -685,7 +683,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
 
         const p2 = footer.createEl('p');
         p2.appendText('Developed by ');
-        const a1 = p2.createEl('a', { href: 'https://github.com/frostmute', text: 'Frostmute (Jonathan Wagner)' });
+        const a1 = p2.createEl('a', { href: 'https://github.com/frostmute', text: 'Frostmute' });
         a1.setAttr('target', '_blank');
         p2.appendText('.');
 
