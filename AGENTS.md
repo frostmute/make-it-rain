@@ -29,7 +29,7 @@ Make It Rain is an Obsidian plugin that imports Raindrop.io bookmarks into struc
 ```bash
 npm run dev          # Watch mode with esbuild
 npm run build        # Production build (TypeScript check + esbuild)
-npm run copy-to-vault # Copy built files to Obsidian vault (hardcoded path)
+npm run copy-to-vault # Copy built files to Obsidian vaults (hardcoded paths)
 ```
 
 ### Testing
@@ -139,7 +139,7 @@ Plugin settings include API token, templates, file naming, download options, and
 
 ### Environment Variables
 - `npm_package_version`: Used by version bump script
-- Hardcoded vault path in copy script: `/home/frost/Endeavor/.obsidian/plugins/make-it-rain/`
+- Hardcoded vault paths in copy script: `/home/frost/Obsidian Vault/` and `/home/frost/Make-It-Rain Test/`
 
 ## Key Files for Reference
 
