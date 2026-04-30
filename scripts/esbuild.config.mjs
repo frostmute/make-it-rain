@@ -40,17 +40,19 @@ const context = await esbuild.context({
 	treeShaking: true,
 	outfile: "main.js",
 	plugins: [
-		{
-			name: 'watch-deploy',
-			setup(build) {
-				build.onEnd(result => {
-					if (result.errors.length === 0) {
-						console.log('Build successful, deploying to vaults...');
-						copyToVaults();
-					}
-				});
-			},
-		},
+		...(!process.env.CI ? [
+			{
+				name: 'watch-deploy',
+				setup(build) {
+					build.onEnd(result => {
+						if (result.errors.length === 0) {
+							console.log('Build successful, deploying to vaults...');
+							copyToVaults();
+						}
+					});
+				},
+			}
+		] : []),
 	],
 });
 
