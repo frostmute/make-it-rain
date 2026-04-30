@@ -1,13 +1,16 @@
 # Make It Rain - AI Coding Agent Guide
 
+*Current Version: 1.9.0*
+
 ## Architecture Overview
 
 Make It Rain is an Obsidian plugin that imports Raindrop.io bookmarks into structured Markdown notes. The codebase follows a modular architecture centered around a main plugin class (`RaindropToObsidian`) that orchestrates:
 
 - **API Integration**: Fetches bookmarks from Raindrop.io with rate limiting and retry logic
 - **Template System**: Custom Handlebars-like syntax for note formatting with content-type-specific templates
-- **File Management**: Creates organized folder structures mirroring Raindrop collections
+- **File Management**: Creates organized folder structures mirroring Raindrop collections with automatic folder notes
 - **Data Processing**: Transforms Raindrop items into YAML-frontmatter Markdown notes
+- **File Downloads**: Downloads native Raindrop file attachments (PDFs, EPUBs, images, videos, etc.)
 
 ## Key Components
 
@@ -30,6 +33,7 @@ Make It Rain is an Obsidian plugin that imports Raindrop.io bookmarks into struc
 npm run dev          # Watch mode with esbuild
 npm run build        # Production build (TypeScript check + esbuild)
 npm run copy-to-vault # Copy built files to Obsidian vaults (hardcoded paths)
+npm run build-and-copy # Build and copy to vault in one command
 ```
 
 ### Testing
@@ -37,6 +41,7 @@ npm run copy-to-vault # Copy built files to Obsidian vaults (hardcoded paths)
 npm test             # Run Jest test suite
 npm run test:watch   # Watch mode for tests
 npm run test:coverage # Generate coverage reports
+npm run test:verbose # Run tests with verbose output
 ```
 
 ### Release
@@ -44,21 +49,67 @@ npm run test:coverage # Generate coverage reports
 npm run version      # Bump version in manifest.json and versions.json
 ```
 
+### Code Quality
+```bash
+npm run lint         # Run ESLint on source files
+npm run lint:md      # Lint markdown files
+```
+
 ## Project-Specific Patterns
 
 ### Template System
-Custom Handlebars-like syntax implemented in `renderTemplate()` method:
+Custom Handlebars-like syntax implemented in `renderTemplate()` method with support for content-type-specific templates:
 - `{{variable}}`: Simple variable substitution
-- `{{#if condition}}...{{/if}}`: Conditional blocks
+- `{{#if condition}}...{{/if}}`: Conditional blocks with optional `{{else}}`
 - `{{#each array}}...{{/each}}`: Iteration over arrays
-- Helpers: `{{formatDate}}`, `{{formatTags}}`, `{{raindropType}}`
+- Pre-calculated helpers: `{{domain}}`, `{{renderedType}}`, `{{formattedCreatedDate}}`, `{{formattedUpdatedDate}}`, `{{formattedTags}}`
+
+Templates are configurable per content type (link, article, image, video, document, audio, book) with individual toggles. Modal options allow temporary overrides during import.
 
 Example template:
 ```
+---
+title: "{{title}}"
+source: {{link}}
+type: {{type}}
+created: {{created}}
+lastupdate: {{lastupdate}}
+id: {{id}}
+collectionId: {{collectionId}}
+collectionTitle: "{{collectionTitle}}"
+collectionPath: "{{collectionPath}}"
+{{#if collectionParentId}}collectionParentId: {{collectionParentId}}{{/if}}
+tags:
+{{#each tags}}
+  - {{this}}
+{{/each}}
+{{#if cover}}
+{{bannerFieldName}}: {{cover}}
+{{/if}}
+---
+
+{{#if cover}}
+![{{title}}]({{cover}})
+{{/if}}
+
 # {{title}}
+
 {{#if excerpt}}
-## Summary
+## Description
 {{excerpt}}
+{{/if}}
+
+{{#if note}}
+## Notes
+{{note}}
+{{/if}}
+
+{{#if highlights}}
+## Highlights
+{{#each highlights}}
+- {{text}}
+{{#if note}}  *Note:* {{note}}{{/if}}
+{{/each}}
 {{/if}}
 ```
 
@@ -81,11 +132,21 @@ Collections are fetched in parallel (root + nested) and cached for 5 minutes. Pa
 Configurable rate limiter (default 60 req/min) with automatic delays between API calls. Uses `setTimeout` for delays, tested with Jest fake timers.
 
 ### File Downloads
-For native Raindrop uploads:
+For native Raindrop uploads and attachments:
 - Detects via `raindrop.link` containing `/v2/` and `/file`
-- Downloads via authenticated API endpoint
+- Downloads via authenticated API endpoint with S3 redirect handling
 - Validates file type via MIME types and magic bytes
-- Creates debug files on download failures
+- Supports PDFs, EPUBs, images, videos, audio files, and documents
+- Creates debug files on download failures for troubleshooting
+- Configurable via settings toggle
+
+### Automatic Folder Notes
+Plugin automatically generates index notes for collection folders:
+- Creates `FOLDER_NAME.md` files in each collection directory
+- Includes YAML frontmatter with collection metadata
+- Lists all notes in the collection with wiki-links
+- Improves Obsidian graph compatibility and navigation
+- Configurable via settings toggle
 
 ### Error Handling
 - API errors show user notices but continue processing
@@ -107,6 +168,7 @@ For native Raindrop uploads:
 - **esbuild**: Bundles TypeScript to CommonJS, excludes Obsidian and builtins
 - **TypeScript**: Strict checking before build
 - Output: `main.js`, `manifest.json`, `styles.css` in project root
+- Manifest relocated to root for better compatibility with automated submission tools
 
 ## Testing Patterns
 
