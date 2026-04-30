@@ -126,7 +126,7 @@ export class RaindropFetchModal extends Modal {
             });
         };
 
-        renderCollections();
+        void renderCollections();
 
         new Setting(contentEl)
             .setName('Include subcollections')

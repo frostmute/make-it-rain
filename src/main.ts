@@ -647,7 +647,9 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 })
                 .replace(this.VAR_REGEX, (_, key) => {
                     const value = this.getNestedProperty(context, key.trim());
-                    return typeof value === 'object' && value !== null ? formatYamlValue(value) : (value !== null && value !== undefined ? String(value) : '');
+                    if (value === null || value === undefined) return '';
+                    if (typeof value === 'object') return formatYamlValue(value);
+                    return String(value);
                 });
         };
         return renderBlock(template, { ...data, domain: getDomain(data.link as string || ''), updated: data.lastupdate || '' });
