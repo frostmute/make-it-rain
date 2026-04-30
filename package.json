@@ -10,6 +10,7 @@
     "lint": "eslint src/ --ext .ts",
     "lint:md": "markdownlint '**/*.md' --fix",
     "copy-to-vault": "node scripts/copy-to-vault.mjs",
+    "scan-secrets": "node scripts/secret-scanner.mjs",
     "build-and-copy": "npm run build && npm run copy-to-vault",
     "test": "jest",
     "test:watch": "jest --watch",

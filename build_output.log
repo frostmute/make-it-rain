@@ -1,4 +1,0 @@
-
-> make-it-rain@1.8.0 build
-> tsc -noEmit -skipLibCheck && node scripts/esbuild.config.mjs production
-
