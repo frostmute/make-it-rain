@@ -1,5 +1,3 @@
-import { RaindropType } from "../types";
-
 /**
  * Format Utilities for Make It Rain
  */
@@ -34,13 +32,22 @@ export function getDomain(url: string): string {
 
 export function raindropType(type: string): string {
     const types = {
-        link: 'Web Link',
-        article: 'Article',
-        image: 'Image',
-        video: 'Video',
-        document: 'Document',
-        audio: 'Audio',
-        book: 'Book'
+        link: 'web link',
+        article: 'article',
+        image: 'image',
+        video: 'video',
+        document: 'document',
+        audio: 'audio',
+        book: 'book'
     };
     return types[type as keyof typeof types] || type;
+}
+
+/**
+ * Escapes special characters in a string for use in a regular expression
+ * @param str - The string to escape
+ * @returns The escaped string
+ */
+export function escapeRegExp(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }

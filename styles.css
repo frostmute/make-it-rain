@@ -11,3 +11,45 @@
   flex-direction: column;
   align-items: flex-start;
 }
+.make-it-rain-full-width {
+  width: 100%;
+}
+.make-it-rain-monospace {
+  font-family: var(--font-monospace);
+}
+
+.make-it-rain-collections-container {
+  max-height: 150px;
+  overflow-y: auto;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  padding: 10px;
+  margin-top: 5px;
+  margin-bottom: 10px;
+}
+
+.make-it-rain-collection-list {
+  list-style-type: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+.make-it-rain-collection-item {
+  padding: 5px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--background-modifier-border-hover);
+}
+
+.make-it-rain-collection-item:hover {
+  background-color: var(--background-modifier-hover);
+}
+
+.make-it-rain-input-hint {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.make-it-rain-input-hint-warning {
+  color: var(--text-warning);
+}

@@ -1,6 +1,5 @@
-import { App, request, Notice } from 'obsidian';
+import { App, request } from 'obsidian';
 import { sanitizeFileName } from './fileUtils';
-import { RaindropCollection } from '../types';
 
 
 /**
@@ -44,49 +43,39 @@ export function createRateLimiter(maxRequestsPerMinute = 60, delayBetweenRequest
     let requestCount = 0;
     let resetTime = Date.now() + 60000; // 1 minute window
     
-    /**
-     * Checks if we're within rate limits and handles delays if needed
-     */
-
     let queuePromise: Promise<void> = Promise.resolve();
 
     /**
      * Checks if we're within rate limits and handles delays if needed
      */
-    const checkLimit = (): Promise<void> => {
-        // Chain promises to ensure sequential execution of the rate limit check
-        // even when called concurrently
-        const nextPromise = queuePromise.then(async () => {
-            const now = Date.now();
+const checkLimit = async (): Promise<void> => {
+	// Chain promises to ensure sequential execution of the rate limit check
+	// even when called concurrently
+	await queuePromise;
+	const now = Date.now();
 
-            // Reset counter if we're in a new time window
-            if (now > resetTime) {
-                resetTime = now + 60000;
-                requestCount = 0;
-            }
+	// Reset counter if we're in a new time window
+	if (now > resetTime) {
+		resetTime = now + 60000;
+		requestCount = 0;
+	}
 
-            // If we've hit the rate limit, wait for the reset
-            if (requestCount >= maxRequestsPerMinute) {
-                const waitTime = resetTime - now;
-                console.log(`Rate limit reached. Waiting ${waitTime}ms before next request.`);
-                await new Promise(resolve => setTimeout(resolve, waitTime));
-                // Reset after waiting
-                resetTime = Date.now() + 60000;
-                requestCount = 0;
-            } else if (requestCount > 0) {
-                // Standard delay between requests to be polite to the API
-                await new Promise(resolve => setTimeout(resolve, delayBetweenRequests));
-            }
+	// If we've hit the rate limit, wait for the reset
+	if (requestCount >= maxRequestsPerMinute) {
+		const waitTime = resetTime - now;
+		console.warn(`Rate limit reached. Waiting ${waitTime}ms before next request.`);
+		await new Promise(resolve => setTimeout(resolve, waitTime));
+		// Reset after waiting
+		resetTime = Date.now() + 60000;
+		requestCount = 0;
+	} else if (requestCount > 0) {
+		// Standard delay between requests to be polite to the API
+		await new Promise(resolve => setTimeout(resolve, delayBetweenRequests));
+	}
 
-            // Increment counter after making a request
-            requestCount++;
-        });
-
-        // Update the tail of the queue
-        queuePromise = nextPromise.catch(() => {});
-
-        return nextPromise;
-    };
+	// Increment counter after making a request
+	requestCount++;
+};
 
     /**
      * Resets the counter when hitting a rate limit
@@ -94,8 +83,8 @@ export function createRateLimiter(maxRequestsPerMinute = 60, delayBetweenRequest
     const resetCounter = (): void => {
         resetTime = Date.now() + 60000;
         requestCount = 0;
-        console.log('Rate limiter counter reset.');
-    };
+console.warn('Rate limiter counter reset.');
+};
     
     return { checkLimit, resetCounter };
 }
@@ -132,7 +121,7 @@ export function buildCollectionApiUrl(collectionId: string): string {
  * @param response - The response from the API
  * @returns Parsed JSON data
  */
-export function parseApiResponse(response: string | object): any {
+export function parseApiResponse(response: string | object): unknown {
     if (typeof response === 'string') {
         return JSON.parse(response);
     }
@@ -150,17 +139,19 @@ export function parseApiResponse(response: string | object): any {
  * @returns True if error was handled and retry should happen, false otherwise
  */
 export async function handleRequestError(
-    error: any, 
+    error: unknown, 
     rateLimiter: RateLimiter, 
     attemptNumber: number, 
     maxRetries: number,
     delayBetweenRetries: number
 ): Promise<boolean> {
     const isLastAttempt = attemptNumber >= maxRetries - 1;
+    const errorStatus = (error as { status?: number })?.status;
+    const errorMessage = (error as { message?: string })?.message;
     
     // Handle rate limiting (HTTP 429)
-    if (error.status === 429 || (error.message && error.message.includes('rate limit'))) {
-        console.log('Rate limit hit, resetting counter and waiting...');
+    if (errorStatus === 429 || (errorMessage && errorMessage.includes('rate limit'))) {
+        console.warn('Rate limit hit, resetting counter and waiting...');
         rateLimiter.resetCounter();
         await new Promise(resolve => setTimeout(resolve, delayBetweenRetries * 2)); // Longer wait for rate limits
         return true; // We handled the error, continue with retry
@@ -199,9 +190,8 @@ export async function fetchWithRetry(
     rateLimiterOrMaxRetries?: RateLimiter | number,
     maxRetries: number = 3,
     delayBetweenRetries: number = 1000
-): Promise<any> {
+): Promise<unknown> {
     // Normalize parameters to handle both calling patterns
-    let app: App | undefined;
     let url: string;
     let requestOptions: RequestInit;
     let rateLimiter: RateLimiter;
@@ -218,15 +208,15 @@ export async function fetchWithRetry(
         }
     } else {
         // New pattern: (app, url, options, rateLimiter, maxRetries?, delay?)
-        app = appOrUrl;
         url = urlOrOptions as string;
         requestOptions = optionsOrRateLimiter as RequestInit;
         rateLimiter = rateLimiterOrMaxRetries as RateLimiter;
     }
     
-    // Try up to maxRetries times
-    let attemptNumber = 0;
-    while (true) {
+// Try up to maxRetries times
+let attemptNumber = 0;
+// Intentional infinite loop for retry logic
+while (true) {
         const isLastAttempt = attemptNumber >= maxRetries - 1;
         
         try {
@@ -261,11 +251,12 @@ export async function fetchWithRetry(
  * @param response - The raw API response
  * @returns The collection data or null if invalid response
  */
-export function extractCollectionData(response: Record<string, any>): RaindropCollection | null {
-    const isValidResponse = response && response.result === true && response.item;
+export function extractCollectionData(response: unknown): unknown {
+    const data = response as { result?: boolean, item?: unknown };
+    const isValidResponse = data && data.result && data.item;
     
     if (isValidResponse) {
-        return response.item as RaindropCollection;
+        return data.item;
     }
     
     console.error('Failed to fetch collection info:', response);
@@ -303,4 +294,3 @@ export function getFullPathSegments(
 
     return segments;
 }
-

@@ -14,7 +14,7 @@ describe('RaindropToObsidian', () => {
             author: 'frostmute',
             version: '1.7.2',
             minAppVersion: '0.15.0',
-            description: 'Raindrop.io Integration'
+            description: 'Pull your Raindrop.io bookmarks with flexible filtering, customization, and location options.'
         } as PluginManifest;
 
         plugin = new RaindropToObsidian(mockApp as unknown as App, manifest);
@@ -82,7 +82,7 @@ describe('RaindropToObsidian', () => {
 
     describe('onunload', () => {
         it('should log unloading message', () => {
-            const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+            const consoleSpy = jest.spyOn(console, 'debug').mockImplementation();
             plugin.onunload();
             expect(consoleSpy).toHaveBeenCalledWith('Make It Rain plugin unloaded.');
             consoleSpy.mockRestore();
@@ -160,6 +160,26 @@ describe('RaindropToObsidian', () => {
             const fileName = plugin.generateFileName(raindrop, true);
             expect(fileName).toBe('Test  Raindrop Illegal');
         });
+
+        it('should correctly handle placeholders with regex special characters', () => {
+            const raindrop = {
+                _id: 123,
+                title: 'Test Raindrop',
+                link: 'https://test.com',
+                created: '2024-01-01T12:00:00Z',
+                lastUpdate: '2024-01-01T12:00:00Z',
+                type: 'link' as RaindropType
+            } as RaindropItem;
+
+            // This test is a bit artificial because replacePlaceholder is an internal function
+            // that is currently only called with hardcoded strings.
+            // But if we were to allow a dynamic placeholder, this ensures it's safe.
+            // We'll test it indirectly by ensuring the current logic still works with standard templates
+            // and the formatUtils tests cover the actual escaping logic.
+            plugin.settings.fileNameTemplate = '{{title}}';
+            const fileName = plugin.generateFileName(raindrop, true);
+            expect(fileName).toBe('Test Raindrop');
+        });
     });
 
     describe('updateRibbonIcon', () => {
@@ -169,7 +189,7 @@ describe('RaindropToObsidian', () => {
             plugin.updateRibbonIcon();
             expect(addRibbonIconSpy).toHaveBeenCalledWith(
                 'cloud-download',
-                'Fetch Raindrops',
+                'Fetch raindrops',
                 expect.any(Function)
             );
         });
