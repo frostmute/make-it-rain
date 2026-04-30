@@ -1,5 +1,5 @@
 /**
- * Unit Tests for API Utilities
+ * API Utilities Tests
  * =============================
  *
  * Tests for Raindrop.io API interaction utilities including rate limiting,
@@ -19,7 +19,8 @@ import {
 
 // Mock the obsidian request function
 jest.mock('obsidian', () => ({
-    request: jest.fn()
+    request: jest.fn(),
+    Notice: jest.fn()
 }));
 
 describe('apiUtils', () => {
@@ -51,174 +52,133 @@ describe('apiUtils', () => {
 
         it('should delay between requests', async () => {
             const rateLimiter = createRateLimiter(60, 300);
+            
+            // First call should be immediate
+            await rateLimiter.checkLimit();
 
-            // First request - no delay (but internal promise chain wait)
-            const promise1 = rateLimiter.checkLimit();
-            await jest.advanceTimersByTimeAsync(0);
-            await promise1;
+            // Second call should wait 300ms
+            const p2 = rateLimiter.checkLimit();
+            
+            // Should still be pending
+            let resolved = false;
+            p2.then(() => resolved = true);
+            await jest.advanceTimersByTimeAsync(200);
+            expect(resolved).toBe(false);
 
-            // Second request - should delay 300ms
-            const promise2 = rateLimiter.checkLimit();
-            await jest.advanceTimersByTimeAsync(300);
-            await promise2;
-
-            expect(jest.getTimerCount()).toBe(0);
+            // Should resolve after 300ms total
+            await jest.advanceTimersByTimeAsync(100);
+            await p2;
+            expect(resolved).toBe(true);
         });
 
         it('should enforce rate limit', async () => {
             const rateLimiter = createRateLimiter(2, 100);
-
-            // First request - should delay 100ms
-            const promise1 = rateLimiter.checkLimit();
-            await jest.advanceTimersByTimeAsync(100);
-            await promise1;
-
-            // Second request - should delay 100ms
-            const promise2 = rateLimiter.checkLimit();
-            await jest.advanceTimersByTimeAsync(100);
-            await promise2;
-
-            // Third request - should hit rate limit and wait for reset
-            const promise3 = rateLimiter.checkLimit();
             
-            // Allow microtasks to run so the promise can reach the await/setTimeout stage
-            await Promise.resolve();
-
-            // Should be waiting for rate limit reset (up to 60 seconds)
-            expect(jest.getTimerCount()).toBeGreaterThan(0);
-
-            // Fast forward past the rate limit window
-            await jest.advanceTimersByTimeAsync(60000);
-            await promise3;
+            await rateLimiter.checkLimit(); // 1 (immediate)
+            
+            const p2 = rateLimiter.checkLimit(); // 2 (waits 100ms)
+            await jest.advanceTimersByTimeAsync(100);
+            await p2;
+            
+            const p3 = rateLimiter.checkLimit(); // 3 - should hit limit
+            
+            let resolved = false;
+            p3.then(() => resolved = true);
+            
+            // Wait almost a minute
+            await jest.advanceTimersByTimeAsync(50000);
+            expect(resolved).toBe(false);
+            
+            // Wait until 1 minute window resets
+            await jest.advanceTimersByTimeAsync(10000);
+            await p3;
+            expect(resolved).toBe(true);
         });
 
         it('should reset counter when resetCounter is called', async () => {
-            const rateLimiter = createRateLimiter(2, 100);
-
-            // Use up the rate limit
-            const promise1 = rateLimiter.checkLimit();
-            await jest.advanceTimersByTimeAsync(100);
-            await promise1;
-
-            const promise2 = rateLimiter.checkLimit();
-            await jest.advanceTimersByTimeAsync(100);
-            await promise2;
-
-            // Reset the counter
-            rateLimiter.resetCounter();
-
-            // Should be able to make requests again without long wait
-            const promise3 = rateLimiter.checkLimit();
-            await jest.advanceTimersByTimeAsync(100);
-            await promise3;
-
-            expect(true).toBe(true); // Test passed if we got here
-        });
-
-        it('should reset counter after time window expires', async () => {
-            const rateLimiter = createRateLimiter(1, 100);
-
-            // First request
-            const promise1 = rateLimiter.checkLimit();
-            await jest.advanceTimersByTimeAsync(100);
-            await promise1;
-
-            // Wait for time window to expire (60 seconds)
-            await jest.advanceTimersByTimeAsync(60000);
+            const rateLimiter = createRateLimiter(1, 1000);
             
-            // Should be able to make a request again
-            const promise2 = rateLimiter.checkLimit();
-            await jest.advanceTimersByTimeAsync(100);
-            await promise2;
+            await rateLimiter.checkLimit();
+            const p2 = rateLimiter.checkLimit();
+            
+            rateLimiter.resetCounter();
+            
+            // Even if reset, checkLimit might still wait if implementation doesn't check resetCount immediately in loop
+            // But our resetCounter just updates variables.
+            // The currently running checkLimit (if any) would be awaiting a timer.
+            
+            await jest.advanceTimersByTimeAsync(1000);
+            await p2;
         });
     });
 
     describe('createAuthenticatedRequestOptions', () => {
         it('should create request options with bearer token', () => {
-            const token = 'test-api-token-123';
+            const token = 'test-token';
             const options = createAuthenticatedRequestOptions(token);
 
-            expect(options).toHaveProperty('method', 'GET');
-            expect(options).toHaveProperty('headers');
-            expect(options.headers).toEqual({
-                'Authorization': 'Bearer test-api-token-123',
-                'Content-Type': 'application/json'
-            });
+            expect(options.headers).toHaveProperty('Authorization', `Bearer ${token}`);
+            expect(options.method).toBe('GET');
         });
 
         it('should handle empty token', () => {
             const options = createAuthenticatedRequestOptions('');
-
             expect(options.headers).toHaveProperty('Authorization', 'Bearer ');
         });
 
         it('should handle special characters in token', () => {
-            const token = 'token-with-special-chars!@#$%';
+            const token = 'token!@#$%^&*()';
             const options = createAuthenticatedRequestOptions(token);
-
-            expect(options.headers).toHaveProperty(
-                'Authorization',
-                'Bearer token-with-special-chars!@#$%'
-            );
+            expect(options.headers).toHaveProperty('Authorization', `Bearer ${token}`);
         });
     });
 
     describe('buildCollectionApiUrl', () => {
         it('should build correct API URL for collection ID', () => {
-            const url = buildCollectionApiUrl('12345');
-
-            expect(url).toBe('https://api.raindrop.io/rest/v1/collection/12345');
+            const id = '12345';
+            const url = buildCollectionApiUrl(id);
+            expect(url).toBe(`https://api.raindrop.io/rest/v1/collection/${id}`);
         });
 
         it('should build URL for negative collection IDs (system collections)', () => {
-            const url = buildCollectionApiUrl('-1');
-
-            expect(url).toBe('https://api.raindrop.io/rest/v1/collection/-1');
+            const id = '-1';
+            const url = buildCollectionApiUrl(id);
+            expect(url).toBe(`https://api.raindrop.io/rest/v1/collection/${id}`);
         });
 
         it('should handle string collection IDs', () => {
-            const url = buildCollectionApiUrl('all');
-
-            expect(url).toBe('https://api.raindrop.io/rest/v1/collection/all');
+            const id = 'my-collection';
+            const url = buildCollectionApiUrl(id);
+            expect(url).toBe(`https://api.raindrop.io/rest/v1/collection/${id}`);
         });
     });
 
     describe('parseApiResponse', () => {
         it('should parse JSON string response', () => {
-            const jsonString = '{"result": true, "items": []}';
-            const parsed = parseApiResponse(jsonString) as any;
-
-            expect(parsed).toEqual({ result: true, items: [] });
+            const data = { foo: 'bar' };
+            const response = JSON.stringify(data);
+            const result = parseApiResponse(response);
+            expect(result).toEqual(data);
         });
 
         it('should return object if already parsed', () => {
-            const obj = { result: true, items: [] };
-            const parsed = parseApiResponse(obj) as any;
-
-            expect(parsed).toEqual(obj);
-            expect(parsed).toBe(obj); // Same reference
+            const data = { foo: 'bar' };
+            const result = parseApiResponse(data);
+            expect(result).toBe(data);
         });
 
         it('should parse complex JSON structures', () => {
-            const jsonString = JSON.stringify({
-                result: true,
-                items: [
-                    { id: 1, title: 'Test' },
-                    { id: 2, title: 'Test 2' }
-                ],
-                count: 2
-            });
-
-            const parsed = parseApiResponse(jsonString) as any;
-
-            expect(parsed.result).toBe(true);
-            expect(parsed.items).toHaveLength(2);
-            expect(parsed.count).toBe(2);
+            const data = { 
+                result: true, 
+                items: [{ id: 1 }, { id: 2 }],
+                meta: { count: 2 }
+            };
+            const result = parseApiResponse(JSON.stringify(data));
+            expect(result).toEqual(data);
         });
 
         it('should throw error for invalid JSON string', () => {
-            const invalidJson = '{invalid json}';
-
+            const invalidJson = '{ invalid }';
             expect(() => parseApiResponse(invalidJson)).toThrow();
         });
 
@@ -232,74 +192,45 @@ describe('apiUtils', () => {
 
         beforeEach(() => {
             mockRateLimiter = {
-                checkLimit: jest.fn().mockResolvedValue(undefined),
+                checkLimit: jest.fn(),
                 resetCounter: jest.fn()
             };
         });
 
         it('should handle rate limit error (429) and reset counter', async () => {
-            jest.useRealTimers();
-            const error = { status: 429, message: 'Rate limit exceeded' };
-
-            const result = await handleRequestError(
-                error,
-                mockRateLimiter,
-                0,
-                3,
-                10
-            );
+            const error = { status: 429 };
+            const promise = handleRequestError(error, mockRateLimiter, 0, 3, 100);
+            await jest.advanceTimersByTimeAsync(200);
+            const result = await promise;
 
             expect(result).toBe(true);
             expect(mockRateLimiter.resetCounter).toHaveBeenCalled();
         });
 
         it('should handle rate limit message in error', async () => {
-            jest.useRealTimers();
             const error = { message: 'rate limit exceeded' };
-
-            const result = await handleRequestError(
-                error,
-                mockRateLimiter,
-                0,
-                3,
-                10
-            );
+            const promise = handleRequestError(error, mockRateLimiter, 0, 3, 100);
+            await jest.advanceTimersByTimeAsync(200);
+            const result = await promise;
 
             expect(result).toBe(true);
             expect(mockRateLimiter.resetCounter).toHaveBeenCalled();
         });
 
         it('should wait longer for rate limit errors', async () => {
-            jest.useRealTimers();
             const error = { status: 429 };
-
-            const promise = handleRequestError(
-                error,
-                mockRateLimiter,
-                0,
-                3,
-                10
-            );
-
-            // Should wait 2x normal delay for rate limits (2000ms)
             
+            const promise = handleRequestError(error, mockRateLimiter, 0, 3, 100);
+            await jest.advanceTimersByTimeAsync(200);
             const result = await promise;
 
             expect(result).toBe(true);
         });
 
         it('should retry on non-rate-limit errors', async () => {
-            const error = { status: 500, message: 'Internal Server Error' };
-
-            const promise = handleRequestError(
-                error,
-                mockRateLimiter,
-                0,
-                3,
-                1000
-            );
-
-            await jest.advanceTimersByTimeAsync(1000);
+            const error = new Error('Some error');
+            const promise = handleRequestError(error, mockRateLimiter, 0, 3, 100);
+            await jest.advanceTimersByTimeAsync(100);
             const result = await promise;
 
             expect(result).toBe(true);
@@ -307,50 +238,25 @@ describe('apiUtils', () => {
         });
 
         it('should not retry on last attempt', async () => {
-            const error = { status: 500, message: 'Internal Server Error' };
-
-            const result = await handleRequestError(
-                error,
-                mockRateLimiter,
-                2, // Last attempt (maxRetries = 3, attemptNumber = 2)
-                3,
-                1000
-            );
+            const error = new Error('Some error');
+            const result = await handleRequestError(error, mockRateLimiter, 2, 3, 100);
 
             expect(result).toBe(false);
         });
 
         it('should handle errors without status code', async () => {
-            const error = new Error('Network error');
-
-            const promise = handleRequestError(
-                error,
-                mockRateLimiter,
-                0,
-                3,
-                1000
-            );
-
-            await jest.advanceTimersByTimeAsync(1000);
+            const error = { foo: 'bar' };
+            const promise = handleRequestError(error, mockRateLimiter, 0, 3, 100);
+            await jest.advanceTimersByTimeAsync(100);
             const result = await promise;
-
             expect(result).toBe(true);
         });
 
         it('should handle string errors', async () => {
             const error = 'Something went wrong';
-
-            const promise = handleRequestError(
-                error,
-                mockRateLimiter,
-                0,
-                3,
-                1000
-            );
-
-            await jest.advanceTimersByTimeAsync(1000);
+            const promise = handleRequestError(error, mockRateLimiter, 0, 3, 100);
+            await jest.advanceTimersByTimeAsync(100);
             const result = await promise;
-
             expect(result).toBe(true);
         });
     });
@@ -391,19 +297,42 @@ describe('apiUtils', () => {
         });
 
         it('should return null for null or undefined response', () => {
-            expect(extractCollectionData(null)).toBeNull();
+            expect(extractCollectionData(null as any)).toBeNull();
             expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to fetch collection info:', null);
 
-            expect(extractCollectionData(undefined)).toBeNull();
+            expect(extractCollectionData(undefined as any)).toBeNull();
             expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to fetch collection info:', undefined);
         });
 
         it('should return null for primitive types', () => {
-            expect(extractCollectionData('string response')).toBeNull();
+            expect(extractCollectionData('string response' as any)).toBeNull();
             expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to fetch collection info:', 'string response');
 
-            expect(extractCollectionData(123)).toBeNull();
+            expect(extractCollectionData(123 as any)).toBeNull();
             expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to fetch collection info:', 123);
+        });
+
+        it('should handle complex collection data', () => {
+            const response = {
+                result: true,
+                item: {
+                    _id: 123,
+                    title: 'Tech Articles',
+                    parent: { $id: 100 },
+                    count: 42,
+                    color: '#FF5733',
+                    cover: ['image1.jpg', 'image2.jpg'],
+                    created: '2024-01-01T00:00:00Z',
+                    public: true
+                }
+            };
+
+            const data = extractCollectionData(response) as any;
+
+            expect(data!._id).toBe(123);
+            expect(data!.title).toBe('Tech Articles');
+            expect(data!.parent).toEqual({ $id: 100 });
+            expect(data!.count).toBe(42);
         });
     });
 

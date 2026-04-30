@@ -1,11 +1,14 @@
 import { App, Modal, Setting, TextComponent, ButtonComponent, Notice, ToggleComponent } from 'obsidian';
 import type RaindropToObsidian from './main';
 import { 
+    IRaindropToObsidian,
     RaindropCollection, 
     RaindropType, 
-    ModalFetchOptions, 
-    TagMatchTypes,
-    RaindropTypes
+    TagMatchTypes, 
+    FilterTypes, 
+    RaindropTypes, 
+    ModalFetchOptions,
+    AggregateHighlightsOptions
 } from './types';
 
 /**
@@ -442,3 +445,76 @@ export class QuickImportModal extends Modal {
         contentEl.empty();
     }
 }
+
+export class HighlightsAggregateModal extends Modal {
+    plugin: IRaindropToObsidian;
+    tag: string = '';
+    vaultPath: string;
+
+    constructor(app: App, plugin: IRaindropToObsidian) {
+        super(app);
+        this.plugin = plugin;
+        this.vaultPath = this.plugin.settings.defaultFolder;
+    }
+
+    onOpen() {
+        const { contentEl } = this;
+        contentEl.empty();
+        contentEl.addClass('make-it-rain-modal');
+
+        contentEl.createEl('h2', { text: 'Aggregate Highlights by Tag' });
+
+        new Setting(contentEl)
+            .setName('Raindrop Tag')
+            .setDesc('Enter the tag to search for across all collections. All items with this tag that have highlights will be aggregated into a single note.')
+            .setClass('setting-item-stacked')
+            .addText((text: TextComponent) => {
+                text.setPlaceholder('e.g., research, productivity')
+                    .setValue(this.tag)
+                    .onChange((value: string) => {
+                        this.tag = value.trim().replace(/^#/, ''); // Remove leading # if user typed it
+                    });
+                text.inputEl.style.width = '100%';
+            });
+
+        new Setting(contentEl)
+            .setName('Vault Save Location (Optional)')
+            .setDesc('Override default save folder for the aggregated note. Leave blank for default.')
+            .addText((text: TextComponent) => {
+                text.setPlaceholder(this.plugin.settings.defaultFolder || 'Vault Root')
+                    .setValue(this.vaultPath)
+                    .onChange((value: string) => {
+                        this.vaultPath = value.trim();
+                    });
+                text.inputEl.style.width = '100%';
+            });
+
+        const buttonsEl = contentEl.createDiv({ cls: 'modal-button-container' });
+        new ButtonComponent(buttonsEl)
+            .setButtonText('Aggregate Highlights')
+            .setCta()
+            .onClick(async () => {
+                if (!this.tag) {
+                    new Notice('Please enter a tag to aggregate.', 5000);
+                    return;
+                }
+
+                this.close();
+                const options: AggregateHighlightsOptions = {
+                    tag: this.tag,
+                    vaultPath: this.vaultPath || undefined
+                };
+                await this.plugin.aggregateHighlightsByTag(options);
+            });
+
+        new ButtonComponent(buttonsEl)
+            .setButtonText('Cancel')
+            .onClick(() => { this.close(); });
+    }
+
+    onClose() {
+        const { contentEl } = this;
+        contentEl.empty();
+    }
+}
+

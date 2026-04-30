@@ -23,7 +23,10 @@ import {
 
 // Import utility functions from consolidated index
 import { DEFAULT_SETTINGS, RaindropToObsidianSettingTab } from './settings';
-import { RaindropFetchModal, QuickImportModal } from './modals';
+import { RaindropFetchModal, QuickImportModal, HighlightsAggregateModal } from './modals';
+import { 
+    AggregateHighlightsOptions
+} from './types';
 import { 
     // File utilities
     sanitizeFileName,
@@ -92,6 +95,14 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             name: 'Quick import raindrop by URL or ID',
             callback: () => {
                 new QuickImportModal(this.app, this).open();
+            }
+        });
+
+        this.addCommand({
+            id: 'aggregate-highlights-by-tag',
+            name: 'Aggregate Highlights by Tag',
+            callback: async () => {
+                new HighlightsAggregateModal(this.app, this).open();
             }
         });
 
@@ -738,6 +749,114 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         } catch (error) {
             loadingNotice.hide();
             new Notice(`Error during quick import of item ${itemId}: ${error instanceof Error ? error.message : String(error)}`, 10000);
+        }
+    }
+
+    /**
+     * Aggregates all highlights for a specific tag into a single Markdown note.
+     * Searches across all collections using the Raindrop.io search API.
+     * @param options - Aggregation options including tag and optional vault path
+     */
+    async aggregateHighlightsByTag(options: AggregateHighlightsOptions): Promise<void> {
+        if (!this.settings.apiToken) {
+            new Notice('Please configure your Raindrop.io API token in the plugin settings.', 10000);
+            return;
+        }
+
+        const loadingNotice = new Notice(`Aggregating highlights for tag: #${options.tag}...`, 0);
+        const baseApiUrl = 'https://api.raindrop.io/rest/v1';
+        const perPage = 50;
+
+        try {
+            let allItems: RaindropItem[] = [];
+            let page = 0;
+            let hasMore = true;
+
+            const fetchOptions: RequestInit = {
+                method: 'GET',
+                headers: { 'Authorization': `Bearer ${this.settings.apiToken}` }
+            };
+
+            while (hasMore) {
+                loadingNotice.setMessage(`Fetching highlights for #${options.tag} (Page ${page + 1})...`);
+                const searchParams = new URLSearchParams({
+                    perpage: perPage.toString(),
+                    page: page.toString(),
+                    search: `#"${options.tag}" type:highlight`
+                });
+
+                const apiUrl = `${baseApiUrl}/raindrops/0?${searchParams.toString()}`;
+                const response = await fetchWithRetry(this.app, apiUrl, fetchOptions, this.rateLimiter);
+                const data = response as RaindropResponse;
+
+                if (!data.result) {
+                    throw new Error('Raindrop API returned an error.');
+                }
+
+                if (data.items && data.items.length > 0) {
+                    allItems = allItems.concat(data.items as RaindropItem[]);
+                    hasMore = data.items.length === perPage;
+                    page++;
+                } else {
+                    hasMore = false;
+                }
+            }
+
+            if (allItems.length === 0) {
+                loadingNotice.hide();
+                new Notice(`No highlights found for tag: #${options.tag}`, 5000);
+                return;
+            }
+
+            // Generate content
+            const lines: string[] = [];
+            lines.push(`# Aggregated Highlights: #${options.tag}\n`);
+            lines.push(`Generated on: ${new Date().toLocaleString()}\n`);
+
+            allItems.forEach(item => {
+                if (item.highlights && item.highlights.length > 0) {
+                    lines.push(`## [${item.title}](${item.link})`);
+                    item.highlights.forEach(highlight => {
+                        lines.push(`- ${highlight.text.replace(/\r\n|\r|\n/g, ' ')}`);
+                        if (highlight.note) {
+                            lines.push(`  - **Note**: ${highlight.note.replace(/\r\n|\r|\n/g, ' ')}`);
+                        }
+                    });
+                    lines.push('\n---\n');
+                }
+            });
+
+            const content = lines.join('\n');
+
+            // Save the note
+            const fileName = sanitizeFileName(`Aggregated Highlights - #${options.tag}`);
+            const folderPath = options.vaultPath || this.settings.defaultFolder || '';
+            
+            if (folderPath) {
+                await createFolderStructure(this.app, folderPath);
+            }
+
+            const filePath = normalizePath(`${folderPath}/${fileName}.md`);
+            
+            if (await this.app.vault.adapter.exists(filePath)) {
+                // If exists, create a new one with a timestamp to avoid overwriting user research
+                const timestampedFileName = `${fileName} - ${Date.now()}`;
+                const timestampedPath = normalizePath(`${folderPath}/${timestampedFileName}.md`);
+                await this.app.vault.create(timestampedPath, content);
+                new Notice(`Note already existed. Created: ${timestampedFileName}.md`, 5000);
+            } else {
+                await this.app.vault.create(filePath, content);
+                new Notice(`Successfully aggregated highlights into ${fileName}.md`, 5000);
+            }
+
+            loadingNotice.hide();
+
+        } catch (error) {
+            loadingNotice.hide();
+            let errorMessage = 'An error occurred during highlight aggregation';
+            if (error instanceof Error) errorMessage = error.message;
+            new Notice(`${errorMessage}`, 10000);
+            console.error(`Error aggregating highlights for tag ${options.tag}:`, error);
         }
     }
 }
