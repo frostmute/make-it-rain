@@ -45,4 +45,5 @@ gemini.md
 /src/index.ts
 /docs/meta/
 /scripts/
+coverage/
 AGENTS.md
