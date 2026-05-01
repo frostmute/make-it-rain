@@ -53,6 +53,7 @@ export function createRateLimiter(
     
     let runningCount = 0;
     const waitingQueue: (() => void)[] = [];
+    const tokenWaitingQueue: (() => void)[] = [];
 
     /**
      * Refills tokens based on elapsed time
@@ -64,6 +65,14 @@ export function createRateLimiter(
             const newTokens = Math.floor(elapsed / refillRate);
             tokens = Math.min(maxRequestsPerMinute, tokens + newTokens);
             lastRefill = now - (elapsed % refillRate);
+            
+            // Wake up waiters if we have tokens
+            if (tokens > 0) {
+                while (tokenWaitingQueue.length > 0 && tokens > 0) {
+                    const resolve = tokenWaitingQueue.shift();
+                    if (resolve) resolve();
+                }
+            }
         }
     };
 
@@ -81,22 +90,31 @@ export function createRateLimiter(
         try {
             refill();
             
-            if (tokens <= 0) {
-                // Wait for at least one token
+            while (tokens <= 0) {
+                // Wait for a token
                 const now = Date.now();
                 const waitTime = refillRate - (now - lastRefill);
-                await new Promise(resolve => setTimeout(resolve, Math.max(1, waitTime)));
+                
+                // Set up a promise that resolves when tokens are refilled or manual reset occurs
+                let timeoutId: any;
+                const tokenPromise = new Promise<void>(resolve => {
+                    tokenWaitingQueue.push(resolve);
+                    timeoutId = setTimeout(() => {
+                        // Remove from queue if timeout hits first
+                        const index = tokenWaitingQueue.indexOf(resolve);
+                        if (index > -1) tokenWaitingQueue.splice(index, 1);
+                        resolve();
+                    }, Math.max(1, waitTime));
+                });
+                
+                await tokenPromise;
+                clearTimeout(timeoutId);
                 refill();
             }
 
             // Consume token
             if (tokens > 0) {
                 tokens--;
-            } else {
-                // Fallback for edge cases/rounding: just wait a bit more
-                await new Promise(resolve => setTimeout(resolve, refillRate));
-                refill();
-                if (tokens > 0) tokens--;
             }
             
             // Politeness delay to spread out requests
@@ -120,6 +138,12 @@ export function createRateLimiter(
         tokens = maxRequestsPerMinute;
         lastRefill = Date.now();
         console.warn('Rate limiter tokens refilled.');
+        
+        // Wake up all token waiters
+        while (tokenWaitingQueue.length > 0) {
+            const resolve = tokenWaitingQueue.shift();
+            if (resolve) resolve();
+        }
     };
 
     /**
