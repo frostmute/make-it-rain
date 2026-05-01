@@ -1,0 +1,13 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint", "obsidianmd"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:obsidianmd/recommended"
+  ],
+  "rules": {
+    "no-constant-condition": "off"
+  }
+}

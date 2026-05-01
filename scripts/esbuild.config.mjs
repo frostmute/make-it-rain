@@ -1,6 +1,7 @@
 import esbuild from "esbuild";
 import process from "process";
 import builtins from "builtin-modules";
+import { copyToVaults } from "./copy-to-vault.mjs";
 
 const banner =
 `/*
@@ -38,12 +39,28 @@ const context = await esbuild.context({
 	sourcemap: prod ? false : "inline",
 	treeShaking: true,
 	outfile: "main.js",
-	});
+	plugins: [
+		...(!process.env.CI ? [
+			{
+				name: 'watch-deploy',
+				setup(build) {
+					build.onEnd(result => {
+						if (result.errors.length === 0) {
+							console.log('Build successful, deploying to vaults...');
+							copyToVaults();
+						}
+					});
+				},
+			}
+		] : []),
+	],
+});
 
-	// Add output for styles.css
-	if (prod) {
+// Add output for styles.css
+if (prod) {
 	await context.rebuild();
 	process.exit(0);
 } else {
 	await context.watch();
-} 
+}
+ 

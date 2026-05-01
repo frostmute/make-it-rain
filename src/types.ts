@@ -158,9 +158,15 @@ export interface CollectionResponse {
     readonly items: readonly RaindropCollection[];
 }
 
+export interface AggregateHighlightsOptions {
+    tag: string;
+    vaultPath?: string;
+}
+
 export interface IRaindropToObsidian {
     settings: MakeItRainSettings;
     fetchRaindrops(options: ModalFetchOptions): Promise<void>;
+    aggregateHighlightsByTag(options: AggregateHighlightsOptions): Promise<void>;
     saveSettings(): Promise<void>;
     updateRibbonIcon(): void;
     fetchAllUserCollections(): Promise<RaindropCollection[]>;
