@@ -24,6 +24,9 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Scan for secrets
+        run: npm run scan-secrets
+
       - name: Run tests
         run: npm test
 
@@ -43,12 +46,12 @@ jobs:
 
       - name: Verify build artifacts
         run: |
-          if [ ! -f "build/main.js" ]; then
-            echo "Error: build/main.js not found!"
+          if [ ! -f "main.js" ]; then
+            echo "Error: main.js not found!"
             exit 1
           fi
-          if [ ! -f "build/manifest.json" ]; then
-            echo "Error: build/manifest.json not found!"
+          if [ ! -f "manifest.json" ]; then
+            echo "Error: manifest.json not found!"
             exit 1
           fi
           echo "Build artifacts verified successfully."

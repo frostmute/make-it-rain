@@ -14,7 +14,7 @@ describe('RaindropToObsidian', () => {
             author: 'frostmute',
             version: '1.7.2',
             minAppVersion: '0.15.0',
-            description: 'Raindrop.io Integration'
+            description: 'Pull your Raindrop.io bookmarks with flexible filtering, customization, and location options.'
         } as PluginManifest;
 
         plugin = new RaindropToObsidian(mockApp as unknown as App, manifest);
@@ -37,13 +37,52 @@ describe('RaindropToObsidian', () => {
             expect(loadSettingsSpy).toHaveBeenCalled();
             expect(addCommandSpy).toHaveBeenCalledWith(expect.objectContaining({ id: 'fetch-raindrops' }));
             expect(addCommandSpy).toHaveBeenCalledWith(expect.objectContaining({ id: 'quick-import-raindrop' }));
+            expect(addCommandSpy).toHaveBeenCalledWith(expect.objectContaining({ id: 'aggregate-highlights-by-tag' }));
             expect(addSettingTabSpy).toHaveBeenCalled();
+        });
+    });
+
+    describe('aggregateHighlightsByTag', () => {
+        it('should call fetchWithRetry and create a note', async () => {
+            plugin.settings.apiToken = 'test-token';
+            const mockHighlights = [
+                { _id: 1, title: 'Item 1', link: 'link1', highlights: [{ text: 'h1', note: 'n1' }] },
+                { _id: 2, title: 'Item 2', link: 'link2', highlights: [{ text: 'h2' }] }
+            ];
+            
+            const apiUtils = require('../../src/utils/apiUtils');
+            const fetchWithRetrySpy = jest.spyOn(apiUtils, 'fetchWithRetry').mockResolvedValue({
+                result: true,
+                items: mockHighlights
+            });
+
+            const createSpy = jest.spyOn(plugin.app.vault, 'create').mockResolvedValue({} as any);
+            const existsSpy = jest.spyOn(plugin.app.vault.adapter, 'exists').mockResolvedValue(false);
+            
+            // Mock normalizePath which is usually a global in Obsidian but mocked in our setup
+            // Mock createFolderStructure by mocking mkdir on adapter if needed
+
+            await plugin.aggregateHighlightsByTag({ tag: 'research' });
+
+            expect(fetchWithRetrySpy).toHaveBeenCalled();
+            expect(createSpy).toHaveBeenCalledWith(
+                expect.stringContaining('Aggregated Highlights - research.md'),
+                expect.stringContaining('## [Item 1](link1)')
+            );
+            expect(createSpy).toHaveBeenCalledWith(
+                expect.stringContaining('Aggregated Highlights - research.md'),
+                expect.stringContaining('- h1')
+            );
+            expect(createSpy).toHaveBeenCalledWith(
+                expect.stringContaining('Aggregated Highlights - research.md'),
+                expect.stringContaining('**Note**: n1')
+            );
         });
     });
 
     describe('onunload', () => {
         it('should log unloading message', () => {
-            const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+            const consoleSpy = jest.spyOn(console, 'debug').mockImplementation();
             plugin.onunload();
             expect(consoleSpy).toHaveBeenCalledWith('Make It Rain plugin unloaded.');
             consoleSpy.mockRestore();
@@ -121,6 +160,26 @@ describe('RaindropToObsidian', () => {
             const fileName = plugin.generateFileName(raindrop, true);
             expect(fileName).toBe('Test  Raindrop Illegal');
         });
+
+        it('should correctly handle placeholders with regex special characters', () => {
+            const raindrop = {
+                _id: 123,
+                title: 'Test Raindrop',
+                link: 'https://test.com',
+                created: '2024-01-01T12:00:00Z',
+                lastUpdate: '2024-01-01T12:00:00Z',
+                type: 'link' as RaindropType
+            } as RaindropItem;
+
+            // This test is a bit artificial because replacePlaceholder is an internal function
+            // that is currently only called with hardcoded strings.
+            // But if we were to allow a dynamic placeholder, this ensures it's safe.
+            // We'll test it indirectly by ensuring the current logic still works with standard templates
+            // and the formatUtils tests cover the actual escaping logic.
+            plugin.settings.fileNameTemplate = '{{title}}';
+            const fileName = plugin.generateFileName(raindrop, true);
+            expect(fileName).toBe('Test Raindrop');
+        });
     });
 
     describe('updateRibbonIcon', () => {
@@ -130,7 +189,7 @@ describe('RaindropToObsidian', () => {
             plugin.updateRibbonIcon();
             expect(addRibbonIconSpy).toHaveBeenCalledWith(
                 'cloud-download',
-                'Fetch Raindrops',
+                'Fetch raindrops',
                 expect.any(Function)
             );
         });

@@ -71,6 +71,7 @@ export {
     formatDateISO,
     formatTags,
     getDomain,
-    raindropType
+    raindropType,
+    escapeRegExp
 } from './formatUtils';
 

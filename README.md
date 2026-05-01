@@ -9,7 +9,7 @@
 
 # Make It Rain
 
-**Seamlessly import your [Raindrop.io](https://raindrop.io) bookmarks into [Obsidian](https://obsidian.md/)**
+**Pull your Raindrop.io bookmarks with flexible filtering, customization, and location options.**
 
 Transform your web clippings, articles, and research into a powerful knowledge base.
 
@@ -105,7 +105,7 @@ Get started in 3 simple steps:
 2. Paste your API token
 3. Click **Verify Token** to test the connection
 4. (Optional) Set your default import folder
-5. Done! Run **"Fetch Raindrops"** from the Command Palette to start importing
+5. Done! Run **"Fetch raindrops (filtered)"** from the Command Palette to start importing
 
 > 💡 **New to Make It Rain?** Check out the [Installation Guide](https://frostmute.github.io/make-it-rain/user-guide/installation) for detailed instructions.
 
@@ -149,14 +149,14 @@ Learn how to contribute to the project:
 | Setting | Description | Default |
 |---------|-------------|---------|
 | **API Token** | Your Raindrop.io test token (required) | - |
-| **Default Vault Location** | Folder path for imported notes | Vault root |
-| **Filename Template** | Template for note filenames | `{{title}}` |
-| **Show Ribbon Icon** | Display plugin icon in sidebar | Enabled |
-| **Banner Field Name** | Frontmatter field for banner images | `banner` |
-| **Create Folder Notes** | Generate index notes for each collection folder | Enabled |
-| **Download Files** | Fetch native Raindrop upload attachments | Enabled |
+| **Default vault save location** | Folder path for imported notes | Vault root |
+| **Filename template** | Template for note filenames | `{{title}}` |
+| **Show ribbon icon** | Display plugin icon in sidebar | Enabled |
+| **Banner field name** | Frontmatter field for banner images | `banner` |
+| **Create folder notes** | Generate index notes for each collection folder | Enabled |
+| **Download files** | Fetch native Raindrop upload attachments | Enabled |
 
-### Filename Template Placeholders
+### Filename template placeholders
 
 Use these variables in your filename template:
 
@@ -219,24 +219,23 @@ For complete details, see the [Note Structure documentation](https://frostmute.g
 ### Import bookmarks from a specific collection
 
 1. Open Command Palette (`Ctrl/Cmd+P`)
-2. Run **"Fetch Raindrops"**
+2. Run **"Fetch raindrops (filtered)"**
 3. Select your collection from the dynamic list
-4. Click **Fetch Raindrops**
+4. Click **Fetch raindrops**
 
 ### Import a single bookmark by URL
 
 1. Open Command Palette
-2. Run **"Quick Import Raindrop by URL/ID"**
-3. Paste the Raindrop URL or ID
-4. Click **Fetch & Create Note**
+2. Run **"Quick import raindrop by url/id"**
+3. Paste the raindrop URL or id
+4. Click **Import**
 
 ### Use different templates for different import types
 
-1. Open **"Fetch Raindrops"** modal
+1. Open **"Fetch raindrops (filtered)"** modal
 2. Configure your filters
-3. Enable **"Override template"**
-4. Choose your template
-5. Fetch!
+3. Enable **"Use default template only"** or **"Force use of content-type templates"**
+4. Fetch!
 
 ### Automatically organize by collection
 

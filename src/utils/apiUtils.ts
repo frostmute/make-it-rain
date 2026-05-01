@@ -1,6 +1,6 @@
-import { App, request, Notice } from 'obsidian';
+import { App, request } from 'obsidian';
 import { sanitizeFileName } from './fileUtils';
-import { RaindropCollection } from '../types';
+import { RaindropCollection, RaindropType } from '../types';
 
 
 /**
@@ -33,15 +33,6 @@ export interface RateLimiter {
     complete: () => void;
 }
 
-/**
- * Creates a rate limiter that manages API request pacing using a Token Bucket algorithm
- * Supports concurrency and respects per-minute limits.
- * 
- * @param maxRequestsPerMinute - Maximum number of requests allowed per minute
- * @param delayBetweenRequests - Minimum delay between requests to the same slot (ms)
- * @param maxConcurrency - Maximum number of concurrent requests allowed
- * @returns A rate limiter object with methods to check limits and reset counters
- */
 /**
  * Creates a rate limiter that manages API request pacing using a Token Bucket algorithm
  * Supports concurrency and respects per-minute limits.
@@ -128,7 +119,7 @@ export function createRateLimiter(
     const resetCounter = (): void => {
         tokens = maxRequestsPerMinute;
         lastRefill = Date.now();
-        console.log('Rate limiter tokens refilled.');
+        console.warn('Rate limiter tokens refilled.');
     };
 
     /**
@@ -181,7 +172,7 @@ export function buildCollectionApiUrl(collectionId: string): string {
  * @param response - The response from the API
  * @returns Parsed JSON data
  */
-export function parseApiResponse(response: string | object): any {
+export function parseApiResponse(response: string | object): unknown {
     if (typeof response === 'string') {
         return JSON.parse(response);
     }
@@ -199,17 +190,19 @@ export function parseApiResponse(response: string | object): any {
  * @returns True if error was handled and retry should happen, false otherwise
  */
 export async function handleRequestError(
-    error: any, 
+    error: unknown, 
     rateLimiter: RateLimiter, 
     attemptNumber: number, 
     maxRetries: number,
     delayBetweenRetries: number
 ): Promise<boolean> {
     const isLastAttempt = attemptNumber >= maxRetries - 1;
+    const errorStatus = (error as { status?: number })?.status;
+    const errorMessage = (error as { message?: string })?.message;
     
     // Handle rate limiting (HTTP 429)
-    if (error.status === 429 || (error.message && error.message.includes('rate limit'))) {
-        console.log('Rate limit hit, resetting counter and waiting...');
+    if (errorStatus === 429 || (errorMessage && errorMessage.includes('rate limit'))) {
+        console.warn('Rate limit hit, resetting counter and waiting...');
         rateLimiter.resetCounter();
         await new Promise(resolve => setTimeout(resolve, delayBetweenRetries * 2)); // Longer wait for rate limits
         return true; // We handled the error, continue with retry
@@ -248,9 +241,8 @@ export async function fetchWithRetry(
     rateLimiterOrMaxRetries?: RateLimiter | number,
     maxRetries: number = 3,
     delayBetweenRetries: number = 1000
-): Promise<any> {
+): Promise<unknown> {
     // Normalize parameters to handle both calling patterns
-    let app: App | undefined;
     let url: string;
     let requestOptions: RequestInit;
     let rateLimiter: RateLimiter;
@@ -267,7 +259,6 @@ export async function fetchWithRetry(
         }
     } else {
         // New pattern: (app, url, options, rateLimiter, maxRetries?, delay?)
-        app = appOrUrl;
         url = urlOrOptions as string;
         requestOptions = optionsOrRateLimiter as RequestInit;
         rateLimiter = rateLimiterOrMaxRetries as RateLimiter;
@@ -275,6 +266,7 @@ export async function fetchWithRetry(
     
     // Try up to maxRetries times
     let attemptNumber = 0;
+    // Intentional infinite loop for retry logic
     while (true) {
         const isLastAttempt = attemptNumber >= maxRetries - 1;
         
@@ -315,11 +307,12 @@ export async function fetchWithRetry(
  * @param response - The raw API response
  * @returns The collection data or null if invalid response
  */
-export function extractCollectionData(response: any): RaindropCollection | null {
-    const isValidResponse = response && typeof response === 'object' && response.result === true && response.item;
+export function extractCollectionData(response: unknown): RaindropCollection | null {
+    const data = response as { result?: boolean, item?: RaindropCollection };
+    const isValidResponse = data && data.result && data.item;
     
     if (isValidResponse) {
-        return response.item as RaindropCollection;
+        return data.item!;
     }
     
     console.error('Failed to fetch collection info:', response);
@@ -357,4 +350,3 @@ export function getFullPathSegments(
 
     return segments;
 }
-
