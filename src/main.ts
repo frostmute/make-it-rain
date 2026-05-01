@@ -30,6 +30,7 @@ import {
 import { 
     // File utilities
     sanitizeFileName,
+    sanitizeMarkdownContent,
     createFolderStructure,
     
     // API utilities
@@ -621,11 +622,11 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 if (raindrop.cover) frontmatter += `${this.settings.bannerFieldName}: ${raindrop.cover}\n`;
                 frontmatter += `---\n\n`;
 
-                let noteBody = (raindrop.cover ? `![${sanitizeFileName(raindrop.title) || 'Cover'}](${raindrop.cover})\n\n` : "") + `# ${raindrop.title}\n\n`;
-                if (raindrop.excerpt) noteBody += `## Description\n${raindrop.excerpt}\n\n`;
-                if (templateData.note) noteBody += `## Notes\n${templateData.note}\n\n`;
+                let noteBody = (raindrop.cover ? `![${sanitizeFileName(raindrop.title) || 'Cover'}](${raindrop.cover})\n\n` : "") + `# ${sanitizeMarkdownContent(raindrop.title)}\n\n`;
+                if (raindrop.excerpt) noteBody += `## Description\n${sanitizeMarkdownContent(raindrop.excerpt)}\n\n`;
+                if (templateData.note) noteBody += `## Notes\n${sanitizeMarkdownContent(templateData.note)}\n\n`;
                 if (templateData.highlights?.length) {
-                    noteBody += `## Highlights\n${templateData.highlights.map(h => `- ${h.text.replace(/\n/g, ' ')}${h.note ? `\n  *Note:* ${h.note.replace(/\n/g, ' ')}` : ""}`).join('\n')}\n\n`;
+                    noteBody += `## Highlights\n${templateData.highlights.map(h => `- ${sanitizeMarkdownContent(h.text).replace(/\n/g, ' ')}${h.note ? `\n  *Note:* ${sanitizeMarkdownContent(h.note).replace(/\n/g, ' ')}` : ""}`).join('\n')}\n\n`;
                 }
                 finalContent = frontmatter + noteBody;
             }

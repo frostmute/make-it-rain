@@ -75,3 +75,4 @@ export {
     escapeRegExp
 } from './formatUtils';
 
+export { sanitizeMarkdownContent } from './securityUtils';
