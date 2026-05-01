@@ -1,5 +1,6 @@
 import { App, request } from 'obsidian';
 import { sanitizeFileName } from './fileUtils';
+import { RaindropCollection, RaindropType } from '../types';
 
 
 /**
@@ -29,64 +30,138 @@ import { sanitizeFileName } from './fileUtils';
 export interface RateLimiter {
     checkLimit: () => Promise<void>;
     resetCounter: () => void;
+    complete: () => void;
 }
 
 /**
- * Creates a rate limiter that manages API request pacing
- * Uses a functional closure approach to maintain state
+ * Creates a rate limiter that manages API request pacing using a Token Bucket algorithm
+ * Supports concurrency and respects per-minute limits.
  * 
  * @param maxRequestsPerMinute - Maximum number of requests allowed per minute
- * @param delayBetweenRequests - Milliseconds to wait between requests
+ * @param delayBetweenRequests - Minimum delay between requests to the same slot (ms)
+ * @param maxConcurrency - Maximum number of concurrent requests allowed
  * @returns A rate limiter object with methods to check limits and reset counters
  */
-export function createRateLimiter(maxRequestsPerMinute = 60, delayBetweenRequests = 300): RateLimiter {
-    let requestCount = 0;
-    let resetTime = Date.now() + 60000; // 1 minute window
+export function createRateLimiter(
+    maxRequestsPerMinute = 60, 
+    delayBetweenRequests = 300,
+    maxConcurrency = 5
+): RateLimiter {
+    let tokens = maxRequestsPerMinute;
+    let lastRefill = Date.now();
+    const refillRate = 60000 / maxRequestsPerMinute; // ms per token
     
-    let queuePromise: Promise<void> = Promise.resolve();
+    let runningCount = 0;
+    const waitingQueue: (() => void)[] = [];
+    const tokenWaitingQueue: (() => void)[] = [];
+
+    /**
+     * Refills tokens based on elapsed time
+     */
+    const refill = () => {
+        const now = Date.now();
+        const elapsed = now - lastRefill;
+        if (elapsed >= refillRate) {
+            const newTokens = Math.floor(elapsed / refillRate);
+            tokens = Math.min(maxRequestsPerMinute, tokens + newTokens);
+            lastRefill = now - (elapsed % refillRate);
+            
+            // Wake up waiters if we have tokens
+            if (tokens > 0) {
+                while (tokenWaitingQueue.length > 0 && tokens > 0) {
+                    const resolve = tokenWaitingQueue.shift();
+                    if (resolve) resolve();
+                }
+            }
+        }
+    };
 
     /**
      * Checks if we're within rate limits and handles delays if needed
      */
-const checkLimit = async (): Promise<void> => {
-	// Chain promises to ensure sequential execution of the rate limit check
-	// even when called concurrently
-	await queuePromise;
-	const now = Date.now();
+    const checkLimit = async (): Promise<void> => {
+        // 1. Concurrency check
+        if (runningCount >= maxConcurrency) {
+            await new Promise<void>(resolve => waitingQueue.push(resolve));
+        }
+        
+        runningCount++;
 
-	// Reset counter if we're in a new time window
-	if (now > resetTime) {
-		resetTime = now + 60000;
-		requestCount = 0;
-	}
+        try {
+            refill();
+            
+            while (tokens <= 0) {
+                // Wait for a token
+                const now = Date.now();
+                const waitTime = refillRate - (now - lastRefill);
+                
+                // Set up a promise that resolves when tokens are refilled or manual reset occurs
+                let timeoutId: any;
+                const tokenPromise = new Promise<void>(resolve => {
+                    tokenWaitingQueue.push(resolve);
+                    timeoutId = setTimeout(() => {
+                        // Remove from queue if timeout hits first
+                        const index = tokenWaitingQueue.indexOf(resolve);
+                        if (index > -1) tokenWaitingQueue.splice(index, 1);
+                        resolve();
+                    }, Math.max(1, waitTime));
+                });
+                
+                await tokenPromise;
+                clearTimeout(timeoutId);
+                refill();
+            }
 
-	// If we've hit the rate limit, wait for the reset
-	if (requestCount >= maxRequestsPerMinute) {
-		const waitTime = resetTime - now;
-		console.warn(`Rate limit reached. Waiting ${waitTime}ms before next request.`);
-		await new Promise(resolve => setTimeout(resolve, waitTime));
-		// Reset after waiting
-		resetTime = Date.now() + 60000;
-		requestCount = 0;
-	} else if (requestCount > 0) {
-		// Standard delay between requests to be polite to the API
-		await new Promise(resolve => setTimeout(resolve, delayBetweenRequests));
-	}
-
-	// Increment counter after making a request
-	requestCount++;
-};
+            // Consume token
+            if (tokens > 0) {
+                tokens--;
+            }
+            
+            // Politeness delay to spread out requests
+            if (delayBetweenRequests > 0) {
+                const delay = delayBetweenRequests / maxConcurrency;
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        } catch (error) {
+            // Ensure we don't leak slots on error
+            runningCount--;
+            const next = waitingQueue.shift();
+            if (next) next();
+            throw error;
+        }
+    };
 
     /**
      * Resets the counter when hitting a rate limit
      */
     const resetCounter = (): void => {
-        resetTime = Date.now() + 60000;
-        requestCount = 0;
-console.warn('Rate limiter counter reset.');
-};
+        tokens = maxRequestsPerMinute;
+        lastRefill = Date.now();
+        console.warn('Rate limiter tokens refilled.');
+        
+        // Wake up all token waiters
+        while (tokenWaitingQueue.length > 0) {
+            const resolve = tokenWaitingQueue.shift();
+            if (resolve) resolve();
+        }
+    };
+
+    /**
+     * Releases a concurrency slot
+     */
+    const complete = (): void => {
+        if (runningCount > 0) {
+            runningCount--;
+            const next = waitingQueue.shift();
+            if (next) next();
+        }
+    };
     
-    return { checkLimit, resetCounter };
+    return { 
+        checkLimit, 
+        resetCounter,
+        complete
+    };
 }
 
 /**
@@ -213,26 +288,31 @@ export async function fetchWithRetry(
         rateLimiter = rateLimiterOrMaxRetries as RateLimiter;
     }
     
-// Try up to maxRetries times
-let attemptNumber = 0;
-// Intentional infinite loop for retry logic
-while (true) {
+    // Try up to maxRetries times
+    let attemptNumber = 0;
+    // Intentional infinite loop for retry logic
+    while (true) {
         const isLastAttempt = attemptNumber >= maxRetries - 1;
         
         try {
             // Check rate limit before making request
             await rateLimiter.checkLimit();
             
-            // Use Obsidian's request API for consistent behavior across platforms
-            const response = await request({
-                url: url,
-                method: requestOptions.method || 'GET',
-                headers: requestOptions.headers as Record<string, string>,
-                body: requestOptions.body as string | ArrayBuffer | undefined
-            });
-            
-            // Parse and return the response
-            return parseApiResponse(response);
+            try {
+                // Use Obsidian's request API for consistent behavior across platforms
+                const response = await request({
+                    url: url,
+                    method: requestOptions.method || 'GET',
+                    headers: requestOptions.headers as Record<string, string>,
+                    body: requestOptions.body as string | ArrayBuffer | undefined
+                });
+                
+                // Parse and return the response
+                return parseApiResponse(response);
+            } finally {
+                // Release concurrency slot
+                rateLimiter.complete();
+            }
             
         } catch (error) {
             // Handle rate limiting and retry logic
@@ -251,12 +331,12 @@ while (true) {
  * @param response - The raw API response
  * @returns The collection data or null if invalid response
  */
-export function extractCollectionData(response: unknown): unknown {
-    const data = response as { result?: boolean, item?: unknown };
+export function extractCollectionData(response: unknown): RaindropCollection | null {
+    const data = response as { result?: boolean, item?: RaindropCollection };
     const isValidResponse = data && data.result && data.item;
     
     if (isValidResponse) {
-        return data.item;
+        return data.item!;
     }
     
     console.error('Failed to fetch collection info:', response);

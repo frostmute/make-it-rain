@@ -39,76 +39,86 @@ describe('apiUtils', () => {
 
             expect(rateLimiter).toHaveProperty('checkLimit');
             expect(rateLimiter).toHaveProperty('resetCounter');
-            expect(typeof rateLimiter.checkLimit).toBe('function');
-            expect(typeof rateLimiter.resetCounter).toBe('function');
+            expect(rateLimiter).toHaveProperty('complete');
         });
 
-        it('should create a rate limiter with custom settings', () => {
-            const rateLimiter = createRateLimiter(120, 500);
+        it('should allow burst up to maxConcurrency without delay', async () => {
+            const rateLimiter = createRateLimiter(60, 0, 5);
 
-            expect(rateLimiter).toHaveProperty('checkLimit');
-            expect(rateLimiter).toHaveProperty('resetCounter');
+            // These should all resolve immediately
+            await rateLimiter.checkLimit();
+            await rateLimiter.checkLimit();
+            await rateLimiter.checkLimit();
+            await rateLimiter.checkLimit();
+            await rateLimiter.checkLimit();
         });
 
-        it('should delay between requests', async () => {
-            const rateLimiter = createRateLimiter(60, 300);
+        it('should delay between requests when over concurrency', async () => {
+            const rateLimiter = createRateLimiter(60, 0, 1);
             
             // First call should be immediate
             await rateLimiter.checkLimit();
 
-            // Second call should wait 300ms
+            // Second call should wait for complete
             const p2 = rateLimiter.checkLimit();
             
             // Should still be pending
             let resolved = false;
             p2.then(() => resolved = true);
-            await jest.advanceTimersByTimeAsync(200);
+            
+            // Resolve some time
+            await jest.advanceTimersByTimeAsync(100);
             expect(resolved).toBe(false);
 
-            // Should resolve after 300ms total
-            await jest.advanceTimersByTimeAsync(100);
+            // Complete first one
+            rateLimiter.complete();
+            
+            // Should resolve now
+            await jest.advanceTimersByTimeAsync(0);
             await p2;
             expect(resolved).toBe(true);
         });
 
-        it('should enforce rate limit', async () => {
-            const rateLimiter = createRateLimiter(2, 100);
+        it('should enforce rate limit based on tokens', async () => {
+            // 2 requests per minute = 30s refill rate
+            const rateLimiter = createRateLimiter(2, 0, 5);
             
-            await rateLimiter.checkLimit(); // 1 (immediate)
-            
-            const p2 = rateLimiter.checkLimit(); // 2 (waits 100ms)
-            await jest.advanceTimersByTimeAsync(100);
-            await p2;
+            await rateLimiter.checkLimit(); // 1
+            await rateLimiter.checkLimit(); // 2
             
             const p3 = rateLimiter.checkLimit(); // 3 - should hit limit
             
             let resolved = false;
             p3.then(() => resolved = true);
             
-            // Wait almost a minute
-            await jest.advanceTimersByTimeAsync(50000);
+            // Wait 20s
+            await jest.advanceTimersByTimeAsync(20000);
             expect(resolved).toBe(false);
             
-            // Wait until 1 minute window resets
-            await jest.advanceTimersByTimeAsync(10000);
+            // Wait another 11s (31s total)
+            await jest.advanceTimersByTimeAsync(11000);
             await p3;
             expect(resolved).toBe(true);
         });
 
         it('should reset counter when resetCounter is called', async () => {
-            const rateLimiter = createRateLimiter(1, 1000);
+            const rateLimiter = createRateLimiter(1, 0, 5);
             
-            await rateLimiter.checkLimit();
-            const p2 = rateLimiter.checkLimit();
+            await rateLimiter.checkLimit(); // Consume the only token
             
+            const p2 = rateLimiter.checkLimit(); // Should wait
+            let resolved = false;
+            p2.then(() => resolved = true);
+            
+            await jest.advanceTimersByTimeAsync(30000);
+            expect(resolved).toBe(false);
+
             rateLimiter.resetCounter();
             
-            // Even if reset, checkLimit might still wait if implementation doesn't check resetCount immediately in loop
-            // But our resetCounter just updates variables.
-            // The currently running checkLimit (if any) would be awaiting a timer.
-            
-            await jest.advanceTimersByTimeAsync(1000);
+            // Should resolve after reset
+            await jest.advanceTimersByTimeAsync(0);
             await p2;
+            expect(resolved).toBe(true);
         });
     });
 
@@ -192,8 +202,9 @@ describe('apiUtils', () => {
 
         beforeEach(() => {
             mockRateLimiter = {
-                checkLimit: jest.fn(),
-                resetCounter: jest.fn()
+                checkLimit: jest.fn().mockResolvedValue(undefined),
+                resetCounter: jest.fn(),
+                complete: jest.fn()
             };
         });
 
@@ -343,7 +354,8 @@ describe('apiUtils', () => {
         beforeEach(() => {
             mockRateLimiter = {
                 checkLimit: jest.fn().mockResolvedValue(undefined),
-                resetCounter: jest.fn()
+                resetCounter: jest.fn(),
+                complete: jest.fn()
             };
         });
 
