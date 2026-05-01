@@ -1,11 +1,10 @@
-import { App, Modal, Setting, TextComponent, ButtonComponent, Notice, ToggleComponent } from 'obsidian';
+import { App, Modal, Setting, TextComponent, ButtonComponent, Notice, ToggleComponent, TFolder, TFile, normalizePath } from 'obsidian';
 import type RaindropToObsidian from './main';
 import { 
     IRaindropToObsidian,
     RaindropCollection, 
     RaindropType, 
     TagMatchTypes, 
-    FilterTypes, 
     RaindropTypes, 
     ModalFetchOptions,
     AggregateHighlightsOptions
@@ -35,12 +34,25 @@ export class RaindropFetchModal extends Modal {
         this.vaultPath = plugin.settings.defaultFolder;
     }
 
+
     onOpen() {
         const { contentEl } = this;
         contentEl.empty();
         contentEl.addClass('make-it-rain-modal');
 
         new Setting(contentEl).setName('Fetch raindrops').setHeading();
+
+        this.buildFetchCriteriaSection(contentEl);
+        this.buildNoteOptionsSection(contentEl);
+        this.buildTemplateOptionsSection(contentEl);
+
+        contentEl.createEl('hr');
+
+        this.buildActionButtons(contentEl);
+    }
+
+    private buildFetchCriteriaSection(contentEl: HTMLElement) {
+        new Setting(contentEl).setName('Fetch criteria').setHeading();
 
         new Setting(contentEl)
             .setName('Vault save location (optional)')
@@ -193,7 +205,11 @@ export class RaindropFetchModal extends Modal {
                         this.filterType = value as RaindropType | 'all';
                     });
             });
+    }
 
+    private buildNoteOptionsSection(contentEl: HTMLElement) {
+        new Setting(contentEl).setName('Note options').setHeading();
+        
         const appendTagsSetting = new Setting(contentEl)
             .setName('Append tags to notes')
             .setDesc('Comma-separated tags to add to the frontmatter of each created note.')
@@ -270,8 +286,9 @@ export class RaindropFetchModal extends Modal {
                         }
                     });
             });
+    }
 
-        // --- Template Options Section ---
+    private buildTemplateOptionsSection(contentEl: HTMLElement) {
         if (this.plugin.settings.isTemplateSystemEnabled) {
             new Setting(contentEl).setName('Template overrides (optional)').setHeading();
             
@@ -305,7 +322,9 @@ export class RaindropFetchModal extends Modal {
                         });
                 });
         }
+    }
 
+    private buildActionButtons(contentEl: HTMLElement) {
         const buttonsEl = contentEl.createDiv({ cls: 'modal-button-container' });
         new ButtonComponent(buttonsEl)
             .setButtonText('Fetch raindrops')
@@ -517,4 +536,3 @@ export class HighlightsAggregateModal extends Modal {
         contentEl.empty();
     }
 }
-
