@@ -105,7 +105,7 @@ Installation → API Configuration → Test Import → Explore Settings
 ### Daily Workflow
 
 ```
-Add bookmarks in Raindrop.io → Run "Fetch Raindrops" → Organize in Obsidian
+Add bookmarks in raindrop.io → Run "Fetch raindrops (filtered)" → Organize in Obsidian
 ```
 
 [Learn about importing →](user-guide/usage.md)
