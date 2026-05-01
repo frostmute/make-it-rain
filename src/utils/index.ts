@@ -76,6 +76,4 @@ export {
 } from './formatUtils';
 
 // Re-export all security utilities
-export {
-    sanitizeMarkdownContent
-} from './securityUtils';
+export { sanitizeMarkdownContent } from './securityUtils';
