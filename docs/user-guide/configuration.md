@@ -25,56 +25,62 @@ This is the most important setting required for the plugin to function.
 
 ## General Settings
 
-### Default Raindrop Location
+### Default vault save location
 
-- **Setting**: Default Raindrop Location
-- **Description**: The default folder where your Raindrop bookmarks will be saved
+- **Setting**: Default vault save location
+- **Description**: The default folder where your raindrop bookmarks will be saved
 - **Format**: Path relative to your vault root (e.g., "Raindrops" or "References/Web")
-- **Note**: You can override this setting every time you fetch raindrops, giving you the flexibility to save them in different locations and keep them synchronized (or not) seperately from other collections.
+- **Note**: You can override this setting every time you fetch raindrops.
 
-### Filename Template
+### Filename template
 
-- **Setting**: Filename Template
+- **Setting**: Filename template
 - **Description**: Determines how filenames are generated for your notes
 - **Default**: `{{title}}`
 - **Variables**: You can use any variable available in the [template system](template-system.md#available-variables)
 - **Example**: `{{created:YYYY-MM-DD}}-{{title}}` would create files like "2025-05-16-Article Title.md"
-- **Note**: During the fetch process, a linting process will be performed to ensure that the filename is formatted correctly and does not contain any invalid characters, using the default Obsidian filename linting rules. This means that any invalid characters will be removed, changing the filename if necessary.
-- **Help**: A `(?)` help icon next to this setting in the plugin provides a direct link to this documentation section.
 
-### Show Ribbon Icon
+### Download files locally
 
-- **Setting**: Show Ribbon Icon
+- **Setting**: Download files locally
+- **Description**: If a raindrop is a document, image, video, or audio file, automatically download the raw file directly into your vault.
+- **Default**: Disabled
+
+### Create folder notes
+
+- **Setting**: Create folder notes
+- **Description**: Automatically generate an index note matching the name of each collection folder, listing its children.
+- **Default**: Disabled
+
+### Show ribbon icon
+
+- **Setting**: Show ribbon icon
 - **Description**: Toggles visibility of the Make It Rain icon in the Obsidian ribbon (left sidebar)
 - **Default**: Enabled
-- **Note**: Even when disabled, you can still access the plugin via the Command Palette
 
-### Banner Field Name
+### Banner field name
 
-- **Setting**: Banner Field Name
+- **Setting**: Banner field name
 - **Description**: Customizes the frontmatter field name used for the banner image
 - **Default**: `banner`
-- **Usage**: Some Obsidian themes and plugins look for specific banner/image field names in frontmatter. If you use a different theme or plugin that expects a different field name, you can customize it here. By default this field is populated with the cover image URL from Raindrop.io.
 
 ## Template System
 
-The template system allows you to customize how your Raindrop bookmarks are formatted in Obsidian notes.
+The template system allows you to customize how your raindrop bookmarks are formatted in Obsidian notes.
 
-### Enable Template System
+### Enable template system
 
-- **Setting**: Enable Template System
-- **Description**: Toggles the template system on/off. When enabled, the template editor sections below become active. The settings UI stacks descriptions above template text areas for easier editing.
+- **Setting**: Enable template system
+- **Description**: Toggles the template system on/off.
 - **Default**: Enabled
 
-### Default Template
+### Default template
 
-When the template system is enabled, you'll see a text editor for customizing the default template. You can easily revert to the original default template using the **"Reset to Default"** button next to the template editor in the settings.
+When the template system is enabled, you'll see a text editor for customizing the default template.
 
-For detailed information on the template system, including syntax, available variables, and examples, see the [Template System documentation](template-system.md).
+### Content-type templates
 
-### Content Type Templates
-
-You can create specific templates for different types of content. Each specific content-type template can also be individually reset to its original default using its own **"Reset"** button next to its editor in the settings.
+You can create specific templates for different types of content.
 
 - Link templates
 - Article templates
@@ -82,6 +88,7 @@ You can create specific templates for different types of content. Each specific 
 - Video templates
 - Document templates
 - Audio templates
+- Book templates
 
 ## Configuration Tips
 

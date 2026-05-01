@@ -100,6 +100,7 @@ export function formatYamlValue(value: unknown, indentLevel: number = 0, seen?: 
 
     const currentSeen = seen || new Set<unknown>();
     if (currentSeen.has(value)) {
+      // eslint-disable-next-line sentence-case/sentence-case -- Intentional title case for testing consistency
       return '"[Circular Reference]"';
     }
     currentSeen.add(value);
@@ -118,6 +119,7 @@ export function formatYamlValue(value: unknown, indentLevel: number = 0, seen?: 
 
     const currentSeen = seen || new Set<unknown>();
     if (currentSeen.has(value)) {
+      // eslint-disable-next-line sentence-case/sentence-case -- Intentional title case for testing consistency
       return '"[Circular Reference]"';
     }
     currentSeen.add(value);
