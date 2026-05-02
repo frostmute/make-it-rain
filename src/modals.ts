@@ -1,4 +1,4 @@
-import { App, Modal, Setting, TextComponent, ButtonComponent, Notice, ToggleComponent, TFolder, TFile, normalizePath } from 'obsidian';
+import { App, Modal, Setting, TextComponent, ButtonComponent, Notice, ToggleComponent, TFolder, TFile, normalizePath, DropdownComponent } from 'obsidian';
 import type RaindropToObsidian from './main';
 import { 
     IRaindropToObsidian,
@@ -169,7 +169,7 @@ export class RaindropFetchModal extends Modal {
         const tagMatchSetting = new Setting(contentEl)
             .setName('Tag match type')
             .setDesc("Choose 'all' for items with all specified tags, 'any' for items with any.")
-            .addDropdown(dropdown => {
+            .addDropdown((dropdown: DropdownComponent) => {
                 dropdown
                     .addOption(TagMatchTypes.ALL, 'Match all tags (and)')
                     .addOption(TagMatchTypes.ANY, 'Match any tag (or)')
@@ -190,7 +190,7 @@ export class RaindropFetchModal extends Modal {
         new Setting(contentEl)
             .setName('Filter by type')
             .setDesc('Select the type of raindrops to fetch.')
-            .addDropdown(dropdown => {
+            .addDropdown((dropdown: DropdownComponent) => {
                 dropdown
                     .addOption('all', 'All types')
                     .addOption(RaindropTypes.LINK, 'Link')
@@ -383,7 +383,7 @@ export class QuickImportModal extends Modal {
         new Setting(contentEl).setName('Quick import raindrop').setHeading();
 
         new Setting(contentEl)
-            .setName('The URL or ID.')
+            .setName('URL or ID')
             .setDesc(
                 'How to find: In the raindrop.io app, click "Edit" on the specific item (or look for a similar action that opens the item in a detailed/edit view). ' +
                 'The URL in your browser\'s address bar should look like ".../item/[ID]/edit" or similar. ' +
@@ -481,10 +481,10 @@ export class HighlightsAggregateModal extends Modal {
         contentEl.empty();
         contentEl.addClass('make-it-rain-modal');
 
-        contentEl.createEl('h2', { text: 'Aggregate Highlights by Tag' });
+        contentEl.createEl('h2', { text: 'Aggregate highlights by tag' });
 
         new Setting(contentEl)
-            .setName('Raindrop Tag')
+            .setName('Raindrop tag')
             .setDesc('Enter the tag to search for across all collections. All items with this tag that have highlights will be aggregated into a single note.')
             .setClass('setting-item-stacked')
             .addText((text: TextComponent) => {
@@ -493,24 +493,24 @@ export class HighlightsAggregateModal extends Modal {
                     .onChange((value: string) => {
                         this.tag = value.trim().replace(/^#/, ''); // Remove leading # if user typed it
                     });
-                text.inputEl.style.width = '100%';
+                text.inputEl.addClass('make-it-rain-full-width');
             });
 
         new Setting(contentEl)
-            .setName('Vault Save Location (Optional)')
+            .setName('Vault save location (optional)')
             .setDesc('Override default save folder for the aggregated note. Leave blank for default.')
             .addText((text: TextComponent) => {
-                text.setPlaceholder(this.plugin.settings.defaultFolder || 'Vault Root')
+                text.setPlaceholder(this.plugin.settings.defaultFolder || 'Vault root')
                     .setValue(this.vaultPath)
                     .onChange((value: string) => {
                         this.vaultPath = value.trim();
                     });
-                text.inputEl.style.width = '100%';
+                text.inputEl.addClass('make-it-rain-full-width');
             });
 
         const buttonsEl = contentEl.createDiv({ cls: 'modal-button-container' });
         new ButtonComponent(buttonsEl)
-            .setButtonText('Aggregate Highlights')
+            .setButtonText('Aggregate highlights')
             .setCta()
             .onClick(async () => {
                 if (!this.tag) {

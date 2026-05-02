@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting, TextComponent, ButtonComponent, Notice, request, ToggleComponent } from 'obsidian';
+import { App, PluginSettingTab, Setting, TextComponent, ButtonComponent, Notice, request, ToggleComponent, TextAreaComponent } from 'obsidian';
 import type RaindropToObsidian from './main';
 import { RaindropTypes } from './types';
 import { MakeItRainSettings } from './types';
@@ -454,7 +454,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
         new Setting(containerEl).setName('API').setHeading();
         const apiTokenSetting = new Setting(containerEl)
             .setName('Raindrop.io API token')
-            .setDesc('Create a test token in your Raindrop.io integrationsettings.')
+            .setDesc('Create a test token in your Raindrop.io integration settings.')
             .addText((text: TextComponent) => {
                 text.setPlaceholder('Enter your API token')
                     .setValue(this.plugin.settings.apiToken)
@@ -589,10 +589,10 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
             new Setting(containerEl)
                 .setDesc('This template is used if no content-type specific template is active or defined below.')
                 .setClass('setting-item-stacked') // Added class
-                .addTextArea((text) => {
+                .addTextArea((text: TextAreaComponent) => {
                     text.setPlaceholder('Enter your default handlebars template here. Visit the documentation for available variables.')
                         .setValue(this.plugin.settings.defaultTemplate)
-                        .onChange(async (value) => {
+                        .onChange(async (value: string) => {
                             this.plugin.settings.defaultTemplate = value;
                             await this.plugin.saveSettings();
                         });
@@ -600,7 +600,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                     text.inputEl.addClass('make-it-rain-full-width');
                     text.inputEl.addClass('make-it-rain-monospace');
                 })
-                .addButton((button) => {
+                .addButton((button: ButtonComponent) => {
                     button
                         .setButtonText("Reset to default")
                         .setIcon("undo") // Using 'undo' icon
@@ -628,10 +628,10 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                 new Setting(containerEl)
                     .setName(`Enable ${typeStr} template`)
                     .setDesc(`Use a custom template for "${typeStr}" items.`)
-                    .addToggle((toggle) => {
+                    .addToggle((toggle: ToggleComponent) => {
                         toggle
                             .setValue(this.plugin.settings.contentTypeTemplateToggles[typeKey])
-                            .onChange(async (value) => {
+                            .onChange(async (value: boolean) => {
                                 this.plugin.settings.contentTypeTemplateToggles[typeKey] = value;
                                 await this.plugin.saveSettings();
                                 this.display(); // Refresh to show/hide textarea
@@ -642,10 +642,10 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                     new Setting(containerEl)
                         .setDesc(`Template for "${typeStr}" content. Leave empty to use the default template.`)
                         .setClass('setting-item-stacked') // Added class
-                        .addTextArea((text) => {
+                        .addTextArea((text: TextAreaComponent) => {
                             text.setPlaceholder(`Enter template for ${typeStr} items...`)
                                 .setValue(this.plugin.settings.contentTypeTemplates[typeKey])
-                                .onChange(async (value) => {
+                                .onChange(async (value: string) => {
                                     this.plugin.settings.contentTypeTemplates[typeKey] = value;
                                     await this.plugin.saveSettings();
                                 });
@@ -653,7 +653,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                             text.inputEl.addClass('make-it-rain-full-width');
                             text.inputEl.addClass('make-it-rain-monospace');
                         })
-                        .addButton((button) => { // Add Reset Button for specific type
+                        .addButton((button: ButtonComponent) => { // Add Reset Button for specific type
                             button
                                 .setButtonText("Reset") 
                                 .setIcon("undo")
