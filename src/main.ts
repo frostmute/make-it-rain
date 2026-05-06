@@ -642,27 +642,27 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         }
     }
 
-    private readonly IF_REGEX = /{{#if ([^}]+)}}([\s\S]*?)(?:{{else}}([\s\S]*?))?{{\/if}}/g;
-    private readonly EACH_REGEX = /{{#each ([^}]+)}}([\s\S]*?){{\/each}}/g;
-    private readonly VAR_REGEX = /{{([^}]+)}}/g;
-
     private renderTemplate(template: string, data: Record<string, unknown>): string {
         const renderBlock = (blockContent: string, context: Record<string, unknown>): string => {
+            const IF_REGEX = /{{#if ([^}]+)}}([\s\S]*?)(?:{{else}}([\s\S]*?))?{{\/if}}/g;
+            const EACH_REGEX = /{{#each ([^}]+)}}([\s\S]*?){{\/each}}/g;
+            const VAR_REGEX = /{{([^}]+)}}/g;
+
             return blockContent
-                .replace(this.IF_REGEX, (_, cond, content, elseContent) => {
+                .replace(IF_REGEX, (_, cond, content, elseContent) => {
                     const value = this.getNestedProperty(context, cond.trim());
                     return (value && (Array.isArray(value) ? value.length > 0 : !!value)) ? renderBlock(content, context) : (elseContent ? renderBlock(elseContent, context) : '');
                 })
-                .replace(this.EACH_REGEX, (_, arrayVar, content) => {
+                .replace(EACH_REGEX, (_, arrayVar, content) => {
                     const array = this.getNestedProperty(context, arrayVar.trim());
                     return Array.isArray(array) ? array.map(item => renderBlock(content, typeof item === 'object' && item !== null ? { ...context, ...item } as Record<string, unknown> : { ...context, 'this': item } as Record<string, unknown>)).join('') : '';
                 })
-                .replace(this.VAR_REGEX, (_, key) => {
+                .replace(VAR_REGEX, (_, key) => {
                     const value = this.getNestedProperty(context, key.trim());
                     return typeof value === 'object' && value !== null ? formatYamlValue(value) : (value !== null && value !== undefined ? String(value) : '');
                 });
         };
-        return renderBlock(template, { ...data, domain: getDomain(data.link as string || ''), updated: data.lastupdate || '' });
+        return renderBlock(template, { ...data, id: data._id, domain: getDomain(data.link as string || ''), updated: data.lastupdate || '' });
     }
 
     private getNestedProperty(obj: Record<string, unknown>, path: string): unknown {
