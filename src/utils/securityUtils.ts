@@ -13,7 +13,8 @@
 export function sanitizeMarkdownContent(content: unknown): string {
     if (typeof content !== 'string') {
         if (content === null || content === undefined) return '';
-        return typeof content === 'object' ? JSON.stringify(content) : String(content);
+        if (typeof content === 'object') return JSON.stringify(content);
+        return String(content);
     }
 
     let sanitized = content;

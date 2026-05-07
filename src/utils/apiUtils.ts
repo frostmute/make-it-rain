@@ -1,6 +1,6 @@
 import { App, request } from 'obsidian';
 import { sanitizeFileName } from './fileUtils';
-import { RaindropCollection, RaindropType } from '../types';
+import { RaindropCollection } from '../types';
 
 
 /**

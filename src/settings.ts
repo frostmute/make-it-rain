@@ -451,7 +451,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
         containerEl.empty();
 
         // --- API Configuration Section ---
-        new Setting(containerEl).setName('API').setHeading();
+        new Setting(containerEl).setName('API configuration').setHeading();
         const apiTokenSetting = new Setting(containerEl)
             .setName('Raindrop.io API token')
             .setDesc('Create a test token in your Raindrop.io integration settings.')
@@ -483,7 +483,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
         apiTokenHelpLink.setAttr('target', '_blank');
 
         // --- Import settings Section ---
-        new Setting(containerEl).setName('Import').setHeading();
+        new Setting(containerEl).setName('Import settings').setHeading();
 
         new Setting(containerEl)
             .setName('Default vault save location')
@@ -523,7 +523,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
             .setName('Banner frontmatter field name')
             .setDesc('Customize the frontmatter field name for the banner/cover image (default: banner).')
             .addText((text: TextComponent) => {
-                text.setPlaceholder('Banner')
+                text.setPlaceholder('banner')
                     .setValue(this.plugin.settings.bannerFieldName)
                     .onChange(async (value: string) => {
                         this.plugin.settings.bannerFieldName = value;
@@ -571,7 +571,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
         containerEl.createEl('hr');
 
         // --- Template system Section ---
-        new Setting(containerEl).setName('Templates').setHeading();
+        new Setting(containerEl).setName('Template settings').setHeading();
         new Setting(containerEl)
             .setName('Enable template system')
             .setDesc('Use custom templates for formatting imported notes. If disabled, a basic note structure will be used.')

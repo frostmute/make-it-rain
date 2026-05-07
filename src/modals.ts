@@ -1,4 +1,4 @@
-import { App, Modal, Setting, TextComponent, ButtonComponent, Notice, ToggleComponent, TFolder, TFile, normalizePath, DropdownComponent } from 'obsidian';
+import { App, Modal, Setting, TextComponent, ButtonComponent, Notice, ToggleComponent, DropdownComponent } from 'obsidian';
 import type RaindropToObsidian from './main';
 import { 
     IRaindropToObsidian,

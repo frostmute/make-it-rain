@@ -125,7 +125,7 @@ export function formatYamlValue(value: unknown, indentLevel: number = 0, seen?: 
     currentSeen.add(value);
 
     const formattedKeys = keys.map((key) => {
-      const formattedValue = formatYamlValue(value[key as keyof typeof value], indentLevel + 1, currentSeen);
+      const formattedValue = formatYamlValue(value[key], indentLevel + 1, currentSeen);
       return formattedValue.startsWith("\n")
         ? `${indent}${key}:${formattedValue}`
         : `${indent}${key}: ${formattedValue}`;
