@@ -49,6 +49,7 @@ Import exactly what you need with granular filtering options.
 - **Quick import** by URL or ID for individual items
 - **Dynamic collection selector** - browse and select from your Raindrop account
 - **Tag filtering** with AND/OR logic
+- **Aggregate highlights by tag** - Consolidate highlights from across your vault into a single summary note
 - **Content type filtering** (links, articles, images, videos, documents, audio, books)
 - **Selective sync** - fetch only new items or update existing notes
 
@@ -68,7 +69,7 @@ Your imported notes organize themselves based on your Raindrop structure.
 
 Built to handle large Raindrop libraries with confidence.
 
-- **Smart rate limiting** (configurable, default 60 requests/minute) with automatic retries
+- **Smart rate limiting** (default 60 requests/minute) with automatic retries
 - **Modular architecture** - Improved reliability with dedicated collection fetching logic
 - **Enhanced tag handling** - Automatic tag sanitization and appending from settings
 - **Safe by default** - prevents accidental overwrites
@@ -230,6 +231,13 @@ For complete details, see the [Note Structure documentation](https://frostmute.g
 3. Paste the raindrop URL or id
 4. Click **Import**
 
+### Aggregate highlights by tag
+
+1. Open Command Palette
+2. Run **"Aggregate highlights by tag"**
+3. Enter the tag to aggregate highlights for
+4. Click **Aggregate**
+
 ### Use different templates for different import types
 
 1. Open **"Fetch raindrops (filtered)"** modal
@@ -323,8 +331,11 @@ We welcome contributions from the community! Whether you're fixing bugs, adding 
 # Install dependencies
 npm install
 
-# Run in development mode
+# Run in development mode (watches and deploys to configured vaults)
 npm run dev
+
+# Scan for secrets
+npm run scan-secrets
 
 # Run tests
 npm test
