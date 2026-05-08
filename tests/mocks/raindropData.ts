@@ -142,6 +142,122 @@ export const mockRaindropMinimal = {
     type: 'link' as RaindropType
 };
 
+export const mockRaindropBrokenUrl = {
+    _id: 12353,
+    title: 'Broken URL Bookmark',
+    link: 'not-a-url',
+    created: '2024-02-10T10:00:00Z',
+    lastUpdate: '2024-02-10T10:00:00Z',
+    type: 'link' as RaindropType
+};
+
+export const mockRaindropEmptyMetadata = {
+    _id: 12354,
+    title: '',
+    excerpt: '',
+    note: '',
+    link: 'https://example.com/empty',
+    created: '2024-02-11T11:00:00Z',
+    lastUpdate: '2024-02-11T11:00:00Z',
+    type: 'link' as RaindropType
+};
+
+export const mockRaindropMassiveDescription = {
+    _id: 12355,
+    title: 'Massive Description',
+    excerpt: 'A'.repeat(10000),
+    note: 'B'.repeat(10000),
+    link: 'https://example.com/massive',
+    created: '2024-02-12T12:00:00Z',
+    lastUpdate: '2024-02-12T12:00:00Z',
+    type: 'article' as RaindropType
+};
+
+export const mockRaindropNestedTags = {
+    _id: 12356,
+    title: 'Nested Tags',
+    link: 'https://example.com/nested',
+    created: '2024-02-13T13:00:00Z',
+    lastUpdate: '2024-02-13T13:00:00Z',
+    tags: ['parent/child', 'level1/level2/level3'],
+    type: 'link' as RaindropType
+};
+
+export const mockRaindropInvalidTitle = {
+    _id: 12357,
+    title: 'Invalid / Filename \\ Characters : * ? " < > |',
+    link: 'https://example.com/invalid-title',
+    created: '2024-02-14T14:00:00Z',
+    lastUpdate: '2024-02-14T14:00:00Z',
+    type: 'link' as RaindropType
+};
+
+export const mockRaindropMissingCollection = {
+    _id: 12358,
+    title: 'No Collection',
+    link: 'https://example.com/no-collection',
+    created: '2024-02-15T15:00:00Z',
+    lastUpdate: '2024-02-15T15:00:00Z',
+    type: 'link' as RaindropType
+    // collection field omitted
+};
+
+export const mockRaindropNoTags = {
+    _id: 12359,
+    title: 'No Tags Array',
+    link: 'https://example.com/no-tags',
+    created: '2024-02-16T16:00:00Z',
+    lastUpdate: '2024-02-16T16:00:00Z',
+    type: 'link' as RaindropType
+};
+
+export const mockRaindropEmptyHighlights = {
+    _id: 12360,
+    title: 'Empty Highlights',
+    link: 'https://example.com/empty-highlights',
+    created: '2024-02-17T17:00:00Z',
+    lastUpdate: '2024-02-17T17:00:00Z',
+    highlights: [],
+    type: 'article' as RaindropType
+};
+
+export const mockRaindropHighlightNoText = {
+    _id: 12361,
+    title: 'Highlight No Text',
+    link: 'https://example.com/highlight-no-text',
+    created: '2024-02-18T18:00:00Z',
+    lastUpdate: '2024-02-18T18:00:00Z',
+    highlights: [
+        {
+            text: '',
+            note: 'Note with no text',
+            created: '2024-02-18T18:05:00Z'
+        }
+    ],
+    type: 'article' as RaindropType
+};
+
+export const mockRaindropLongTags = {
+    _id: 12362,
+    title: 'Long Tags',
+    link: 'https://example.com/long-tags',
+    created: '2024-02-19T19:00:00Z',
+    lastUpdate: '2024-02-19T19:00:00Z',
+    tags: ['T'.repeat(150), 'another-very-long-tag-that-goes-on-and-on-and-on-and-on-and-on'],
+    type: 'link' as RaindropType
+};
+
+export const mockRaindropUnicode = {
+    _id: 12363,
+    title: 'Unicode & Emojis 🚀 🦀 漢字 日本語',
+    excerpt: 'Mixed content: 🌟✨ sparkle, 💻 code, 🍱 food',
+    link: 'https://example.com/unicode',
+    created: '2024-02-20T20:00:00Z',
+    lastUpdate: '2024-02-20T20:00:00Z',
+    tags: ['🚀', '🦀', '漢字'],
+    type: 'link' as RaindropType
+};
+
 /**
  * Mock Collections
  */

@@ -1,6 +1,6 @@
 import { App, request } from 'obsidian';
 import { sanitizeFileName } from './fileUtils';
-import { RaindropCollection, RaindropType } from '../types';
+import { RaindropCollection } from '../types';
 
 
 /**
@@ -96,7 +96,7 @@ export function createRateLimiter(
                 const waitTime = refillRate - (now - lastRefill);
                 
                 // Set up a promise that resolves when tokens are refilled or manual reset occurs
-                let timeoutId: any;
+                let timeoutId: ReturnType<typeof setTimeout> | undefined;
                 const tokenPromise = new Promise<void>(resolve => {
                     tokenWaitingQueue.push(resolve);
                     timeoutId = setTimeout(() => {
@@ -106,11 +106,10 @@ export function createRateLimiter(
                         resolve();
                     }, Math.max(1, waitTime));
                 });
-                
+
                 await tokenPromise;
-                clearTimeout(timeoutId);
-                refill();
-            }
+                if (timeoutId) clearTimeout(timeoutId);
+                refill();            }
 
             // Consume token
             if (tokens > 0) {
@@ -258,14 +257,14 @@ export async function handleRequestError(
  * @param delayBetweenRetries - Delay between retry attempts in milliseconds
  * @returns The parsed API response
  */
-export async function fetchWithRetry(
+export async function fetchWithRetry<T = unknown>(
     appOrUrl: App | string, 
     urlOrOptions: string | RequestInit, 
     optionsOrRateLimiter?: RequestInit | RateLimiter,
     rateLimiterOrMaxRetries?: RateLimiter | number,
     maxRetries: number = 3,
     delayBetweenRetries: number = 1000
-): Promise<unknown> {
+): Promise<T> {
     // Normalize parameters to handle both calling patterns
     let url: string;
     let requestOptions: RequestInit;
@@ -308,7 +307,7 @@ export async function fetchWithRetry(
                 });
                 
                 // Parse and return the response
-                return parseApiResponse(response);
+                return parseApiResponse(response) as T;
             } finally {
                 // Release concurrency slot
                 rateLimiter.complete();

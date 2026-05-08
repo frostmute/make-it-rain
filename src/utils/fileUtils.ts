@@ -61,7 +61,7 @@ export async function createFolder(app: App, path: string): Promise<boolean> {
         await app.vault.createFolder(path);
         return true;
     } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorMessage = error instanceof Error ? error.message : (typeof error === 'object' && error !== null ? JSON.stringify(error) : String(error));
         throw new Error(`Failed to create folder at ${path}: ${errorMessage}`);
     }
 }
@@ -128,7 +128,7 @@ export async function createFolderStructure(app: App, fullPath: string): Promise
         
         return true;
     } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorMessage = error instanceof Error ? error.message : (typeof error === 'object' && error !== null ? JSON.stringify(error) : String(error));
         throw new Error(`Failed to create/verify folder: ${fullPath}. Error: ${errorMessage}.`);
     }
 }

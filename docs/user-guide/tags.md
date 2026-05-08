@@ -73,44 +73,18 @@ Filter imports by tags using:
 
 - **Tag Patterns**: `work*`, `*research`
 - **Tag Groups**: `(work|personal)`
-- **Tag Combinations**: `work+research|personal`
+### Tag Combinations: `work+research|personal`
 
-## Tag Customization
+## Tag Consolidation
 
-### Tag Transformation
+### Aggregate Highlights by Tag
 
-Customize how tags are processed:
+The **Aggregate Highlights by Tag** feature allows you to gather all highlights from notes that share a specific tag into a single document. This is particularly useful for synthesizing research across multiple sources.
 
-```typescript
-interface TagOptions {
-    prefix: string;          // Add prefix to all tags
-    suffix: string;          // Add suffix to all tags
-    transform: (tag: string) => string;  // Custom transformation
-    filter: (tag: string) => boolean;    // Filter tags
-}
-```
-
-### Tag Mapping
-
-Map Raindrop tags to Obsidian tags:
-
-```typescript
-interface TagMapping {
-    'to read': 'status/to_read';
-    'in progress': 'status/in_progress';
-    'done': 'status/done';
-}
-```
-
-### Tag Templates
-
-Use tags in templates:
-
-```handlebars
-{{#if tags}}
-Tags: {{formatTags tags}}
-{{/if}}
-```
+1. Open the Command Palette (`Ctrl/Cmd+P`).
+2. Run **"Aggregate highlights by tag"**.
+3. Enter the tag name (e.g., `research`).
+4. A new note `Highlights for research.md` will be created with all extracted highlights.
 
 ## Best Practices
 
@@ -201,106 +175,3 @@ Tags: {{formatTags tags}}
    - Check syntax
    - Test patterns
    - Verify logic
-
-## Advanced Features
-
-### Tag Analytics
-
-- Tag usage statistics
-- Popular tags
-- Tag relationships
-
-### Tag Automation
-
-- Automatic tagging
-- Tag suggestions
-- Tag cleanup
-
-### Tag Integration
-
-- Other plugins
-- External tools
-- Custom scripts
-
-## API Reference
-
-### Tag Properties
-
-```typescript
-interface Tag {
-    name: string;
-    count: number;
-    type?: string;
-}
-```
-
-### Tag Options
-
-```typescript
-interface TagOptions {
-    prefix?: string;
-    suffix?: string;
-    transform?: (tag: string) => string;
-    filter?: (tag: string) => boolean;
-    mapping?: Record<string, string>;
-}
-```
-
-### Filter Options
-
-```typescript
-interface TagFilterOptions {
-    tags: string[];
-    logic: 'AND' | 'OR';
-    exclude: string[];
-    patterns: string[];
-}
-```
-
-## Examples
-
-### Basic Tag Import
-
-```yaml
----
-title: My Bookmark
-tags:
-  - work
-  - research
-  - to_read
----
-```
-
-### Tag Filtering
-
-```typescript
-// AND Logic
-const andFilter = 'work+research';
-
-// OR Logic
-const orFilter = 'work|research';
-
-// Complex Filter
-const complexFilter = '(work|personal)+research';
-```
-
-### Tag Mapping
-
-```typescript
-const tagMapping = {
-    'to read': 'status/to_read',
-    'in progress': 'status/in_progress',
-    'done': 'status/done'
-};
-```
-
-### Tag Templates
-
-```handlebars
-{{#if tags}}
-## Tags
-{{#each tags}}
-- [[{{this}}]]
-{{/each}}
-{{/if}}
-```

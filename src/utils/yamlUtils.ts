@@ -125,7 +125,7 @@ export function formatYamlValue(value: unknown, indentLevel: number = 0, seen?: 
     currentSeen.add(value);
 
     const formattedKeys = keys.map((key) => {
-      const formattedValue = formatYamlValue(value[key as keyof typeof value], indentLevel + 1, currentSeen);
+      const formattedValue = formatYamlValue(value[key], indentLevel + 1, currentSeen);
       return formattedValue.startsWith("\n")
         ? `${indent}${key}:${formattedValue}`
         : `${indent}${key}: ${formattedValue}`;
@@ -138,7 +138,7 @@ export function formatYamlValue(value: unknown, indentLevel: number = 0, seen?: 
   try {
     return JSON.stringify(value);
   } catch (error) {
-    console.error("Error formatting YAML value:", error instanceof Error ? error.message : String(error));
+    console.error("Error formatting YAML value:", error instanceof Error ? error.message : (typeof error === 'object' && error !== null ? JSON.stringify(error) : String(error)));
     return `"Error formatting value"`;
   }
 }
@@ -181,7 +181,7 @@ export function createYamlFrontmatter(data: Record<string, unknown>): string {
     frontmatter += "---\n\n";
     return frontmatter;
   } catch (error) {
-    console.error("Error creating YAML frontmatter:", error instanceof Error ? error.message : String(error));
+    console.error("Error creating YAML frontmatter:", error instanceof Error ? error.message : (typeof error === 'object' && error !== null ? JSON.stringify(error) : String(error)));
     new Notice("Error creating note frontmatter. Check console for details.");
     return '---\ntitle: "Error creating frontmatter"\n---\n\n';
   }

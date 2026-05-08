@@ -19,6 +19,8 @@ Make It Rain provides two main ways to import your bookmarks, each with its own 
     * Access via **Ribbon Icon**: Click the raindrop icon in the left sidebar (if enabled in plugin settings).
 2. **Quick import raindrop by url/id (for single item imports)**:
     * Access via **Command Palette**: Press `Ctrl+P` (or `Cmd+P` on Mac) and search for "Make It Rain: Quick import raindrop by url/id".
+3. **Aggregate highlights by tag (for consolidating research)**:
+    * Access via **Command Palette**: Press `Ctrl+P` (or `Cmd+P` on Mac) and search for "Make It Rain: Aggregate highlights by tag".
 
 ## Fetch Raindrops Modal Options
 
@@ -121,6 +123,31 @@ A simplified modal will appear with the following options:
 
 1. Click the **Import** button in the quick import modal.
 2. The plugin will fetch the specified raindrop item and create a note for it based on your template settings.
+
+## Aggregate Highlights by Tag
+
+This command is designed for researchers and heavy highlight users who want to consolidate all highlights from bookmarks sharing a specific tag into a single summary note.
+
+### Accessing Aggregate Highlights
+
+1. Open the Obsidian **Command Palette** (`Ctrl+P` or `Cmd+P` on Mac).
+2. Search for and select the command: **"Aggregate highlights by tag"**.
+
+### Aggregation Options
+
+A modal will appear with the following options:
+
+* **Tag to aggregate**:
+  * Enter the exact tag name you want to collect highlights for.
+* **Vault save location (optional)**:
+  * Specify where to save the generated summary note. Defaults to the plugin's default save folder.
+
+### Aggregation Process
+
+1. Click the **Aggregate** button.
+2. The plugin will scan your vault for notes containing the specified tag.
+3. It extracts all highlights (and associated notes) from these files.
+4. It generates a single new note titled `Highlights for [Tag].md` containing the consolidated list.
 
 ## Understanding the Results
 

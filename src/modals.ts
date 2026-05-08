@@ -1,4 +1,4 @@
-import { App, Modal, Setting, TextComponent, ButtonComponent, Notice, ToggleComponent, TFolder, TFile, normalizePath } from 'obsidian';
+import { App, Modal, Setting, TextComponent, ButtonComponent, Notice, ToggleComponent, DropdownComponent } from 'obsidian';
 import type RaindropToObsidian from './main';
 import { 
     IRaindropToObsidian,
@@ -169,7 +169,7 @@ export class RaindropFetchModal extends Modal {
         const tagMatchSetting = new Setting(contentEl)
             .setName('Tag match type')
             .setDesc("Choose 'all' for items with all specified tags, 'any' for items with any.")
-            .addDropdown(dropdown => {
+            .addDropdown((dropdown: DropdownComponent) => {
                 dropdown
                     .addOption(TagMatchTypes.ALL, 'Match all tags (and)')
                     .addOption(TagMatchTypes.ANY, 'Match any tag (or)')
@@ -190,7 +190,7 @@ export class RaindropFetchModal extends Modal {
         new Setting(contentEl)
             .setName('Filter by type')
             .setDesc('Select the type of raindrops to fetch.')
-            .addDropdown(dropdown => {
+            .addDropdown((dropdown: DropdownComponent) => {
                 dropdown
                     .addOption('all', 'All types')
                     .addOption(RaindropTypes.LINK, 'Link')
@@ -383,7 +383,7 @@ export class QuickImportModal extends Modal {
         new Setting(contentEl).setName('Quick import raindrop').setHeading();
 
         new Setting(contentEl)
-            .setName('The URL or ID.')
+            .setName('URL or ID')
             .setDesc(
                 'How to find: In the raindrop.io app, click "Edit" on the specific item (or look for a similar action that opens the item in a detailed/edit view). ' +
                 'The URL in your browser\'s address bar should look like ".../item/[ID]/edit" or similar. ' +
@@ -493,7 +493,7 @@ export class HighlightsAggregateModal extends Modal {
                     .onChange((value: string) => {
                         this.tag = value.trim().replace(/^#/, ''); // Remove leading # if user typed it
                     });
-                text.inputEl.style.width = '100%';
+                text.inputEl.addClass('make-it-rain-full-width');
             });
 
         new Setting(contentEl)
@@ -505,7 +505,7 @@ export class HighlightsAggregateModal extends Modal {
                     .onChange((value: string) => {
                         this.vaultPath = value.trim();
                     });
-                text.inputEl.style.width = '100%';
+                text.inputEl.addClass('make-it-rain-full-width');
             });
 
         const buttonsEl = contentEl.createDiv({ cls: 'modal-button-container' });

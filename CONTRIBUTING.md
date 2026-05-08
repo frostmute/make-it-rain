@@ -229,6 +229,9 @@ npm run test:watch
 # Generate coverage report
 npm run test:coverage
 
+# Scan for secrets
+npm run scan-secrets
+
 # Type check
 npm run type-check
 
@@ -644,7 +647,7 @@ git clone https://github.com/YOUR_USERNAME/make-it-rain.git
 cd make-it-rain
 npm install
 
-# Start development
+# Start development (watches and deploys to configured vaults)
 npm run dev
 
 # Run tests
@@ -655,7 +658,7 @@ npm test
 
 ```bash
 # Development
-npm run dev              # Watch and rebuild on changes
+npm run dev              # Watch and rebuild on changes (auto-deploys to vaults)
 npm run build            # Build for production
 npm run build:clean      # Clean build
 
@@ -667,7 +670,8 @@ npm run test:coverage    # Generate coverage report
 # Quality
 npm run type-check       # TypeScript type checking
 npm run lint:md          # Lint markdown documentation
-
+npm run scan-secrets     # Scan for secrets in the codebase
+```
 # Documentation
 npm run docs:build       # Build documentation site
 npm run docs:serve       # Serve docs locally

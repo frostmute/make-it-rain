@@ -7,7 +7,7 @@
  * to promote code reuse and maintainability.
  */
 
-import { App, Notice, Plugin, PluginManifest, TFile, TFolder, normalizePath } from 'obsidian';
+import { App, Notice, Plugin, PluginManifest, TFile, TFolder, TAbstractFile, normalizePath } from 'obsidian';
 import { 
     MakeItRainSettings, 
     RaindropType, 
@@ -47,7 +47,11 @@ import {
     formatDate,
     formatTags,
     getDomain,
-    raindropType
+    raindropType,
+    toUppercase,
+    toLowercase,
+    toTitleCase,
+    truncateString
 } from './utils';
 
 // System collection IDs from raindrop.io API docs
@@ -102,7 +106,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         this.addCommand({
             id: 'aggregate-highlights-by-tag',
             name: 'Aggregate highlights by tag',
-            callback: async () => {
+            callback: () => {
                 new HighlightsAggregateModal(this.app, this).open();
             }
         });
@@ -316,8 +320,8 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                         const collectionNameForNotice = collectionIdToNameMap.get(collectionId) || collectionId.toString();
                         loadingNotice.setMessage(`Fetching from collection: ${collectionNameForNotice}, page ${page + 1}...`);
 
-                        const response = await fetchWithRetry(this.app, currentApiUrl, fetchOptions, this.rateLimiter);
-                        const data = response as RaindropResponse;
+                        const response = await fetchWithRetry<RaindropResponse>(this.app, currentApiUrl, fetchOptions, this.rateLimiter);
+                        const data = response;
 
                         if (!data.result) {
                             new Notice(`Error fetching collection: ${collectionNameForNotice}. Skipping.`, 7000);
@@ -353,8 +357,8 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                             const currentApiUrl = `${baseApiUrl}/raindrops/0?${params.toString()}`;
                             loadingNotice.setMessage(`Fetching items with tag: ${tag}, page ${page + 1}...`);
 
-                            const response = await fetchWithRetry(this.app, currentApiUrl, fetchOptions, this.rateLimiter);
-                            const data = response as RaindropResponse;
+                            const response = await fetchWithRetry<RaindropResponse>(this.app, currentApiUrl, fetchOptions, this.rateLimiter);
+                            const data = response;
 
                             if (!data.result) break;
                             if (data?.items) {
@@ -380,8 +384,8 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                         const currentApiUrl = `${baseApiUrl}/raindrops/0?${params.toString()}`;
                         loadingNotice.setMessage(`Fetching items with tags: ${searchParameterString}, page ${page + 1}...`);
 
-                        const response = await fetchWithRetry(this.app, currentApiUrl, fetchOptions, this.rateLimiter);
-                        const data = response as RaindropResponse;
+                        const response = await fetchWithRetry<RaindropResponse>(this.app, currentApiUrl, fetchOptions, this.rateLimiter);
+                        const data = response;
 
                         if (!data.result) throw new Error(`API Error: ${JSON.stringify(data)}`);
                         if (data?.items) {
@@ -403,8 +407,8 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     const currentApiUrl = `${baseApiUrl}/raindrops/0?${params.toString()}`;
                     loadingNotice.setMessage(`Fetching all items, page ${page + 1}...`);
 
-                    const response = await fetchWithRetry(this.app, currentApiUrl, fetchOptions, this.rateLimiter);
-                    const data = response as RaindropResponse;
+                    const response = await fetchWithRetry<RaindropResponse>(this.app, currentApiUrl, fetchOptions, this.rateLimiter);
+                    const data = response;
 
                     if (!data.result) throw new Error(`API Error: ${JSON.stringify(data)}`);
                     if (data?.items) {
@@ -435,7 +439,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             }
         } catch (error) {
             loadingNotice.hide();
-            const errorMessage = error instanceof Error ? error.message : String(error);
+            const errorMessage = error instanceof Error ? error.message : (typeof error === 'object' && error !== null ? JSON.stringify(error) : String(error));
             new Notice(`Error fetching raindrops: ${errorMessage}`, 10000);
             console.error('Error fetching raindrop API:', error);
         }
@@ -505,9 +509,9 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     if (abstractFile instanceof TFolder) {
                         let content = `---\ntitle: "${folderName.replace(/"/g, '\\"')}"\ntype: collection\n---\n\n# ${folderName}\n\n## Collection Contents\n\n`;
                         const listItems = abstractFile.children
-                            .filter(child => child.name !== `${folderName}.md`)
-                            .sort((a, b) => a.name.localeCompare(b.name))
-                            .map(child => `- [[${child.name.replace('.md', '')}]]\n`);
+                            .filter((child: TAbstractFile) => child.name !== `${folderName}.md`)
+                            .sort((a: TAbstractFile, b: TAbstractFile) => a.name.localeCompare(b.name))
+                            .map((child: TAbstractFile) => `- [[${child.name.replace('.md', '')}]]\n`);
                         content += listItems.join('');
                         if (await app.vault.adapter.exists(folderNotePath)) await app.vault.adapter.write(folderNotePath, content);
                         else await app.vault.create(folderNotePath, content);
@@ -642,27 +646,50 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         }
     }
 
-    private readonly IF_REGEX = /{{#if ([^}]+)}}([\s\S]*?)(?:{{else}}([\s\S]*?))?{{\/if}}/g;
-    private readonly EACH_REGEX = /{{#each ([^}]+)}}([\s\S]*?){{\/each}}/g;
-    private readonly VAR_REGEX = /{{([^}]+)}}/g;
-
     private renderTemplate(template: string, data: Record<string, unknown>): string {
         const renderBlock = (blockContent: string, context: Record<string, unknown>): string => {
+            const IF_REGEX = /{{#if ([^}]+)}}([\s\S]*?)(?:{{else}}([\s\S]*?))?{{\/if}}/g;
+            const EACH_REGEX = /{{#each ([^}]+)}}([\s\S]*?){{\/each}}/g;
+            const VAR_REGEX = /{{([^}]+)}}/g;
+
             return blockContent
-                .replace(this.IF_REGEX, (_, cond, content, elseContent) => {
+                .replace(IF_REGEX, (_, cond, content, elseContent) => {
                     const value = this.getNestedProperty(context, cond.trim());
                     return (value && (Array.isArray(value) ? value.length > 0 : !!value)) ? renderBlock(content, context) : (elseContent ? renderBlock(elseContent, context) : '');
                 })
-                .replace(this.EACH_REGEX, (_, arrayVar, content) => {
+                .replace(EACH_REGEX, (_, arrayVar, content) => {
                     const array = this.getNestedProperty(context, arrayVar.trim());
                     return Array.isArray(array) ? array.map(item => renderBlock(content, typeof item === 'object' && item !== null ? { ...context, ...item } as Record<string, unknown> : { ...context, 'this': item } as Record<string, unknown>)).join('') : '';
                 })
-                .replace(this.VAR_REGEX, (_, key) => {
-                    const value = this.getNestedProperty(context, key.trim());
-                    return typeof value === 'object' && value !== null ? formatYamlValue(value) : (value !== null && value !== undefined ? String(value) : '');
+                .replace(VAR_REGEX, (_, key) => {
+                    const trimmedKey = key.trim();
+                    const parts = trimmedKey.split(/\s+/);
+
+                    if (parts.length >= 2) {
+                        const helper = parts[0].toLowerCase();
+                        const varName = parts[1];
+                        const value = this.getNestedProperty(context, varName);
+
+                        if (value !== undefined && value !== null) {
+                            const strValue = String(value);
+                            switch (helper) {
+                                case 'uppercase': return toUppercase(strValue);
+                                case 'lowercase': return toLowercase(strValue);
+                                case 'titlecase': return toTitleCase(strValue);
+                                case 'truncate':
+                                    const length = parseInt(parts[2], 10);
+                                    return !isNaN(length) ? truncateString(strValue, length) : strValue;
+                            }
+                        }
+                    }
+
+                    const value = this.getNestedProperty(context, trimmedKey);
+                    if (value === null || value === undefined) return '';
+                    if (typeof value === 'object') return formatYamlValue(value);
+                    return String(value);
                 });
         };
-        return renderBlock(template, { ...data, domain: getDomain(data.link as string || ''), updated: data.lastupdate || '' });
+        return renderBlock(template, { ...data, id: data._id, domain: getDomain(data.link as string || ''), updated: data.lastupdate || '' });
     }
 
     private getNestedProperty(obj: Record<string, unknown>, path: string): unknown {
@@ -679,10 +706,10 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
 
         try {
             const [rootRes, nestedRes] = await Promise.all([
-                fetchWithRetry(this.app, `${baseApiUrl}/collections`, fetchOptions, this.rateLimiter),
-                fetchWithRetry(this.app, `${baseApiUrl}/collections/childrens`, fetchOptions, this.rateLimiter)
+                fetchWithRetry<CollectionResponse>(this.app, `${baseApiUrl}/collections`, fetchOptions, this.rateLimiter),
+                fetchWithRetry<CollectionResponse>(this.app, `${baseApiUrl}/collections/childrens`, fetchOptions, this.rateLimiter)
             ]);
-            const allCollections = [...((rootRes as CollectionResponse).items || []), ...((nestedRes as CollectionResponse).items || [])];
+            const allCollections = [...(rootRes.items || []), ...(nestedRes.items || [])];
             const uniqueCollections = Array.from(new Map(allCollections.map(col => [col._id, col])).values())
                                           .filter(col => col._id !== SystemCollections.TRASH && col._id !== SystemCollections.UNSORTED);
             this.collectionCache = uniqueCollections;
@@ -709,8 +736,8 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         const fetchOptions: RequestInit = { method: 'GET', headers: { 'Authorization': `Bearer ${this.settings.apiToken}` } };
 
         try {
-            const response = await fetchWithRetry(this.app, `${baseApiUrl}/raindrop/${itemId}`, fetchOptions, this.rateLimiter);
-            const data = response as { result: boolean, item?: RaindropItem, items?: RaindropItem[], errorMessage?: string };
+            const response = await fetchWithRetry<{ result: boolean, item?: RaindropItem, items?: RaindropItem[], errorMessage?: string }>(this.app, `${baseApiUrl}/raindrop/${itemId}`, fetchOptions, this.rateLimiter);
+            const data = response;
             const raindropItem = data.item || (data.items && data.items[0]);
             
             if (!raindropItem) {
@@ -747,7 +774,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             await this.processRaindrops([raindropItem], vaultPath, appendTags || '', singleItemOptions.useRaindropTitleForFileName, loadingNotice, singleItemOptions, collectionsData, collectionIdToNameMap);
         } catch (error) {
             loadingNotice.hide();
-            new Notice(`Error during quick import of item ${itemId}: ${error instanceof Error ? error.message : String(error)}`, 10000);
+            new Notice(`Error during quick import of item ${itemId}: ${error instanceof Error ? error.message : (typeof error === 'object' && error !== null ? JSON.stringify(error) : String(error))}`, 10000);
         }
     }
 
@@ -785,15 +812,15 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 });
 
                 const apiUrl = `${baseApiUrl}/raindrops/0?${searchParams.toString()}`;
-                const response = await fetchWithRetry(this.app, apiUrl, fetchOptions, this.rateLimiter);
-                const data = response as RaindropResponse;
+                const response = await fetchWithRetry<RaindropResponse>(this.app, apiUrl, fetchOptions, this.rateLimiter);
+                const data = response;
 
                 if (!data.result) {
                     throw new Error('Raindrop API returned an error.');
                 }
 
                 if (data.items && data.items.length > 0) {
-                    allItems = allItems.concat(data.items as RaindropItem[]);
+                    allItems = allItems.concat(data.items);
                     hasMore = data.items.length === perPage;
                     page++;
                 } else {
