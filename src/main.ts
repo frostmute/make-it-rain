@@ -101,7 +101,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
 
         this.addCommand({
             id: 'aggregate-highlights-by-tag',
-            name: 'Aggregate Highlights by Tag',
+            name: 'Aggregate highlights by tag',
             callback: async () => {
                 new HighlightsAggregateModal(this.app, this).open();
             }
@@ -130,7 +130,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     ...this.settings.contentTypeTemplates,
                     ...Object.keys(savedData.contentTypeTemplates || {}).reduce((acc, key) => {
                         const value = (savedData.contentTypeTemplates as Record<string, string>)[key];
-                        acc[key] = (value as string).trim() === '' ? this.settings.contentTypeTemplates[key as RaindropType] : value;
+                        acc[key] = value.trim() === '' ? this.settings.contentTypeTemplates[key as RaindropType] : value;
                         return acc;
                     }, {} as Record<string, string>)
                 },

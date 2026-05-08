@@ -74,7 +74,7 @@ export class RaindropFetchModal extends Modal {
             .setClass('setting-item-stacked') // Added class
             .addText((text: TextComponent) => {
                 collectionsTextComponent = text; // Store reference to update it later
-                text.setPlaceholder('my collection')
+                text.setPlaceholder('My collection')
                     .setValue(this.collections)
                     .onChange((value: string) => {
                         this.collections = value;
@@ -158,7 +158,7 @@ export class RaindropFetchModal extends Modal {
             .setDesc('Comma-separated raindrop tag names.')
             .setClass('setting-item-stacked') // Added class
             .addText((text: TextComponent) => {
-                text.setPlaceholder('obsidian')
+                text.setPlaceholder('Obsidian')
                     .setValue(this.apiFilterTags)
                     .onChange((value: string) => {
                         this.apiFilterTags = value;
@@ -221,7 +221,7 @@ export class RaindropFetchModal extends Modal {
         });
 
         appendTagsSetting.addText((text: TextComponent) => {
-            text.setPlaceholder('my tag')
+            text.setPlaceholder('My tag')
                     .setValue(this.appendTagsToNotes)
                 .onChange((value: string) => {
                     this.appendTagsToNotes = value;
@@ -245,7 +245,7 @@ export class RaindropFetchModal extends Modal {
         });
 
         new Setting(contentEl)
-            .setName('Use raindrop title for filename')
+            .setName('Use Raindrop title for filename')
             .setDesc('Use the title from Raindrop.io as the filename. If disabled, the raindrop ID will be used.')
             .addToggle((toggle: ToggleComponent) => {
                 toggle.setValue(this.useRaindropTitleForFileName)
@@ -481,14 +481,14 @@ export class HighlightsAggregateModal extends Modal {
         contentEl.empty();
         contentEl.addClass('make-it-rain-modal');
 
-        contentEl.createEl('h2', { text: 'Aggregate Highlights by Tag' });
+        contentEl.createEl('h2', { text: 'Aggregate highlights by tag' });
 
         new Setting(contentEl)
-            .setName('Raindrop Tag')
+            .setName('Raindrop tag')
             .setDesc('Enter the tag to search for across all collections. All items with this tag that have highlights will be aggregated into a single note.')
             .setClass('setting-item-stacked')
             .addText((text: TextComponent) => {
-                text.setPlaceholder('e.g., research, productivity')
+                text.setPlaceholder('E.g., research, productivity')
                     .setValue(this.tag)
                     .onChange((value: string) => {
                         this.tag = value.trim().replace(/^#/, ''); // Remove leading # if user typed it
@@ -497,10 +497,10 @@ export class HighlightsAggregateModal extends Modal {
             });
 
         new Setting(contentEl)
-            .setName('Vault Save Location (Optional)')
+            .setName('Vault save location (optional)')
             .setDesc('Override default save folder for the aggregated note. Leave blank for default.')
             .addText((text: TextComponent) => {
-                text.setPlaceholder(this.plugin.settings.defaultFolder || 'Vault Root')
+                text.setPlaceholder(this.plugin.settings.defaultFolder || 'Vault root')
                     .setValue(this.vaultPath)
                     .onChange((value: string) => {
                         this.vaultPath = value.trim();
@@ -510,7 +510,7 @@ export class HighlightsAggregateModal extends Modal {
 
         const buttonsEl = contentEl.createDiv({ cls: 'modal-button-container' });
         new ButtonComponent(buttonsEl)
-            .setButtonText('Aggregate Highlights')
+            .setButtonText('Aggregate highlights')
             .setCta()
             .onClick(async () => {
                 if (!this.tag) {

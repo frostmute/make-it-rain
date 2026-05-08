@@ -49,7 +49,7 @@ describe('securityUtils', () => {
             expect(sanitizeMarkdownContent(null)).toBe('');
             expect(sanitizeMarkdownContent(undefined)).toBe('');
             expect(sanitizeMarkdownContent(123)).toBe('123');
-            expect(sanitizeMarkdownContent({})).toBe('[object Object]');
+            expect(sanitizeMarkdownContent({})).toBe('{}');
         });
     });
 });

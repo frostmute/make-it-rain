@@ -454,7 +454,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
         new Setting(containerEl).setName('API').setHeading();
         const apiTokenSetting = new Setting(containerEl)
             .setName('Raindrop.io API token')
-            .setDesc('Create a test token in your Raindrop.io integrationsettings.')
+            .setDesc('Create a test token in your Raindrop.io integration settings.')
             .addText((text: TextComponent) => {
                 text.setPlaceholder('Enter your API token')
                     .setValue(this.plugin.settings.apiToken)
@@ -500,7 +500,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
 
         const fileNameTemplateSetting = new Setting(containerEl)
             .setName('Filename template')
-            .setDesc('Define the filename for notes when "use raindrop title" is enabled. Placeholders: {{title}}, {{id}}, {{collectionTitle}}, {{date}} (YYYY-MM-DD).')
+            .setDesc('Define the filename for notes when "use Raindrop title" is enabled. Placeholders: {{title}}, {{id}}, {{collectionTitle}}, {{date}} (YYYY-MM-DD).')
             .addText((text: TextComponent) => {
                 text.setPlaceholder('{{title}}')
                     .setValue(this.plugin.settings.fileNameTemplate)
