@@ -51,3 +51,20 @@ export function raindropType(type: string): string {
 export function escapeRegExp(str: string): string {
     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
+
+export function toUppercase(str: string): string {
+    return str.toUpperCase();
+}
+
+export function toLowercase(str: string): string {
+    return str.toLowerCase();
+}
+
+export function toTitleCase(str: string): string {
+    return str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+}
+
+export function truncateString(str: string, length: number): string {
+    if (str.length <= length) return str;
+    return str.slice(0, length) + '...';
+}

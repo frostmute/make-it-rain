@@ -47,7 +47,11 @@ import {
     formatDate,
     formatTags,
     getDomain,
-    raindropType
+    raindropType,
+    toUppercase,
+    toLowercase,
+    toTitleCase,
+    truncateString
 } from './utils';
 
 // System collection IDs from raindrop.io API docs
@@ -658,7 +662,28 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     return Array.isArray(array) ? array.map(item => renderBlock(content, typeof item === 'object' && item !== null ? { ...context, ...item } as Record<string, unknown> : { ...context, 'this': item } as Record<string, unknown>)).join('') : '';
                 })
                 .replace(VAR_REGEX, (_, key) => {
-                    const value = this.getNestedProperty(context, key.trim());
+                    const trimmedKey = key.trim();
+                    const parts = trimmedKey.split(/\s+/);
+
+                    if (parts.length >= 2) {
+                        const helper = parts[0].toLowerCase();
+                        const varName = parts[1];
+                        const value = this.getNestedProperty(context, varName);
+
+                        if (value !== undefined && value !== null) {
+                            const strValue = String(value);
+                            switch (helper) {
+                                case 'uppercase': return toUppercase(strValue);
+                                case 'lowercase': return toLowercase(strValue);
+                                case 'titlecase': return toTitleCase(strValue);
+                                case 'truncate':
+                                    const length = parseInt(parts[2], 10);
+                                    return !isNaN(length) ? truncateString(strValue, length) : strValue;
+                            }
+                        }
+                    }
+
+                    const value = this.getNestedProperty(context, trimmedKey);
                     if (value === null || value === undefined) return '';
                     if (typeof value === 'object') return formatYamlValue(value);
                     return String(value);

@@ -72,7 +72,11 @@ export {
     formatTags,
     getDomain,
     raindropType,
-    escapeRegExp
+    escapeRegExp,
+    toUppercase,
+    toLowercase,
+    toTitleCase,
+    truncateString
 } from './formatUtils';
 
 // Re-export all security utilities
