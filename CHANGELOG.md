@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Raindrop Group Hierarchy Support**: The plugin now integrates Raindrop.io sidebar "Groups" into the collection hierarchy.
+- **New Template Variable**: Added `{{collectionGroup}}` to access the name of the top-level sidebar Group a collection belongs to.
+- **Improved Path Construction**: The `{{collectionPath}}` variable now includes the sidebar Group name as the root of the path (e.g., `GROUP / Parent / Child`), enabling better vault organization that mirrors the Raindrop sidebar.
+- **Group Caching**: Implemented efficient caching for Raindrop Groups to ensure fast performance and minimal API impact.
+
+### Fixed
+
+- Fixed a TypeScript error in `securityUtils.ts` related to undefined variable names during build.
+
 ## [1.9.0] - 2026-04-22
 
 ### Changed

@@ -4,7 +4,9 @@ This document provides a collection of pre-built templates for various use cases
 
 **Key Changes to Note (Recent Updates):**
 
-- Collection data is now flattened: use `{{collectionId}}`, `{{collectionTitle}}`, `{{collectionPath}}`, and `{{#if collectionParentId}}{{collectionParentId}}{{/if}}` instead of `{{collection.id}}`, etc.
+- Collection data is now flattened: use `{{collectionId}}`, `{{collectionTitle}}`, `{{collectionPath}}`, `{{collectionGroup}}`, and `{{#if collectionParentId}}{{collectionParentId}}{{/if}}` instead of `{{collection.id}}`, etc.
+- `{{collectionPath}}` now includes the sidebar Group name as the root (e.g., `Work / Research / My Collection`).
+- `{{collectionGroup}}` provides the name of the top-level Group directly.
 - The last update field is now `{{lastupdate}}` (previously `last_update` or `lastUpdate`).
 - Helper functions like `formatDate` or `raindropType` are now pre-calculated variables: `{{formattedCreatedDate}}`, `{{formattedUpdatedDate}}`, `{{renderedType}}`, `{{domain}}`, `{{formattedTags}}`.
 
@@ -43,6 +45,7 @@ id: {{id}}
 collectionId: {{collectionId}}
 collectionTitle: "{{collectionTitle}}"
 collectionPath: "{{collectionPath}}"
+{{#if collectionGroup}}collectionGroup: "{{collectionGroup}}"{{/if}}
 {{#if collectionParentId}}collectionParentId: {{collectionParentId}}{{/if}}
 {{#if tags}}tags:
 {{#each tags}}  - {{this}}
@@ -92,6 +95,7 @@ id: {{id}}
 collectionId: {{collectionId}}
 collectionTitle: "{{collectionTitle}}"
 collectionPath: "{{collectionPath}}"
+{{#if collectionGroup}}collectionGroup: "{{collectionGroup}}"{{/if}}
 {{#if collectionParentId}}collectionParentId: {{collectionParentId}}{{/if}}
 {{#if tags}}tags:
 {{#each tags}}  - {{this}}
@@ -151,6 +155,7 @@ lastupdate: {{lastupdate}}
 collectionId: {{collectionId}}
 collectionTitle: "{{collectionTitle}}"
 collectionPath: "{{collectionPath}}"
+{{#if collectionGroup}}collectionGroup: "{{collectionGroup}}"{{/if}}
 {{#if collectionParentId}}collectionParentId: {{collectionParentId}}{{/if}}
 status: to-read # Example custom status
 {{#if tags}}keywords:
@@ -210,6 +215,7 @@ lastupdate: {{lastupdate}}
 collectionId: {{collectionId}}
 collectionTitle: "{{collectionTitle}}"
 collectionPath: "{{collectionPath}}"
+{{#if collectionGroup}}collectionGroup: "{{collectionGroup}}"{{/if}}
 {{#if collectionParentId}}collectionParentId: {{collectionParentId}}{{/if}}
 area: # Placeholder for research area
 {{#if tags}}themes:
@@ -263,6 +269,7 @@ lastupdate: {{lastupdate}}
 collectionId: {{collectionId}}
 collectionTitle: "{{collectionTitle}}"
 collectionPath: "{{collectionPath}}"
+{{#if collectionGroup}}collectionGroup: "{{collectionGroup}}"{{/if}}
 {{#if collectionParentId}}collectionParentId: {{collectionParentId}}{{/if}}
 project: # Placeholder for project name
 status: reference
@@ -314,6 +321,7 @@ lastupdate: {{lastupdate}}
 collectionId: {{collectionId}}
 collectionTitle: "{{collectionTitle}}"
 collectionPath: "{{collectionPath}}"
+{{#if collectionGroup}}collectionGroup: "{{collectionGroup}}"{{/if}}
 {{#if collectionParentId}}collectionParentId: {{collectionParentId}}{{/if}}
 task_id: # Placeholder for related task ID
 actionable: true
@@ -359,6 +367,7 @@ lastupdate: {{lastupdate}}
 collectionId: {{collectionId}}
 collectionTitle: "{{collectionTitle}}"
 collectionPath: "{{collectionPath}}"
+{{#if collectionGroup}}collectionGroup: "{{collectionGroup}}"{{/if}}
 {{#if collectionParentId}}collectionParentId: {{collectionParentId}}{{/if}}
 watched: false # Example custom status
 {{#if tags}}video_tags:
@@ -414,6 +423,7 @@ lastupdate: {{lastupdate}}
 collectionId: {{collectionId}}
 collectionTitle: "{{collectionTitle}}"
 collectionPath: "{{collectionPath}}"
+{{#if collectionGroup}}collectionGroup: "{{collectionGroup}}"{{/if}}
 {{#if collectionParentId}}collectionParentId: {{collectionParentId}}{{/if}}
 {{#if tags}}tags:
 {{#each tags}}  - {{this}}
@@ -456,6 +466,7 @@ lastupdate: {{lastupdate}}
 collectionId: {{collectionId}}
 collectionTitle: "{{collectionTitle}}"
 collectionPath: "{{collectionPath}}"
+{{#if collectionGroup}}collectionGroup: "{{collectionGroup}}"{{/if}}
 {{#if collectionParentId}}collectionParentId: {{collectionParentId}}{{/if}}
 course: # Placeholder for course name
 module: # Placeholder for module/topic
