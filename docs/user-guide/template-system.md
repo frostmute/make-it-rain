@@ -74,7 +74,7 @@ String values marked with `(YAML-escaped)` are pre-processed to be safe for dire
 | `type`               | `string`                 | The raw Raindrop type (e.g., `link`, `article`, `image`, `video`, `document`, `audio`).                      | `{{type}}`                                |
 | `collectionId`       | `number`                 | ID of the Raindrop\'s collection.                                                                          | `{{collectionId}}`                        |
 | `collectionTitle`    | `string (YAML-escaped)`  | Title of the Raindrop\'s collection.                                                                       | `\"{{collectionTitle}}\"`                 |
-| `collectionPath`     | `string (YAML-escaped)`  | Full path of the collection, including parent folders and top-level Group (e.g., `CORE KNOWLEDGE / Work/Projects`). | `\"{{collectionPath}}\"`                  |
+| `collectionPath`     | `string (YAML-escaped)`  | Full path of the collection, including parent folders and top-level Group (e.g., `CORE KNOWLEDGE/Work/Projects`). | `\"{{collectionPath}}\"`                  |
 | `collectionGroup`    | `string`                 | The top-level Raindrop.io Group name that the collection belongs to.                                        | `\"{{collectionGroup}}\"`                 |
 | `collectionParentId` | `number`                 | ID of the parent collection, if it exists. Use `{{#if collectionParentId}}...{{/if}}` to check.         | `{{collectionParentId}}`                  |
 | `tags`               | `string[] (YAML-escaped)`| Array of tag strings. Each tag string is individually pre-escaped for YAML.                              | `{{#each tags}}- {{this}}{{/each}}`       |

@@ -48,7 +48,8 @@ interface Collection {
     id: number;
     title: string;
     parent_id?: number;
-    path: string;
+    group?: string; // Top-level sidebar Group name
+    path: string; // Full path including Group
     count: number;
     created: string;
     updated: string;

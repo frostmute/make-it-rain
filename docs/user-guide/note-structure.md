@@ -18,6 +18,7 @@ lastupdate: 2023-10-28T10:20:00Z
 collectionId: 98765
 collectionTitle: "My Collection"
 collectionPath: "Research/My Collection"
+collectionGroup: "CORE KNOWLEDGE"
 collectionParentId: 12345 # Only if a parent exists
 tags:
   - example-tag
@@ -52,7 +53,8 @@ These are notes added to the raindrop in Raindrop.io
 - `lastupdate`: Last update timestamp (ISO 8601).
 - `collectionId`: ID of the collection.
 - `collectionTitle`: Title of the collection (double quotes escaped).
-- `collectionPath`: Full path of the collection (double quotes escaped).
+- `collectionPath`: Full path of the collection including the Group name (double quotes escaped).
+- `collectionGroup`: The name of the top-level Raindrop Group (e.g. "Work", "Personal").
 - `collectionParentId`: (Optional) ID of the parent collection.
 - `tags`: List of tags from Raindrop.io (spaces replaced with `_`, special chars removed).
 - The field name for `banner` (e.g., `banner:`, `cover:`) is taken from your plugin settings.
@@ -78,6 +80,7 @@ id: {{id}}
 collectionId: {{collectionId}}
 collectionTitle: "{{collectionTitle}}"
 collectionPath: "{{collectionPath}}"
+{{#if collectionGroup}}collectionGroup: "{{collectionGroup}}"{{/if}}
 {{#if collectionParentId}}collectionParentId: {{collectionParentId}}{{/if}}
 {{#if tags}}tags:
 {{#each tags}}  - {{this}}
@@ -130,7 +133,8 @@ When using the default template (or any custom template based on it), the follow
 - `lastupdate: {{lastupdate}}` (**Required for updates**)
 - `collectionId: {{collectionId}}`
 - `collectionTitle: "{{collectionTitle}}"`
-- `collectionPath: "{{collectionPath}}"`
+- `collectionPath: "{{collectionPath}}"` (Now includes Group name as root)
+- `collectionGroup: "{{collectionGroup}}"` (The name of the top-level Group)
 - `collectionParentId: {{collectionParentId}}` (Conditional, if parent exists)
 - `tags:` (Iterated using `{{#each tags}}`)
 - `{{bannerFieldName}}: {{cover}}` (Conditional, if cover exists; `bannerFieldName` is from settings)
