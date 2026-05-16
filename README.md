@@ -186,6 +186,7 @@ lastupdate: 2024-01-16T14:20:00Z
 id: 123456789
 collectionTitle: "Web Development"
 collectionPath: "Learning/Web Development"
+collectionGroup: "CORE KNOWLEDGE"
 tags:
   - react
   - javascript
