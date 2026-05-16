@@ -110,6 +110,7 @@ export interface TemplateData {
     collectionTitle: string;
     collectionPath: string;
     collectionParentId?: number;
+    collectionGroup?: string;
     tags: string[];
     highlights: {
         text: string;
@@ -170,7 +171,13 @@ export interface IRaindropToObsidian {
     saveSettings(): Promise<void>;
     updateRibbonIcon(): void;
     fetchAllUserCollections(): Promise<RaindropCollection[]>;
+    fetchUserGroups(): Promise<RaindropGroup[]>;
     fetchSingleRaindrop(itemId: number, vaultPath?: string, appendTags?: string): Promise<void>;
+}
+
+export interface RaindropGroup {
+    title: string;
+    collections: number[];
 }
 
 export type RaindropHighlight = {

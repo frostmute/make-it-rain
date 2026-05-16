@@ -15,6 +15,7 @@ import {
     RaindropItem, 
     RaindropResponse, 
     RaindropCollection, 
+    RaindropGroup,
     CollectionResponse, 
     IRaindropToObsidian,
     TagMatchTypes,
@@ -75,7 +76,9 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
     private rateLimiter: RateLimiter;
     private ribbonIconEl: HTMLElement | undefined;
     private collectionCache: RaindropCollection[] | null = null;
+    private groupCache: RaindropGroup[] | null = null;
     private lastCollectionFetch: number = 0;
+    private lastGroupFetch: number = 0;
     private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache
 
     constructor(app: App, manifest: PluginManifest) {
@@ -243,9 +246,13 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             const collectionNameToIdMap = new Map<string, number>();
             const collectionIdToNameMap = new Map<number, string>();
             const collectionHierarchy = new Map<number, { title: string, parentId?: number }>();
+            const collectionToGroupMap = new Map<number, string>();
 
-            loadingNotice.setMessage('Fetching collections hierarchy...');
-            const allCollections = await this.fetchAllUserCollections();
+            loadingNotice.setMessage('Fetching collections hierarchy and groups...');
+            const [allCollections, allGroups] = await Promise.all([
+                this.fetchAllUserCollections(),
+                this.fetchUserGroups()
+            ]);
 
             if (allCollections.length === 0) {
                 loadingNotice.hide();
@@ -256,6 +263,13 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 collectionNameToIdMap.set(col.title.toLowerCase(), col._id);
                 collectionIdToNameMap.set(col._id, col.title);
                 collectionHierarchy.set(col._id, { title: col.title, parentId: col.parent?.$id });
+            });
+
+            // Map root collections to their groups
+            allGroups.forEach(group => {
+                group.collections.forEach(colId => {
+                    collectionToGroupMap.set(colId, group.title);
+                });
             });
 
             if (options.collections) {
@@ -435,7 +449,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     }
                 }
                 const collectionsData: CollectionResponse = { result: true, items: allCollections };
-                await this.processRaindrops(filteredData, options.vaultPath, options.appendTagsToNotes, options.useRaindropTitleForFileName, loadingNotice, options, collectionsData, collectionIdToNameMap);
+                await this.processRaindrops(filteredData, options.vaultPath, options.appendTagsToNotes, options.useRaindropTitleForFileName, loadingNotice, options, collectionsData, collectionIdToNameMap, new Set<string>(), collectionToGroupMap);
             }
         } catch (error) {
             loadingNotice.hide();
@@ -454,7 +468,8 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         options: ModalFetchOptions,
         collectionsData?: CollectionResponse,
         collectionIdToNameMap: Map<number, string> = new Map<number, string>(),
-        verifiedFolderPaths: Set<string> = new Set<string>()
+        verifiedFolderPaths: Set<string> = new Set<string>(),
+        collectionToGroupMap: Map<number, string> = new Map<number, string>()
     ): Promise<void> {
         const { app } = this;
         const settingsFMTags = appendTagsToNotes.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag !== '');
@@ -480,7 +495,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 const raindrop = raindrops[processed++];
                 if (!raindrop) break;
                 try {
-                    const result = await this.processRaindrop(raindrop, baseTargetFolderPath, settingsFMTags, options, loadingNotice, processed, total, collectionHierarchy, collectionIdToNameMap, verifiedFolderPaths, pendingFolderCreations);
+                    const result = await this.processRaindrop(raindrop, baseTargetFolderPath, settingsFMTags, options, loadingNotice, processed, total, collectionHierarchy, collectionIdToNameMap, verifiedFolderPaths, pendingFolderCreations, collectionToGroupMap);
                     if (result.success) {
                         if (result.type === 'created') createdCount++;
                         else if (result.type === 'updated') updatedCount++;
@@ -539,16 +554,38 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         collectionHierarchy: Map<number, { title: string, parentId?: number }>,
         collectionIdToNameMap: Map<number, string>,
         verifiedFolderPaths: Set<string>,
-        pendingFolderCreations: Map<string, Promise<boolean>>
+        pendingFolderCreations: Map<string, Promise<boolean>>,
+        collectionToGroupMap: Map<number, string> = new Map<number, string>()
     ): Promise<{ success: boolean; type: 'created' | 'updated' | 'skipped' }> {
         try {
             const { app } = this;
             const generatedFilename = this.generateFileName(raindrop, options.useRaindropTitleForFileName);
-            let targetPath = baseTargetFolderPath;
+            
+            let pathSegments: string[] = [];
+            let groupTitle: string | undefined;
+
             if (raindrop.collection?.$id) {
-                const segments = getFullPathSegments(raindrop.collection.$id, collectionHierarchy, collectionIdToNameMap);
-                if (segments.length > 0) targetPath = normalizePath(`${baseTargetFolderPath}/${segments.join('/')}`);
+                pathSegments = getFullPathSegments(raindrop.collection.$id, collectionHierarchy, collectionIdToNameMap);
+                
+                // Find root collection to get group
+                let rootCollectionId: number | undefined = raindrop.collection.$id;
+                if (rootCollectionId !== 0 && rootCollectionId !== -1) {
+                    let parent = collectionHierarchy.get(rootCollectionId);
+                    while (parent && parent.parentId !== undefined && parent.parentId !== 0 && parent.parentId !== -1) {
+                        rootCollectionId = parent.parentId;
+                        parent = collectionHierarchy.get(rootCollectionId);
+                    }
+                    groupTitle = collectionToGroupMap.get(rootCollectionId);
+                }
             }
+
+            if (groupTitle) {
+                pathSegments.unshift(sanitizeFileName(groupTitle));
+            }
+
+            const targetPath = pathSegments.length > 0 
+                ? normalizePath(`${baseTargetFolderPath}/${pathSegments.join('/')}`) 
+                : baseTargetFolderPath;
 
             if (targetPath && !verifiedFolderPaths.has(targetPath)) {
                 if (pendingFolderCreations.has(targetPath)) {
@@ -585,7 +622,8 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 type: raindrop.type,
                 collectionId: raindrop.collection?.$id || 0,
                 collectionTitle: escapeYamlString(collectionIdToNameMap.get(raindrop.collection?.$id || 0) || 'Unknown'),
-                collectionPath: escapeYamlString(getFullPathSegments(raindrop.collection?.$id || 0, collectionHierarchy, collectionIdToNameMap).join('/')),
+                collectionPath: escapeYamlString(pathSegments.join('/')),
+                collectionGroup: groupTitle || '',
                 tags: [...(raindrop.tags || []), ...settingsFMTags].map(tag => escapeYamlString(tag)),
                 highlights: (raindrop.highlights || []).map(h => ({
                     text: escapeYamlString(h.text),
@@ -696,6 +734,25 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         return path.split('.').reduce((current: unknown, prop: string) => (current && typeof current === 'object' && prop in current) ? (current as Record<string, unknown>)[prop] : undefined, obj);
     }
 
+    async fetchUserGroups(): Promise<RaindropGroup[]> {
+        const now = Date.now();
+        if (this.groupCache && (now - this.lastGroupFetch < this.CACHE_TTL)) return this.groupCache;
+        if (!this.settings.apiToken) return [];
+
+        const baseApiUrl = 'https://api.raindrop.io/rest/v1';
+        const fetchOptions: RequestInit = { method: 'GET', headers: { 'Authorization': `Bearer ${this.settings.apiToken}` } };
+
+        try {
+            const userRes = await fetchWithRetry<{ user: { groups: RaindropGroup[] } }>(this.app, `${baseApiUrl}/user`, fetchOptions, this.rateLimiter);
+            const groups = userRes.user?.groups || [];
+            this.groupCache = groups;
+            this.lastGroupFetch = now;
+            return groups;
+        } catch {
+            return this.groupCache || [];
+        }
+    }
+
     async fetchAllUserCollections(): Promise<RaindropCollection[]> {
         const now = Date.now();
         if (this.collectionCache && (now - this.lastCollectionFetch < this.CACHE_TTL)) return this.collectionCache;
@@ -747,14 +804,25 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             }
 
             const collectionIdToNameMap = new Map<number, string>();
+            const collectionToGroupMap = new Map<number, string>();
             let collectionsData: CollectionResponse | undefined;
-            if (raindropItem.collection?.$id) {
-                const allUserCollections = await this.fetchAllUserCollections();
-                if (allUserCollections.length > 0) {
-                    collectionsData = { result: true, items: allUserCollections };
-                    allUserCollections.forEach(col => collectionIdToNameMap.set(col._id, col.title));
-                }
+            
+            const [allUserCollections, allGroups] = await Promise.all([
+                this.fetchAllUserCollections(),
+                this.fetchUserGroups()
+            ]);
+
+            if (allUserCollections.length > 0) {
+                collectionsData = { result: true, items: allUserCollections };
+                allUserCollections.forEach(col => collectionIdToNameMap.set(col._id, col.title));
             }
+
+            // Map root collections to their groups
+            allGroups.forEach(group => {
+                group.collections.forEach(colId => {
+                    collectionToGroupMap.set(colId, group.title);
+                });
+            });
             
             const singleItemOptions: ModalFetchOptions = {
                 vaultPath: vaultPath,
@@ -770,8 +838,8 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 useDefaultTemplate: false,
                 overrideTemplates: false
             };
-            
-            await this.processRaindrops([raindropItem], vaultPath, appendTags || '', singleItemOptions.useRaindropTitleForFileName, loadingNotice, singleItemOptions, collectionsData, collectionIdToNameMap);
+
+            await this.processRaindrops([raindropItem], vaultPath, appendTags || '', singleItemOptions.useRaindropTitleForFileName, loadingNotice, singleItemOptions, collectionsData, collectionIdToNameMap, new Set<string>(), collectionToGroupMap);
         } catch (error) {
             loadingNotice.hide();
             new Notice(`Error during quick import of item ${itemId}: ${error instanceof Error ? error.message : (typeof error === 'object' && error !== null ? JSON.stringify(error) : String(error))}`, 10000);
