@@ -20,6 +20,7 @@ id: {{id}}
 collectionId: {{collectionId}}
 collectionTitle: "{{collectionTitle}}"
 collectionPath: "{{collectionPath}}"
+{{#if collectionGroup}}collectionGroup: "{{collectionGroup}}"{{/if}}
 {{#if collectionParentId}}collectionParentId: {{collectionParentId}}{{/if}}
 tags:
 {{#each tags}}
@@ -73,6 +74,7 @@ id: {{id}}
 collectionId: {{collectionId}}
 collectionTitle: "{{collectionTitle}}"
 collectionPath: "{{collectionPath}}"
+{{#if collectionGroup}}collectionGroup: "{{collectionGroup}}"{{/if}}
 {{#if collectionParentId}}collectionParentId: {{collectionParentId}}{{/if}}
 tags:
 {{#each tags}}
@@ -126,6 +128,7 @@ id: {{id}}
 collectionId: {{collectionId}}
 collectionTitle: "{{collectionTitle}}"
 collectionPath: "{{collectionPath}}"
+{{#if collectionGroup}}collectionGroup: "{{collectionGroup}}"{{/if}}
 {{#if collectionParentId}}collectionParentId: {{collectionParentId}}{{/if}}
 tags:
 {{#each tags}}
@@ -179,6 +182,7 @@ id: {{id}}
 collectionId: {{collectionId}}
 collectionTitle: "{{collectionTitle}}"
 collectionPath: "{{collectionPath}}"
+{{#if collectionGroup}}collectionGroup: "{{collectionGroup}}"{{/if}}
 {{#if collectionParentId}}collectionParentId: {{collectionParentId}}{{/if}}
 tags:
 {{#each tags}}
@@ -217,6 +221,7 @@ id: {{id}}
 collectionId: {{collectionId}}
 collectionTitle: "{{collectionTitle}}"
 collectionPath: "{{collectionPath}}"
+{{#if collectionGroup}}collectionGroup: "{{collectionGroup}}"{{/if}}
 {{#if collectionParentId}}collectionParentId: {{collectionParentId}}{{/if}}
 tags:
 {{#each tags}}
@@ -270,6 +275,7 @@ id: {{id}}
 collectionId: {{collectionId}}
 collectionTitle: "{{collectionTitle}}"
 collectionPath: "{{collectionPath}}"
+{{#if collectionGroup}}collectionGroup: "{{collectionGroup}}"{{/if}}
 {{#if collectionParentId}}collectionParentId: {{collectionParentId}}{{/if}}
 tags:
 {{#each tags}}
@@ -319,6 +325,7 @@ id: {{id}}
 collectionId: {{collectionId}}
 collectionTitle: "{{collectionTitle}}"
 collectionPath: "{{collectionPath}}"
+{{#if collectionGroup}}collectionGroup: "{{collectionGroup}}"{{/if}}
 {{#if collectionParentId}}collectionParentId: {{collectionParentId}}{{/if}}
 tags:
 {{#each tags}}
@@ -377,6 +384,7 @@ id: {{id}}
 collectionId: {{collectionId}}
 collectionTitle: "{{collectionTitle}}"
 collectionPath: "{{collectionPath}}"
+{{#if collectionGroup}}collectionGroup: "{{collectionGroup}}"{{/if}}
 {{#if collectionParentId}}collectionParentId: {{collectionParentId}}{{/if}}
 tags:
 {{#each tags}}

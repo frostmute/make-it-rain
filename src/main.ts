@@ -658,6 +658,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 let frontmatter = `---\nid: ${raindrop._id}\ntitle: "${raindrop.title.replace(/"/g, '\\"')}"\ndescription: "${(raindrop.excerpt || '').replace(/"/g, '\\"')}"\nsource: ${raindrop.link}\ntype: ${raindrop.type}\ncreated: ${raindrop.created}\nlastupdate: ${raindrop.lastUpdate}\n`;
                 if (templateData.collectionId) {
                     frontmatter += `collectionId: ${templateData.collectionId}\ncollectionTitle: "${templateData.collectionTitle}"\ncollectionPath: "${templateData.collectionPath}"\n`;
+                    if (templateData.collectionGroup) frontmatter += `collectionGroup: "${templateData.collectionGroup}"\n`;
                     if (templateData.collectionParentId) frontmatter += `collectionParentId: ${templateData.collectionParentId}\n`;
                 }
                 frontmatter += `tags:\n${[...(raindrop.tags || []), ...settingsFMTags].map(t => `  - ${t.trim().replace(TAG_SPACE_REGEX, '_').replace(TAG_INVALID_CHARS_REGEX, '')}`).join('\n')}\n`;
