@@ -6,7 +6,7 @@ layout: null
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Make It Rain - Raindrop.io Sync for Obsidian</title>
+    <title>Make It Rain - Raindrop.io Import for Obsidian</title>
     
     <!-- Premium Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,7 +19,7 @@ layout: null
             --bg-card: rgba(17, 19, 31, 0.65);
             --bg-card-hover: rgba(23, 26, 43, 0.85);
             --border-color: rgba(255, 255, 255, 0.08);
-            --border-hover: rgba(59, 130, 246, 0.3);
+            --border-hover: rgba(0, 240, 255, 0.3);
             --color-text: #e2e8f0;
             --color-muted: #8e9bb0;
             --color-primary: #00f0ff;
@@ -112,7 +112,7 @@ layout: null
             color: var(--color-muted);
             text-decoration: none;
             margin-left: 2rem;
-            font-weight: 500;
+            font-weight: 600;
             transition: color 0.3s;
         }
 
@@ -139,13 +139,22 @@ layout: null
             .hero {
                 flex-direction: column;
                 text-align: center;
-                gap: 2rem;
+                gap: 3rem;
                 padding: 2rem 0 4rem;
             }
         }
 
         .hero-content {
             flex: 1.2;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        @media (max-width: 968px) {
+            .hero-content {
+                align-items: center;
+            }
         }
 
         .hero-image-container {
@@ -186,6 +195,14 @@ layout: null
             line-height: 1.1;
             letter-spacing: -0.02em;
             margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        @media (max-width: 968px) {
+            h1 {
+                text-align: center;
+                font-size: 3rem;
+            }
         }
 
         h1 span {
@@ -198,7 +215,14 @@ layout: null
             font-size: 1.15rem;
             color: var(--color-muted);
             margin-bottom: 2.5rem;
-            max-width: 520px;
+            max-width: 540px;
+            text-align: left;
+        }
+
+        @media (max-width: 968px) {
+            .hero-desc {
+                text-align: center;
+            }
         }
 
         .cta-buttons {
@@ -326,7 +350,7 @@ layout: null
 
         /* Interactive Simulator */
         .simulator-section {
-            padding: 6rem 0;
+            padding: 4rem 0;
         }
 
         .simulator-wrapper {
@@ -405,6 +429,66 @@ layout: null
             tab-size: 4;
         }
 
+        /* Documentation Section (Prominent Cards) */
+        .docs-section {
+            padding: 6rem 0 4rem;
+        }
+
+        .docs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .doc-card {
+            background: linear-gradient(135deg, rgba(17, 19, 31, 0.8), rgba(23, 26, 43, 0.5));
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2.5rem;
+            text-align: left;
+            text-decoration: none;
+            color: var(--color-text);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+        }
+
+        .doc-card:hover {
+            border-color: var(--color-secondary);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px -10px rgba(189, 0, 255, 0.15);
+        }
+
+        .doc-card h3 {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .doc-card p {
+            color: var(--color-muted);
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+            flex-grow: 1;
+        }
+
+        .doc-card-link {
+            color: var(--color-primary);
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
         /* Quick Start */
         .quickstart-section {
             padding: 4rem 0;
@@ -472,23 +556,6 @@ layout: null
         footer p {
             margin-bottom: 1rem;
         }
-
-        .doc-links {
-            display: flex;
-            justify-content: center;
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .doc-links a {
-            color: var(--color-text);
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-
-        .doc-links a:hover {
-            color: var(--color-primary);
-        }
     </style>
 </head>
 <body>
@@ -498,8 +565,8 @@ layout: null
     <header>
         <div class="logo">🌧️ Make It Rain</div>
         <nav>
-            <a href="{{ site.baseurl }}/user-guide/" id="link-user-guide">User Guide</a>
-            <a href="{{ site.baseurl }}/developer-guide/" id="link-dev-guide">Developer Guide</a>
+            <a href="user-guide/index.html" id="link-user-guide">User Guide</a>
+            <a href="developer-guide/index.html" id="link-dev-guide">Developer Guide</a>
             <a href="https://github.com/frostmute/make-it-rain" id="link-github">GitHub</a>
         </nav>
     </header>
@@ -508,41 +575,41 @@ layout: null
         <!-- Hero -->
         <section class="hero">
             <div class="hero-content">
-                <div class="hero-badge">AST TEMPLATE ENGINE ENABLED</div>
-                <h1>Sync Raindrop.io to Obsidian <span>Beautifully</span></h1>
+                <div class="hero-badge">1.9.1 RELEASE</div>
+                <h1>Pull Raindrop.io to Obsidian <span>Beautifully</span></h1>
                 <p class="hero-desc">Import bookmarks, articles, highlights, and annotations from Raindrop.io directly into your local Markdown vault with complete rendering control.</p>
                 <div class="cta-buttons">
                     <a href="#quickstart" class="btn btn-primary" id="btn-hero-get-started">Get Started</a>
-                    <a href="https://github.com/frostmute/make-it-rain" class="btn btn-secondary" id="btn-hero-github">View GitHub</a>
+                    <a href="#docs" class="btn btn-secondary" id="btn-hero-docs">Read Docs</a>
                 </div>
             </div>
             <div class="hero-image-container">
-                <img src="{{ site.baseurl }}/assets/showcase_hero.png" alt="Make It Rain Dashboard" class="hero-image">
+                <img src="assets/showcase_hero.png" alt="Raindrop to Obsidian Sync Status Mockup" class="hero-image">
             </div>
         </section>
 
         <!-- Features -->
         <section class="features-section" id="features">
             <div class="section-header">
-                <h2>Fully Custom Vault Synchronization</h2>
-                <p>Designed for power users who care about note design and hierarchy.</p>
+                <h2>Fully Custom Vault Import</h2>
+                <p>Designed for power users who care about note design and structure.</p>
             </div>
             
             <div class="features-grid">
                 <div class="feature-card">
-                    <div class="feature-icon">🧩</div>
-                    <h3>AST Template Engine</h3>
-                    <p>Features a custom Abstract Syntax Tree parser supporting nested conditional blocks (e.g., nested highlights conditionals within loops) without tag collision.</p>
+                    <div class="feature-icon">🎨</div>
+                    <h3>Flexible Custom Templates</h3>
+                    <p>Customize how notes look with Handlebars-like templates, including dedicated templates for articles, videos, and links, allowing full control over note layouts.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">📂</div>
-                    <h3>Folder Notes</h3>
-                    <p>Automatically replicates your Raindrop.io folder structure in Obsidian and generates folder index notes (e.g. Folder.md) for Graph compatibility.</p>
+                    <h3>Sidebar & Collection Sync</h3>
+                    <p>Replicates your entire Raindrop sidebar structure, including top-level Groups, Collections, and Sub-collections as nested Obsidian folders.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">📥</div>
                     <h3>Native File Downloads</h3>
-                    <p>Downloads native PDF, EPUB, MOBI, and MP3 bookmark attachments directly behind the scenes into your vault, with smart MIME-to-extension mapping.</p>
+                    <p>Downloads PDF, EPUB, MOBI, and audio files behind the scenes directly to your vault, with smart MIME-to-extension mapping.</p>
                 </div>
             </div>
         </section>
@@ -571,6 +638,40 @@ layout: null
             </div>
         </section>
 
+        <!-- Documentation Prominent Links -->
+        <section class="docs-section" id="docs">
+            <div class="section-header">
+                <h2>📖 In-Depth Documentation</h2>
+                <p>Explore detailed guides, configurations, and developer blueprints.</p>
+            </div>
+            
+            <div class="docs-grid">
+                <a href="user-guide/index.html" class="doc-card" id="card-user-guide">
+                    <div>
+                        <h3>📖 User Guide</h3>
+                        <p>Complete guide on installing, configuring, and getting the most out of templates, collection folder syncing, and tag systems.</p>
+                    </div>
+                    <span class="doc-card-link">READ GUIDE &rarr;</span>
+                </a>
+                
+                <a href="developer-guide/index.html" class="doc-card" id="card-developer-guide">
+                    <div>
+                        <h3>👨‍💻 Developer Guide</h3>
+                        <p>Blueprints for setting up the development workspace, running tests locally, and understanding the core architecture.</p>
+                    </div>
+                    <span class="doc-card-link">EXPLORE DEV GUIDE &rarr;</span>
+                </a>
+
+                <a href="meta/PROJECT_POLISH_COMPLETE.html" class="doc-card" id="card-polish-checklist">
+                    <div>
+                        <h3>✅ Polish Checklist</h3>
+                        <p>The complete checklist of resolved lints, testing matrix verifications, and quality assurance passes.</p>
+                    </div>
+                    <span class="doc-card-link">VIEW POLISH LIST &rarr;</span>
+                </a>
+            </div>
+        </section>
+
         <!-- Quickstart -->
         <section class="quickstart-section" id="quickstart">
             <div class="section-header">
@@ -582,22 +683,23 @@ layout: null
                 <div class="step">
                     <div class="step-num">1</div>
                     <div class="step-content">
-                        <h3>Download the Plugin</h3>
-                        <p>Search for <strong>Make It Rain</strong> in Obsidian's Community Plugins browser, or manually install it using BRAT using the GitHub URL.</p>
+                        <h3>Download the Release Zip</h3>
+                        <p>Download the latest pre-packaged release <strong>make-it-rain.zip</strong> from the GitHub Releases tab.</p>
                     </div>
                 </div>
                 <div class="step">
                     <div class="step-num">2</div>
                     <div class="step-content">
-                        <h3>Enter your API Token</h3>
-                        <p>Acquire a personal access token from your Raindrop.io profile page, and paste it into the plugin settings tab in Obsidian.</p>
+                        <h3>Extract to Plugins Directory</h3>
+                        <p>Unzip the files and place the folder directly into your Obsidian vault's plugins folder:</p>
+                        <div class="code-box">.obsidian/plugins/make-it-rain/</div>
                     </div>
                 </div>
                 <div class="step">
                     <div class="step-num">3</div>
                     <div class="step-content">
-                        <h3>Sync your vault</h3>
-                        <p>Open the Command Palette (<code class="code-box">Cmd/Ctrl + P</code>) and run <code class="code-box">Make It Rain: Fetch Raindrops</code> to sync your bookmarks.</p>
+                        <h3>Enable & Setup</h3>
+                        <p>In Obsidian, go to Settings → Community Plugins, enable <strong>Make It Rain</strong>, add your API Token, and sync your bookmarks!</p>
                     </div>
                 </div>
             </div>
@@ -605,11 +707,6 @@ layout: null
     </main>
 
     <footer>
-        <div class="doc-links">
-            <a href="{{ site.baseurl }}/user-guide/" id="footer-user-guide">User Guide</a>
-            <a href="{{ site.baseurl }}/developer-guide/" id="footer-dev-guide">Developer Guide</a>
-            <a href="{{ site.baseurl }}/meta/PROJECT_POLISH_COMPLETE.html" id="footer-meta">Polish checklist</a>
-        </div>
         <p>&copy; 2026 Make It Rain Plugin. Crafted for Obsidian. Released under the MIT License.</p>
     </footer>
 
@@ -634,53 +731,79 @@ layout: null
                 tmpl: `---
 title: "{{title}}"
 link: {{link}}
-tags: {{#each tags}}- {{this}}
+collection: "{{collectionTitle}}"
+group: "{{collectionGroup}}"
+tags: {{#each tags}}
+  - {{this}}
 {{/each}}
 ---
 # {{title}}
 
+> {{excerpt}}
+
 {{#if note}}
-## Personal Note
+## My Notes
 {{note}}
 {{/if}}
 
 {{#if highlights}}
 ## Highlights
 {{#each highlights}}
-- {{text}}{{#if note}} (Note: {{note}}){{/if}}
+- {{text}}{{#if note}}  *Note:* {{note}}{{/if}}
 {{/each}}
 {{/if}}`,
                 out: `---
-title: "Nesting-Aware Templates"
-link: https://raindrop.io/dev
-tags: - obsidian
-- raindrop
-- integration
+title: "Understanding AST Parsers"
+link: https://example.com/ast-parser
+collection: "Programming"
+group: "Knowledge Base"
+tags: 
+  - parsing
+  - guides
+  - typescript
 ---
-# Nesting-Aware Templates
+# Understanding AST Parsers
 
-## Personal Note
-This is a personal annotation note on the bookmark.
+> A comprehensive guide to understanding how Abstract Syntax Trees work and how to write a lightweight parser in TypeScript.
+
+## My Notes
+This article is extremely helpful for our template compiler rewrite.
 
 ## Highlights
-- Highlights now sync without breaking outer blocks (Note: This note is nested inside the loop!)
-- Nested conditional blocks are rendered safely.`
+- Abstract Syntax Trees represent the structure of program code.  *Note:* Focus on recursive descent parsing.
+- Regular expressions are not nesting-aware.`
             },
             {
-                tmpl: `## Metadata
-- **Domain**: {{domain}}
-- **Last Updated**: {{updated}}
+                tmpl: `---
+title: "{{title}}"
+type: {{type}}
+domain: {{domain}}
+---
+# {{title}}
 
-{{#if excerpt}}
-## Excerpt
-> {{excerpt}}
-{{/if}}`,
-                out: `## Metadata
-- **Domain**: raindrop.io
-- **Last Updated**: 2026-05-23T02:35:19Z
+Watch here: {{link}}
 
-## Excerpt
-> A powerful and flexible plugin that enables complete control over note structure and frontmatter formatting when syncing bookmarks.`
+{{#if cover}}
+![Cover Image]({{cover}})
+{{/if}}
+
+## Details
+- Saved: {{created}}
+- Collection: {{collectionTitle}}`,
+                out: `---
+title: "Obsidian Advanced Workflows"
+type: video
+domain: youtube.com
+---
+# Obsidian Advanced Workflows
+
+Watch here: https://youtube.com/watch?v=12345
+
+![Cover Image](https://img.youtube.com/vi/12345/0.jpg)
+
+## Details
+- Saved: 2026-05-23T02:35:19Z
+- Collection: Obsidian Video Guides`
             }
         ];
 
