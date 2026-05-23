@@ -686,49 +686,167 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
     }
 
     private renderTemplate(template: string, data: Record<string, unknown>): string {
-        const renderBlock = (blockContent: string, context: Record<string, unknown>): string => {
-            const IF_REGEX = /{{#if ([^}]+)}}([\s\S]*?)(?:{{else}}([\s\S]*?))?{{\/if}}/g;
-            const EACH_REGEX = /{{#each ([^}]+)}}([\s\S]*?){{\/each}}/g;
-            const VAR_REGEX = /{{([^}]+)}}/g;
+        interface ASTNode {
+            type: 'text' | 'var' | 'if' | 'each';
+            raw?: string;
+            name?: string;
+            cond?: string;
+            arrayVar?: string;
+            thenBranch?: ASTNode[];
+            elseBranch?: ASTNode[];
+        }
 
-            return blockContent
-                .replace(IF_REGEX, (_, cond, content, elseContent) => {
-                    const value = this.getNestedProperty(context, cond.trim());
-                    return (value && (Array.isArray(value) ? value.length > 0 : !!value)) ? renderBlock(content, context) : (elseContent ? renderBlock(elseContent, context) : '');
-                })
-                .replace(EACH_REGEX, (_, arrayVar, content) => {
-                    const array = this.getNestedProperty(context, arrayVar.trim());
-                    return Array.isArray(array) ? array.map(item => renderBlock(content, typeof item === 'object' && item !== null ? { ...context, ...item } as Record<string, unknown> : { ...context, 'this': item } as Record<string, unknown>)).join('') : '';
-                })
-                .replace(VAR_REGEX, (_, key) => {
-                    const trimmedKey = key.trim();
-                    const parts = trimmedKey.split(/\s+/);
+        const parseTemplate = (tmpl: string): ASTNode[] => {
+            const tokens: Array<{ type: 'text' | 'tag'; value: string }> = [];
+            let lastIdx = 0;
 
+            while (lastIdx < tmpl.length) {
+                const openIdx = tmpl.indexOf('{{', lastIdx);
+                if (openIdx === -1) {
+                    tokens.push({ type: 'text', value: tmpl.substring(lastIdx) });
+                    break;
+                }
+
+                if (openIdx > lastIdx) {
+                    tokens.push({ type: 'text', value: tmpl.substring(lastIdx, openIdx) });
+                }
+
+                const closeIdx = tmpl.indexOf('}}', openIdx + 2);
+                if (closeIdx === -1) {
+                    tokens.push({ type: 'text', value: tmpl.substring(openIdx) });
+                    break;
+                }
+
+                const tagValue = tmpl.substring(openIdx + 2, closeIdx).trim();
+                tokens.push({ type: 'tag', value: tagValue });
+                lastIdx = closeIdx + 2;
+            }
+
+            let tokenIdx = 0;
+
+            const parseNodes = (endTag?: string): ASTNode[] => {
+                const nodes: ASTNode[] = [];
+
+                while (tokenIdx < tokens.length) {
+                    const token = tokens[tokenIdx];
+                    if (token.type === 'text') {
+                        nodes.push({ type: 'text', raw: token.value });
+                        tokenIdx++;
+                    } else {
+                        const val = token.value;
+                        if (endTag && (val === endTag || (endTag === '/if' && val === 'else'))) {
+                            break;
+                        }
+
+                        if (val.startsWith('#if ')) {
+                            const cond = val.substring(4).trim();
+                            tokenIdx++;
+                            const thenBranch = parseNodes('/if');
+                            let elseBranch: ASTNode[] = [];
+                            if (tokenIdx < tokens.length && tokens[tokenIdx].value === 'else') {
+                                tokenIdx++;
+                                elseBranch = parseNodes('/if');
+                            }
+                            if (tokenIdx < tokens.length && tokens[tokenIdx].value === '/if') {
+                                tokenIdx++;
+                            }
+                            nodes.push({ type: 'if', cond, thenBranch, elseBranch });
+                        } else if (val.startsWith('#each ')) {
+                            const arrayVar = val.substring(6).trim();
+                            tokenIdx++;
+                            const thenBranch = parseNodes('/each');
+                            if (tokenIdx < tokens.length && tokens[tokenIdx].value === '/each') {
+                                tokenIdx++;
+                            }
+                            nodes.push({ type: 'each', arrayVar, thenBranch });
+                        } else if (val === '/if' || val === '/each' || val === 'else') {
+                            nodes.push({ type: 'text', raw: `{{${val}}}` });
+                            tokenIdx++;
+                        } else {
+                            nodes.push({ type: 'var', name: val });
+                            tokenIdx++;
+                        }
+                    }
+                }
+                return nodes;
+            };
+
+            return parseNodes();
+        };
+
+        const renderAST = (nodes: ASTNode[], context: Record<string, unknown>): string => {
+            let result = '';
+            for (const node of nodes) {
+                if (node.type === 'text') {
+                    result += node.raw;
+                } else if (node.type === 'var') {
+                    const key = node.name!;
+                    const parts = key.split(/\s+/);
                     if (parts.length >= 2) {
                         const helper = parts[0].toLowerCase();
                         const varName = parts[1];
                         const value = this.getNestedProperty(context, varName);
-
                         if (value !== undefined && value !== null) {
                             const strValue = String(value);
+                            let resolved = false;
                             switch (helper) {
-                                case 'uppercase': return toUppercase(strValue);
-                                case 'lowercase': return toLowercase(strValue);
-                                case 'titlecase': return toTitleCase(strValue);
-                                case 'truncate':
+                                case 'uppercase':
+                                    result += toUppercase(strValue);
+                                    resolved = true;
+                                    break;
+                                case 'lowercase':
+                                    result += toLowercase(strValue);
+                                    resolved = true;
+                                    break;
+                                case 'titlecase':
+                                    result += toTitleCase(strValue);
+                                    resolved = true;
+                                    break;
+                                case 'truncate': {
                                     const length = parseInt(parts[2], 10);
-                                    return !isNaN(length) ? truncateString(strValue, length) : strValue;
+                                    result += !isNaN(length) ? truncateString(strValue, length) : strValue;
+                                    resolved = true;
+                                    break;
+                                }
                             }
+                            if (resolved) continue;
                         }
                     }
 
-                    const value = this.getNestedProperty(context, trimmedKey);
-                    if (value === null || value === undefined) return '';
-                    if (typeof value === 'object') return formatYamlValue(value);
-                    return String(value);
-                });
+                    const value = this.getNestedProperty(context, key);
+                    if (value === null || value === undefined) {
+                        // Keep result unchanged
+                    } else if (typeof value === 'object') {
+                        result += formatYamlValue(value);
+                    } else {
+                        result += String(value);
+                    }
+                } else if (node.type === 'if') {
+                    const value = this.getNestedProperty(context, node.cond!);
+                    const isTrue = !!(value && (Array.isArray(value) ? value.length > 0 : !!value));
+                    if (isTrue) {
+                        result += renderAST(node.thenBranch!, context);
+                    } else if (node.elseBranch) {
+                        result += renderAST(node.elseBranch, context);
+                    }
+                } else if (node.type === 'each') {
+                    const array = this.getNestedProperty(context, node.arrayVar!);
+                    if (Array.isArray(array)) {
+                        for (const item of array) {
+                            const nextContext = typeof item === 'object' && item !== null
+                                ? { ...context, ...item } as Record<string, unknown>
+                                : { ...context, 'this': item } as Record<string, unknown>;
+                            result += renderAST(node.thenBranch!, nextContext);
+                        }
+                    }
+                }
+            }
+            return result;
         };
-        return renderBlock(template, { ...data, id: data._id, domain: getDomain(data.link as string || ''), updated: data.lastupdate || '' });
+
+        const ast = parseTemplate(template);
+        const rootContext = { ...data, id: data._id, domain: getDomain(data.link as string || ''), updated: data.lastupdate || '' };
+        return renderAST(ast, rootContext);
     }
 
     private getNestedProperty(obj: Record<string, unknown>, path: string): unknown {

@@ -69,4 +69,22 @@ describe('RaindropToObsidian Template Helpers', () => {
         const data = { title: 'hello' };
         expect(render('{{truncate title invalid}}', data)).toBe('hello');
     });
+
+    it('should support nested if inside each block', () => {
+        const data = {
+            highlights: [
+                { text: 'Highlight 1', note: 'Note 1' },
+                { text: 'Highlight 2' }
+            ]
+        };
+        const template = `{{#if highlights}}
+## Highlights
+{{#each highlights}}- {{text}}{{#if note}} (Note: {{note}}){{/if}}
+{{/each}}{{/if}}`;
+        const expected = `
+## Highlights
+- Highlight 1 (Note: Note 1)
+- Highlight 2`;
+        expect(render(template, data).trim()).toBe(expected.trim());
+    });
 });

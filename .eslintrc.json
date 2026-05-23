@@ -1,13 +1,22 @@
 {
   "root": true,
   "parser": "@typescript-eslint/parser",
-  "plugins": ["@typescript-eslint", "obsidianmd"],
+  "parserOptions": {
+    "project": "./tsconfig.json"
+  },
+  "env": {
+    "browser": true,
+    "node": true,
+    "es6": true
+  },
+  "plugins": ["@typescript-eslint", "obsidian", "sentence-case"],
   "extends": [
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
-    "plugin:obsidianmd/recommended"
+    "plugin:obsidian/recommended"
   ],
   "rules": {
-    "no-constant-condition": "off"
+    "no-constant-condition": "off",
+    "obsidian/settings-tab": "off"
   }
 }
