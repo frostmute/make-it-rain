@@ -1,4 +1,4 @@
-![Make It Rain Hero](https://github.com/frostmute/make-it-rain/blob/main/assets/1748151599078.webp)
+![Make It Rain Hero](assets/banner.svg)
 
 <div align="center">
 
