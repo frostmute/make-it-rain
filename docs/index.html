@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Make It Rain - Raindrop.io Sync for Obsidian</title>
+    
+    <!-- Premium Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-dark: #090a0f;
+            --bg-card: rgba(17, 19, 31, 0.65);
+            --bg-card-hover: rgba(23, 26, 43, 0.85);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(59, 130, 246, 0.3);
+            --color-text: #e2e8f0;
+            --color-muted: #8e9bb0;
+            --color-primary: #00f0ff;
+            --color-secondary: #bd00ff;
+            --glow-primary: rgba(0, 240, 255, 0.15);
+            --glow-secondary: rgba(189, 0, 255, 0.15);
+            --font-display: 'Outfit', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --font-mono: 'Space Grotesk', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--color-text);
+            font-family: var(--font-body);
+            line-height: 1.6;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Subtle Background Rain Effect */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: 
+                radial-gradient(circle at 10% 20%, rgba(0, 240, 255, 0.03) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(189, 0, 255, 0.03) 0%, transparent 40%);
+            z-index: -2;
+            pointer-events: none;
+        }
+
+        .rain-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            opacity: 0.15;
+            overflow: hidden;
+        }
+
+        .drop {
+            position: absolute;
+            background: linear-gradient(transparent, var(--color-primary));
+            width: 1px;
+            height: 80px;
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-100px); }
+            100% { transform: translateY(100vh); }
+        }
+
+        /* Header / Navbar */
+        header {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        nav a {
+            color: var(--color-muted);
+            text-decoration: none;
+            margin-left: 2rem;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: var(--color-primary);
+        }
+
+        /* Main Container */
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem 5rem;
+        }
+
+        /* Hero Section */
+        .hero {
+            display: flex;
+            align-items: center;
+            gap: 4rem;
+            padding: 4rem 0 6rem;
+        }
+
+        @media (max-width: 968px) {
+            .hero {
+                flex-direction: column;
+                text-align: center;
+                gap: 2rem;
+                padding: 2rem 0 4rem;
+            }
+        }
+
+        .hero-content {
+            flex: 1.2;
+        }
+
+        .hero-image-container {
+            flex: 1;
+            position: relative;
+        }
+
+        .hero-image {
+            width: 100%;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transition: transform 0.5s ease;
+        }
+
+        .hero-image:hover {
+            transform: scale(1.02) rotate(1deg);
+        }
+
+        .hero-badge {
+            background: rgba(0, 240, 255, 0.1);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            color: var(--color-primary);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 1.5rem;
+            font-family: var(--font-mono);
+            letter-spacing: 0.05em;
+        }
+
+        h1 {
+            font-family: var(--font-display);
+            font-size: 4rem;
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            margin-bottom: 1.5rem;
+        }
+
+        h1 span {
+            background: linear-gradient(135deg, var(--color-primary) 30%, var(--color-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-desc {
+            font-size: 1.15rem;
+            color: var(--color-muted);
+            margin-bottom: 2.5rem;
+            max-width: 520px;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        @media (max-width: 968px) {
+            .cta-buttons {
+                justify-content: center;
+            }
+        }
+
+        .btn {
+            padding: 0.85rem 1.8rem;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--color-primary), #00d2e5);
+            color: #040814;
+            box-shadow: 0 4px 20px var(--glow-primary);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 240, 255, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--color-text);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--color-muted);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        /* Features Section */
+        .features-section {
+            padding: 4rem 0;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-header h2 {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+
+        .section-header p {
+            color: var(--color-muted);
+            font-size: 1.1rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2.5rem;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--glow-primary), transparent 60%);
+            opacity: 0;
+            transition: opacity 0.4s;
+            pointer-events: none;
+        }
+
+        .feature-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-hover);
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px -15px rgba(0, 240, 255, 0.1);
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            display: inline-block;
+        }
+
+        .feature-card h3 {
+            font-family: var(--font-display);
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card p {
+            color: var(--color-muted);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* Interactive Simulator */
+        .simulator-section {
+            padding: 6rem 0;
+        }
+
+        .simulator-wrapper {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            display: flex;
+            overflow: hidden;
+            box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.6);
+        }
+
+        @media (max-width: 900px) {
+            .simulator-wrapper {
+                flex-direction: column;
+            }
+        }
+
+        .sim-editor, .sim-output {
+            flex: 1;
+            padding: 2.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sim-editor {
+            border-right: 1px solid var(--border-color);
+        }
+
+        @media (max-width: 900px) {
+            .sim-editor {
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+        }
+
+        .sim-title {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--color-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .sim-btn {
+            background: rgba(0, 240, 255, 0.1);
+            border: 1px solid var(--color-primary);
+            color: var(--color-primary);
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            font-family: var(--font-body);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sim-btn:hover {
+            background: var(--color-primary);
+            color: #040814;
+        }
+
+        pre {
+            background: #06070b;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 8px;
+            padding: 1.2rem;
+            font-family: 'Space Grotesk', monospace;
+            font-size: 0.85rem;
+            color: #c9d1d9;
+            overflow-x: auto;
+            flex-grow: 1;
+            tab-size: 4;
+        }
+
+        /* Quick Start */
+        .quickstart-section {
+            padding: 4rem 0;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .steps {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .step {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .step-num {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            color: #040814;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-family: var(--font-display);
+            flex-shrink: 0;
+        }
+
+        .step-content h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            font-family: var(--font-display);
+        }
+
+        .step-content p {
+            color: var(--color-muted);
+            font-size: 0.95rem;
+        }
+
+        .code-box {
+            background: #06070b;
+            border: 1px solid var(--border-color);
+            padding: 0.8rem 1.2rem;
+            border-radius: 6px;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            margin-top: 0.75rem;
+            display: inline-block;
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--border-color);
+            padding: 4rem 2rem;
+            text-align: center;
+            color: var(--color-muted);
+            font-size: 0.9rem;
+        }
+
+        footer p {
+            margin-bottom: 1rem;
+        }
+
+        .doc-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .doc-links a {
+            color: var(--color-text);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .doc-links a:hover {
+            color: var(--color-primary);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="rain-container" id="rain"></div>
+
+    <header>
+        <div class="logo">🌧️ Make It Rain</div>
+        <nav>
+            <a href="user-guide/README.html" id="link-user-guide">User Guide</a>
+            <a href="developer-guide/README.html" id="link-dev-guide">Developer Guide</a>
+            <a href="https://github.com/frostmute/make-it-rain" id="link-github">GitHub</a>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Hero -->
+        <section class="hero">
+            <div class="hero-content">
+                <div class="hero-badge">AST TEMPLATE ENGINE ENABLED</div>
+                <h1>Sync Raindrop.io to Obsidian <span>Beautifully</span></h1>
+                <p class="hero-desc">Import bookmarks, articles, highlights, and annotations from Raindrop.io directly into your local Markdown vault with complete rendering control.</p>
+                <div class="cta-buttons">
+                    <a href="#quickstart" class="btn btn-primary" id="btn-hero-get-started">Get Started</a>
+                    <a href="https://github.com/frostmute/make-it-rain" class="btn btn-secondary" id="btn-hero-github">View GitHub</a>
+                </div>
+            </div>
+            <div class="hero-image-container">
+                <img src="assets/showcase_hero.png" alt="Make It Rain Dashboard" class="hero-image">
+            </div>
+        </section>
+
+        <!-- Features -->
+        <section class="features-section" id="features">
+            <div class="section-header">
+                <h2>Fully Custom Vault Synchronization</h2>
+                <p>Designed for power users who care about note design and hierarchy.</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🧩</div>
+                    <h3>AST Template Engine</h3>
+                    <p>Features a custom Abstract Syntax Tree parser supporting nested conditional blocks (e.g., nested highlights conditionals within loops) without tag collision.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📂</div>
+                    <h3>Folder Notes</h3>
+                    <p>Automatically replicates your Raindrop.io folder structure in Obsidian and generates folder index notes (e.g. Folder.md) for Graph compatibility.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📥</div>
+                    <h3>Native File Downloads</h3>
+                    <p>Downloads native PDF, EPUB, MOBI, and MP3 bookmark attachments directly behind the scenes into your vault, with smart MIME-to-extension mapping.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Simulator -->
+        <section class="simulator-section">
+            <div class="section-header">
+                <h2>Interactive Template Preview</h2>
+                <p>See how the plugin compiles nested templates into clean Obsidian Markdown notes.</p>
+            </div>
+
+            <div class="simulator-wrapper">
+                <div class="sim-editor">
+                    <div class="sim-title">
+                        <span>Template Input</span>
+                        <button class="sim-btn" onclick="toggleTemplate()" id="btn-sim-toggle">Switch Template</button>
+                    </div>
+                    <pre id="template-editor"></pre>
+                </div>
+                <div class="sim-output">
+                    <div class="sim-title" style="color: var(--color-secondary);">
+                        <span>Rendered Output (.md)</span>
+                    </div>
+                    <pre id="template-output"></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quickstart -->
+        <section class="quickstart-section" id="quickstart">
+            <div class="section-header">
+                <h2>Quick Installation</h2>
+                <p>Set up the plugin in three simple steps.</p>
+            </div>
+
+            <div class="steps">
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <div class="step-content">
+                        <h3>Download the Plugin</h3>
+                        <p>Search for <strong>Make It Rain</strong> in Obsidian's Community Plugins browser, or manually install it using BRAT using the GitHub URL.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <div class="step-content">
+                        <h3>Enter your API Token</h3>
+                        <p>Acquire a personal access token from your Raindrop.io profile page, and paste it into the plugin settings tab in Obsidian.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <div class="step-content">
+                        <h3>Sync your vault</h3>
+                        <p>Open the Command Palette (<code class="code-box">Cmd/Ctrl + P</code>) and run <code class="code-box">Make It Rain: Fetch Raindrops</code> to sync your bookmarks.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="doc-links">
+            <a href="user-guide/README.html" id="footer-user-guide">User Guide</a>
+            <a href="developer-guide/README.html" id="footer-dev-guide">Developer Guide</a>
+            <a href="docs/meta/PROJECT_POLISH_COMPLETE.md" id="footer-meta">Polish checklist</a>
+        </div>
+        <p>&copy; 2026 Make It Rain Plugin. Crafted for Obsidian. Released under the MIT License.</p>
+    </footer>
+
+    <script>
+        // Rain Generation
+        const rainContainer = document.getElementById('rain');
+        const dropCount = 40;
+        
+        for (let i = 0; i < dropCount; i++) {
+            const drop = document.createElement('div');
+            drop.className = 'drop';
+            drop.style.left = `${Math.random() * 100}vw`;
+            drop.style.animationDuration = `${0.5 + Math.random() * 0.8}s`;
+            drop.style.animationDelay = `${Math.random() * 2}s`;
+            drop.style.opacity = `${0.1 + Math.random() * 0.4}`;
+            rainContainer.appendChild(drop);
+        }
+
+        // Simulator Logic
+        const templates = [
+            {
+                tmpl: `---
+title: "{{title}}"
+link: {{link}}
+tags: {{#each tags}}- {{this}}
+{{/each}}
+---
+# {{title}}
+
+{{#if note}}
+## Personal Note
+{{note}}
+{{/if}}
+
+{{#if highlights}}
+## Highlights
+{{#each highlights}}
+- {{text}}{{#if note}} (Note: {{note}}){{/if}}
+{{/each}}
+{{/if}}`,
+                out: `---
+title: "Nesting-Aware Templates"
+link: https://raindrop.io/dev
+tags: - obsidian
+- raindrop
+- integration
+---
+# Nesting-Aware Templates
+
+## Personal Note
+This is a personal annotation note on the bookmark.
+
+## Highlights
+- Highlights now sync without breaking outer blocks (Note: This note is nested inside the loop!)
+- Nested conditional blocks are rendered safely.`
+            },
+            {
+                tmpl: `## Metadata
+- **Domain**: {{domain}}
+- **Last Updated**: {{updated}}
+
+{{#if excerpt}}
+## Excerpt
+> {{excerpt}}
+{{/if}}`,
+                out: `## Metadata
+- **Domain**: raindrop.io
+- **Last Updated**: 2026-05-23T02:35:19Z
+
+## Excerpt
+> A powerful and flexible plugin that enables complete control over note structure and frontmatter formatting when syncing bookmarks.`
+            }
+        ];
+
+        let currentTemplateIdx = 0;
+        
+        function updateSimulator() {
+            document.getElementById('template-editor').innerText = templates[currentTemplateIdx].tmpl;
+            document.getElementById('template-output').innerText = templates[currentTemplateIdx].out;
+        }
+
+        function toggleTemplate() {
+            currentTemplateIdx = (currentTemplateIdx + 1) % templates.length;
+            updateSimulator();
+        }
+
+        // Initialize Simulator
+        updateSimulator();
+    </script>
+</body>
+</html>
