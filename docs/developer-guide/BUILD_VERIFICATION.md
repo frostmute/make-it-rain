@@ -16,7 +16,7 @@ npm run build && echo "✅ SUCCESS" || echo "❌ FAILED"
 ### Method 2: Check Build Artifacts
 
 ```bash
-ls -lh build/
+ls -lh main.js manifest.json styles.css
 ```
 
 You should see:
@@ -65,8 +65,7 @@ bash: tsc: command not found
 Run these commands in order:
 
 ```bash
-# 1. Clean build
-rm -rf build/
+# 1. Build
 npm run build
 
 # 2. Check exit code
@@ -74,11 +73,11 @@ echo $?
 # Should be: 0
 
 # 3. Check files exist
-ls build/main.js build/manifest.json build/styles.css
+ls main.js manifest.json styles.css
 # All three should exist
 
 # 4. Check main.js size
-ls -lh build/main.js
+ls -lh main.js
 # Should be ~80-85KB (anything > 0 is good)
 
 # 5. Run tests
@@ -149,10 +148,10 @@ npx tsc --noEmit src/main.ts
 npm run build && npm test && echo "✅ All good!"
 
 # Build and check size
-npm run build && ls -lh build/main.js
+npm run build && ls -lh main.js
 
 # Clean build
-rm -rf build/ && npm run build
+npm run build
 
 # Build with timing
 time npm run build
@@ -164,9 +163,9 @@ Your build is successful when you see:
 
 ✅ **Exit code 0**
 ✅ **No error messages in output**
-✅ **build/main.js exists and is ~80KB+**
-✅ **build/manifest.json exists**
-✅ **build/styles.css exists**
+✅ **main.js exists and is ~80KB+**
+✅ **manifest.json exists**
+✅ **styles.css exists**
 ✅ **All tests pass (`npm test`)**
 
 ## 🚨 Failure Indicators
@@ -175,7 +174,7 @@ Your build failed if you see:
 
 ❌ **Exit code != 0**
 ❌ **Red error messages in terminal**
-❌ **build/main.js is missing or 0 bytes**
+❌ **main.js is missing or 0 bytes**
 ❌ **TypeScript compilation errors**
 ❌ **"command not found" errors**
 

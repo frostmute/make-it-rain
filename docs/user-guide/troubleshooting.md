@@ -457,7 +457,7 @@ git config --list
 file cleanup.sh
 
 # Verify build output
-ls -lh build/
+ls -lh main.js manifest.json styles.css
 
 # Check test coverage
 npm run test:coverage
