@@ -1,3 +1,6 @@
+---
+layout: null
+---
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -495,8 +498,8 @@
     <header>
         <div class="logo">🌧️ Make It Rain</div>
         <nav>
-            <a href="user-guide/README.html" id="link-user-guide">User Guide</a>
-            <a href="developer-guide/README.html" id="link-dev-guide">Developer Guide</a>
+            <a href="{{ site.baseurl }}/user-guide/" id="link-user-guide">User Guide</a>
+            <a href="{{ site.baseurl }}/developer-guide/" id="link-dev-guide">Developer Guide</a>
             <a href="https://github.com/frostmute/make-it-rain" id="link-github">GitHub</a>
         </nav>
     </header>
@@ -514,7 +517,7 @@
                 </div>
             </div>
             <div class="hero-image-container">
-                <img src="assets/showcase_hero.png" alt="Make It Rain Dashboard" class="hero-image">
+                <img src="{{ site.baseurl }}/assets/showcase_hero.png" alt="Make It Rain Dashboard" class="hero-image">
             </div>
         </section>
 
@@ -603,9 +606,9 @@
 
     <footer>
         <div class="doc-links">
-            <a href="user-guide/README.html" id="footer-user-guide">User Guide</a>
-            <a href="developer-guide/README.html" id="footer-dev-guide">Developer Guide</a>
-            <a href="docs/meta/PROJECT_POLISH_COMPLETE.md" id="footer-meta">Polish checklist</a>
+            <a href="{{ site.baseurl }}/user-guide/" id="footer-user-guide">User Guide</a>
+            <a href="{{ site.baseurl }}/developer-guide/" id="footer-dev-guide">Developer Guide</a>
+            <a href="{{ site.baseurl }}/meta/PROJECT_POLISH_COMPLETE.html" id="footer-meta">Polish checklist</a>
         </div>
         <p>&copy; 2026 Make It Rain Plugin. Crafted for Obsidian. Released under the MIT License.</p>
     </footer>
