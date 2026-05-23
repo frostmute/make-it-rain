@@ -56,7 +56,7 @@ Welcome to Make It Rain! This documentation will help you get the most out of th
 
 - [📥 Installation Guide](user-guide/installation.md) - Install and get your API token
 - [⚙️ Configuration Guide](user-guide/configuration.md) - Set up the plugin to your liking
-- [📖 User Guide](user-guide/README.md) - Complete user documentation
+- [📖 User Guide](user-guide/index.md) - Complete user documentation
 
 **Using the Plugin**
 
@@ -149,9 +149,9 @@ Fork repository → Set up dev environment → Create feature branch → Write t
 
 ```
 docs/
-├── index.md                 ← You are here!
+├── documentation.md         ← You are here!
 ├── user-guide/              ← User documentation
-│   ├── README.md
+│   ├── index.md
 │   ├── installation.md
 │   ├── configuration.md
 │   ├── usage.md
