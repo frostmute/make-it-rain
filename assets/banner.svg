@@ -78,7 +78,7 @@
             font-weight="500" 
             fill="#8e9bb0" 
             letter-spacing="0.25em" 
-            opacity="0.8">RAINDROP.IO TO OBSIDIAN SYNC</text>
+            opacity="0.8">PULL RAINDROP.IO TO OBSIDIAN</text>
 
       <!-- Badge -->
       <rect x="5" y="70" width="85" height="24" rx="12" fill="rgba(0, 240, 255, 0.1)" stroke="rgba(0, 240, 255, 0.2)" stroke-width="1"/>

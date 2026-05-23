@@ -23,7 +23,7 @@ Transform your web clippings, articles, and research into a powerful knowledge b
 
 Make It Rain is a powerful Obsidian plugin that brings your Raindrop.io bookmarks, highlights, and notes directly into your vault. Whether you're a researcher collecting articles, a reader saving interesting finds, or a developer curating resources, Make It Rain helps you integrate your web discoveries seamlessly into your knowledge base.
 
-**The Problem:** Your bookmarks live in Raindrop.io, but your knowledge base lives in Obsidian. Keeping them in sync is tedious.
+**The Problem:** Your bookmarks live in Raindrop.io, but your knowledge base lives in Obsidian. Keeping your vault manually updated is tedious.
 
 **The Solution:** Make It Rain automates the import process with flexible filtering, customizable templates, and smart organization.
 
@@ -51,7 +51,7 @@ Import exactly what you need with granular filtering options.
 - **Tag filtering** with AND/OR logic
 - **Aggregate highlights by tag** - Consolidate highlights from across your vault into a single summary note
 - **Content type filtering** (links, articles, images, videos, documents, audio, books)
-- **Selective sync** - fetch only new items or update existing notes
+- **Selective imports** - fetch only new items or update existing notes
 
 ### 🗂️ Smart Organization
 
@@ -297,7 +297,7 @@ For more tips and workflows, see the [Usage Guide](https://frostmute.github.io/m
 
 Active development focuses on these features:
 
-- 🔄 **Bi-directional sync** - Keep Obsidian and Raindrop in sync
+- 🔄 **Two-way updates** - (Roadmap) Send notes and annotations back to Raindrop.io
 - 📌 **Enhanced highlights** - Better highlight handling in notes
 - 💾 **Saved presets** - Store and reuse fetch configurations
 - 🎬 **Video tutorials** - Learn by watching
