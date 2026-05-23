@@ -544,6 +544,310 @@ layout: null
             display: inline-block;
         }
 
+        /* Premium Code-Based Dashboard Mockup */
+        .mock-window {
+            background: rgba(10, 12, 22, 0.75);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            width: 100%;
+            max-width: 580px;
+            margin: 0 auto;
+            overflow: hidden;
+            font-family: var(--font-body);
+            text-align: left;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .mock-window:hover {
+            border-color: rgba(0, 240, 255, 0.25);
+            box-shadow: 0 35px 70px -15px rgba(0, 240, 255, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .mock-window-header {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 0.85rem 1.2rem;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            position: relative;
+        }
+
+        .mock-dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .mock-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .mock-dot.red { background: #ff5f56; }
+        .mock-dot.yellow { background: #ffbd2e; }
+        .mock-dot.green { background: #27c93f; }
+
+        .mock-window-title {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.75rem;
+            font-family: var(--font-mono);
+            color: var(--color-muted);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .mock-status-pill {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: rgba(39, 201, 63, 0.1);
+            border: 1px solid rgba(39, 201, 63, 0.2);
+            color: #27c93f;
+            padding: 0.2rem 0.5rem;
+            border-radius: 50px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .mock-status-indicator {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #27c93f;
+            box-shadow: 0 0 8px #27c93f;
+            animation: pulse-green 2s infinite;
+        }
+
+        @keyframes pulse-green {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+
+        .mock-window-body {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            height: 320px;
+            position: relative;
+        }
+
+        @media (max-width: 500px) {
+            .mock-window-body {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+        }
+
+        /* Raindrop Source Pane */
+        .mock-pane-left {
+            padding: 1.2rem;
+            border-right: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            background: rgba(0, 0, 0, 0.15);
+        }
+
+        .mock-pane-title {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--color-muted);
+            font-weight: 700;
+            font-family: var(--font-mono);
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .mock-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            overflow-y: auto;
+        }
+
+        .mock-list-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 8px;
+            padding: 0.6rem 0.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+            transition: all 0.2s;
+            cursor: default;
+        }
+
+        .mock-list-item:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(0, 240, 255, 0.15);
+        }
+
+        .mock-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .mock-item-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--color-text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 170px;
+        }
+
+        .mock-item-meta {
+            display: flex;
+            gap: 0.3rem;
+            align-items: center;
+        }
+
+        .mock-badge {
+            font-size: 0.6rem;
+            padding: 0.1rem 0.3rem;
+            border-radius: 4px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .mock-badge.blue {
+            background: rgba(0, 240, 255, 0.1);
+            color: var(--color-primary);
+        }
+
+        .mock-badge.purple {
+            background: rgba(189, 0, 255, 0.1);
+            color: var(--color-secondary);
+        }
+
+        .mock-item-excerpt {
+            font-size: 0.7rem;
+            color: var(--color-muted);
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Obsidian Target Pane */
+        .mock-pane-right {
+            padding: 1.2rem;
+            background: rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .mock-obsidian-note {
+            background: rgba(6, 7, 11, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 8px;
+            padding: 1rem;
+            height: 100%;
+            overflow-y: auto;
+            font-family: var(--font-body);
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .mock-frontmatter {
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+            padding-bottom: 0.6rem;
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            color: #8b949e;
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .mock-fm-key { color: var(--color-primary); }
+        .mock-fm-val { color: #f2cc60; }
+        .mock-fm-tag { color: var(--color-secondary); }
+
+        .mock-note-content {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .mock-note-h1 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--color-text);
+            margin-bottom: 0.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .mock-note-p {
+            font-size: 0.7rem;
+            color: var(--color-muted);
+            line-height: 1.4;
+        }
+
+        .mock-note-quote {
+            border-left: 2px solid var(--color-primary);
+            padding-left: 0.5rem;
+            margin: 0.2rem 0;
+            font-size: 0.7rem;
+            color: #c9d1d9;
+            font-style: italic;
+        }
+
+        /* Flow Indicator Lines */
+        .mock-flow-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.25);
+        }
+
+        .mock-flow-icon {
+            font-size: 1rem;
+            animation: rotate-sync 3s linear infinite;
+        }
+
+        @keyframes rotate-sync {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .mock-window-footer {
+            background: rgba(255, 255, 255, 0.01);
+            padding: 0.6rem 1.2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.65rem;
+            color: var(--color-muted);
+            font-family: var(--font-mono);
+        }
 
         /* Footer */
         footer {
@@ -585,7 +889,88 @@ layout: null
                 </div>
             </div>
             <div class="hero-image-container">
-                <img src="assets/showcase_hero.png" alt="Make It Rain Dashboard Sync" class="hero-image">
+                <div class="mock-window">
+                    <!-- Top Window Bar -->
+                    <div class="mock-window-header">
+                        <div class="mock-dots">
+                            <span class="mock-dot red"></span>
+                            <span class="mock-dot yellow"></span>
+                            <span class="mock-dot green"></span>
+                        </div>
+                        <div class="mock-window-title">make-it-rain-sync.db</div>
+                        <div class="mock-status-pill">
+                            <span class="mock-status-indicator"></span>
+                            <span>Connected</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Window Body -->
+                    <div class="mock-window-body">
+                        <!-- Middle Flow Overlay -->
+                        <div class="mock-flow-container">
+                            <span class="mock-flow-icon">🌧️</span>
+                        </div>
+
+                        <!-- Left Pane: Raindrop.io -->
+                        <div class="mock-pane-left">
+                            <div class="mock-pane-title">
+                                <span>📥 Raindrop.io Source</span>
+                            </div>
+                            <div class="mock-list">
+                                <div class="mock-list-item">
+                                    <div class="mock-item-header">
+                                        <span class="mock-item-title">Designing for Dark Mode</span>
+                                        <span class="mock-badge blue">Link</span>
+                                    </div>
+                                    <span class="mock-item-excerpt">Best practices for UI color palettes, typography and contrast...</span>
+                                </div>
+                                <div class="mock-list-item">
+                                    <div class="mock-item-header">
+                                        <span class="mock-item-title">Understanding AST Parsers</span>
+                                        <span class="mock-badge purple">Article</span>
+                                    </div>
+                                    <span class="mock-item-excerpt">A deep-dive tutorial into Abstract Syntax Trees in TypeScript...</span>
+                                </div>
+                                <div class="mock-list-item">
+                                    <div class="mock-item-header">
+                                        <span class="mock-item-title">Obsidian CSS Themes</span>
+                                        <span class="mock-badge blue">Link</span>
+                                    </div>
+                                    <span class="mock-item-excerpt">Customizing your Obsidian vault appearance with clean CSS rules...</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Pane: Obsidian Notes -->
+                        <div class="mock-pane-right">
+                            <div class="mock-pane-title">
+                                <span>📂 Obsidian Vault Target</span>
+                            </div>
+                            <div class="mock-obsidian-note">
+                                <div class="mock-frontmatter">
+                                    <span>---</span>
+                                    <span><span class="mock-fm-key">title</span>: "Designing for Dark Mode"</span>
+                                    <span><span class="mock-fm-key">type</span>: <span class="mock-fm-val">link</span></span>
+                                    <span><span class="mock-fm-key">tags</span>:</span>
+                                    <span>  - <span class="mock-fm-tag">design</span></span>
+                                    <span>  - <span class="mock-fm-tag">ui-ux</span></span>
+                                    <span>---</span>
+                                </div>
+                                <div class="mock-note-content">
+                                    <div class="mock-note-h1"># Designing for Dark Mode</div>
+                                    <div class="mock-note-quote">> A collection of guidelines and color schemes for dark systems.</div>
+                                    <p class="mock-note-p">This note was auto-imported via the Make It Rain plugin API sync.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Window Footer -->
+                    <div class="mock-window-footer">
+                        <span>Synced: 1,482 items</span>
+                        <span>Rate Limit: 60 req/min</span>
+                    </div>
+                </div>
             </div>
         </section>
 
