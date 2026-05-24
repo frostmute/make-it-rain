@@ -55,6 +55,7 @@ export interface MakeItRainSettings {
     contentTypeTemplateToggles: ContentTypeToggles;
     downloadFiles: boolean;
     createFolderNotes: boolean;
+    archiveScraping: boolean;
 }
 
 export interface ModalFetchOptions {
@@ -88,6 +89,11 @@ export interface RaindropItem {
     };
     readonly highlights?: ReadonlyArray<RaindropHighlight>;
     readonly type: RaindropType;
+    readonly cache?: {
+        readonly status: string;
+        readonly size?: number;
+        readonly created?: string;
+    };
     readonly file?: {
         readonly name?: string;
         readonly size?: number;
@@ -122,6 +128,7 @@ export interface TemplateData {
     url: string;
     domain?: string;
     renderedType?: string;
+    scrapedContent?: string;
     [key: string]: unknown; // Allow for custom fields if needed, but primary fields are typed
 }
 

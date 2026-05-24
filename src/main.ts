@@ -52,7 +52,11 @@ import {
     toUppercase,
     toLowercase,
     toTitleCase,
-    truncateString
+    truncateString,
+    
+    // Scraping utilities
+    fetchArchiveContent,
+    extractContentFromHtml
 } from './utils';
 
 // System collection IDs from raindrop.io API docs
@@ -637,6 +641,14 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 templateData.collectionParentId = collectionHierarchy.get(raindrop.collection?.$id || 0)?.parentId;
             }
 
+            if (this.settings.archiveScraping && raindrop.cache?.status === 'ready') {
+                loadingNotice.setMessage(`Scraping archive for '${raindrop.title || 'Untitled'}'... (${processed}/${total})`);
+                const archiveHtml = await fetchArchiveContent(raindrop._id, this.settings.apiToken);
+                if (archiveHtml) {
+                    templateData.scrapedContent = extractContentFromHtml(archiveHtml);
+                }
+            }
+
             const enhancedDataForRender: Record<string, unknown> = {
                 ...templateData,
                 domain: getDomain(templateData.link || ''),
@@ -667,6 +679,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
 
                 let noteBody = (raindrop.cover ? `![${sanitizeFileName(raindrop.title) || 'Cover'}](${raindrop.cover})\n\n` : "") + `# ${sanitizeMarkdownContent(raindrop.title)}\n\n`;
                 if (raindrop.excerpt) noteBody += `## Description\n${sanitizeMarkdownContent(raindrop.excerpt)}\n\n`;
+                if (templateData.scrapedContent) noteBody += `## Article Content\n${templateData.scrapedContent}\n\n`;
                 if (templateData.note) noteBody += `## Notes\n${sanitizeMarkdownContent(templateData.note)}\n\n`;
                 if (templateData.highlights?.length) {
                     noteBody += `## Highlights\n${templateData.highlights.map(h => `- ${sanitizeMarkdownContent(h.text).replace(/\n/g, ' ')}${h.note ? `\n  *Note:* ${sanitizeMarkdownContent(h.note).replace(/\n/g, ' ')}` : ""}`).join('\n')}\n\n`;
