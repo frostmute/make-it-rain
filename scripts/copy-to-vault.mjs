@@ -8,8 +8,7 @@ export const copyToVaults = () => {
     }
 
     const targetVaultPaths = [
-        '/home/frost/Obsidian Vault/.obsidian/plugins/make-it-rain/',
-        '/home/frost/Make-It-Rain Test/.obsidian/plugins/make-it-rain/'
+        '/Users/thewytchhaus/Documents/Obsidian Vault/.obsidian/plugins/make-it-rain/',
     ];
     const sourceFiles = [
         'main.js',
