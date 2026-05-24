@@ -105,7 +105,7 @@ This command allows you to quickly import a single raindrop item if you know its
 ### Accessing Quick Import
 
 1. Open the Obsidian **Command Palette** (`Ctrl+P` or `Cmd+P` on Mac).
-2. Search for and select the command: **"Quick import raindrop by url/id"**.
+2. Search for and select the command: **"Quick import raindrop by URL or ID"**.
 
 ### Quick Import Modal Options
 

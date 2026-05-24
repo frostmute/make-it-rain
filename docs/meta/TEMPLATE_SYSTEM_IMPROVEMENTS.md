@@ -167,7 +167,7 @@ Missing helpers:
 - Document all helpers
 - Show examples in preview
 
-#### 1.3 Variable Browser & Autocomplete
+#### 1.3 Variable Browser & Autocomplete [IMPLEMENTED]
 
 **Problem:** Users don't know available variables
 

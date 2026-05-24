@@ -253,21 +253,23 @@ const template = `
 
 ### Template Variables
 
-- `{{title}}`: Raindrop title
-- `{{excerpt}}`: Raindrop excerpt
-- `{{url}}`: Original URL
-- `{{type}}`: Content type
-- `{{created}}`: Creation date
-- `{{updated}}`: Last update date
-- `{{collection}}`: Collection info
-- `{{tags}}`: Raindrop tags
+- `{{title}}`: Raindrop title (YAML-escaped)
+- `{{excerpt}}`: Raindrop excerpt (YAML-escaped)
+- `{{link}}`: Original URL (alias `{{url}}`)
+- `{{type}}`: Content type (e.g., `article`)
+- `{{created}}`: Creation date (ISO)
+- `{{lastupdate}}`: Last update date (alias `{{updated}}`)
+- `{{collectionTitle}}`: Collection name
+- `{{tags}}`: Array of tags
 
 ### Template Helpers
 
 - `{{#if}}`: Conditional blocks
 - `{{#each}}`: Iteration
-- `{{formatDate}}`: Date formatting
-- `{{sanitize}}`: Text sanitization
+- `{{uppercase}}`: UPPERCASE transformation
+- `{{lowercase}}`: lowercase transformation
+- `{{titlecase}}`: Title Case transformation
+- `{{truncate}}`: String truncation with length parameter
 
 ## Error Handling
 

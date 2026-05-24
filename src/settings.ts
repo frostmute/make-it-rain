@@ -2,6 +2,7 @@ import { App, PluginSettingTab, Setting, TextComponent, ButtonComponent, Notice,
 import type RaindropToObsidian from './main';
 import { RaindropTypes } from './types';
 import { MakeItRainSettings } from './types';
+import { VariableBrowserModal } from './modals';
 
 export const DEFAULT_SETTINGS: MakeItRainSettings = {
     apiToken: '',
@@ -651,6 +652,18 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
             });
 
         if (this.plugin.settings.isTemplateSystemEnabled) {
+            new Setting(templateContent)
+                .setName('Variable Reference')
+                .setDesc('Browse all available variables and helpers you can use in your templates.')
+                .addButton((button: ButtonComponent) => {
+                    button
+                        .setButtonText("Browse available variables")
+                        .setIcon("search")
+                        .onClick(() => {
+                            new VariableBrowserModal(this.app).open();
+                        });
+                });
+
             new Setting(templateContent).setName('Default template').setHeading();
             new Setting(templateContent)
                 .setDesc('This template is used if no content-type specific template is active or defined below.')

@@ -22,7 +22,7 @@ collectionGroup: "CORE KNOWLEDGE"
 collectionParentId: 12345 # Only if a parent exists
 tags:
   - example-tag
-  - another-tag
+  - another_tag
 banner: https://example.com/cover-image.jpg # Field name from settings
 ---
 
@@ -33,6 +33,9 @@ banner: https://example.com/cover-image.jpg # Field name from settings
 ## Description
 This is the description or excerpt of the raindrop
 
+## Article Content
+This is where the full article content appears if Archive Scraping is enabled.
+
 ## Notes
 These are notes added to the raindrop in Raindrop.io
 
@@ -42,11 +45,13 @@ These are notes added to the raindrop in Raindrop.io
 - Another highlighted text from the raindrop.
 ```
 
+**Note:** When the template system is disabled, local file attachments (PDFs, EPUBs, etc.) are downloaded to your vault but are **not** automatically linked within the note. Use the [Template System](template-system.md) to include `{{localFile}}` or `{{localEmbed}}` for automatic linking.
+
 ### Key Frontmatter Fields (Fallback Structure)
 
 - `id`: Raindrop ID.
 - `title`: Raindrop title (double quotes escaped).
-- `description`: Raindrop excerpt (double quotes escaped; uses `|` for multi-line).
+- `description`: Raindrop excerpt (double quotes escaped).
 - `source`: URL of the bookmark.
 - `type`: Raw content type (e.g., `link`, `article`).
 - `created`: Creation timestamp (ISO 8601).

@@ -37,9 +37,13 @@ This is the most important setting required for the plugin to function.
 - **Setting**: Filename Template
 - **Description**: Determines how filenames are generated for your notes
 - **Default**: `{{title}}`
-- **Variables**: You can use any variable available in the [template system](template-system.md#available-variables)
-- **Example**: `{{created:YYYY-MM-DD}}-{{title}}` would create files like "2025-05-16-Article Title.md"
-- **Note**: During the fetch process, a linting process will be performed to ensure that the filename is formatted correctly and does not contain any invalid characters, using the default Obsidian filename linting rules. This means that any invalid characters will be removed, changing the filename if necessary.
+- **Variables**: The filename template supports a specific subset of variables:
+  - `{{title}}`: The title of the bookmark (sanitized for filenames)
+  - `{{id}}`: The unique Raindrop ID
+  - `{{collectionTitle}}`: The name of the collection
+  - `{{date}}`: The creation date in `YYYY-MM-DD` format
+- **Example**: `{{date}}-{{title}}` would create files like "2025-05-16-Article Title.md"
+- **Note**: Filenames are automatically sanitized to remove characters invalid in Obsidian/OS file systems. If a template results in an empty filename, a default "Unnamed_Raindrop_[ID]" will be used.
 - **Help**: A `(?)` help icon next to this setting in the plugin provides a direct link to this documentation section.
 
 ### Show Ribbon Icon

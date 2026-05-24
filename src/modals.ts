@@ -546,3 +546,90 @@ export class HighlightsAggregateModal extends Modal {
         contentEl.empty();
     }
 }
+
+/**
+ * Modal for browsing available template variables
+ */
+export class VariableBrowserModal extends Modal {
+    constructor(app: App) {
+        super(app);
+    }
+
+    onOpen() {
+        const { contentEl } = this;
+        contentEl.empty();
+        contentEl.addClass('make-it-rain-modal');
+        contentEl.addClass('make-it-rain-variable-browser');
+
+        contentEl.createEl('h2', { text: 'Template Variable Browser' });
+        contentEl.createEl('p', { 
+            text: 'These variables can be used in your templates using the {{variable}} syntax.',
+            cls: 'setting-item-description'
+        });
+
+        const container = contentEl.createDiv({ cls: 'make-it-rain-variable-list-container' });
+
+        this.renderCategory(container, 'Core Variables', [
+            { name: 'id', desc: 'Unique Raindrop ID' },
+            { name: 'title', desc: 'Title of the bookmark' },
+            { name: 'link', desc: 'Original URL' },
+            { name: 'excerpt', desc: 'Summary or excerpt from the page' },
+            { name: 'note', desc: 'Your personal notes on the bookmark' },
+            { name: 'type', desc: 'Content type (link, article, image, video, document, audio, book)' },
+            { name: 'created', desc: 'Creation date (ISO format)' },
+            { name: 'lastupdate', desc: 'Last update date (ISO format)' },
+            { name: 'cover', desc: 'URL to the cover image' },
+        ]);
+
+        this.renderCategory(container, 'Collection Variables', [
+            { name: 'collectionId', desc: 'ID of the collection it belongs to' },
+            { name: 'collectionTitle', desc: 'Name of the collection' },
+            { name: 'collectionPath', desc: 'Full folder path (e.g. Group / Parent / Child)' },
+            { name: 'collectionGroup', desc: 'Name of the sidebar Group' },
+            { name: 'collectionParentId', desc: 'ID of the parent collection (if any)' },
+        ]);
+
+        this.renderCategory(container, 'Formatted Variables', [
+            { name: 'formattedCreatedDate', desc: 'Created date in your local format' },
+            { name: 'formattedUpdatedDate', desc: 'Updated date in your local format' },
+            { name: 'renderedType', desc: 'Human-friendly type name' },
+            { name: 'domain', desc: 'Website domain (e.g. google.com)' },
+            { name: 'formattedTags', desc: 'Tags as space-separated hashtags (e.g. #tag1 #tag2)' },
+        ]);
+
+        this.renderCategory(container, 'Lists & Loops', [
+            { name: 'tags', desc: 'Array of tags. Use with {{#each tags}}...{{/each}}' },
+            { name: 'highlights', desc: 'Array of highlights. Each has {{text}} and {{note}}' },
+        ]);
+
+        this.renderCategory(container, 'Attachments & Scraping', [
+            { name: 'scrapedContent', desc: 'Full article content (if content scraping is enabled)' },
+            { name: 'localFile', desc: 'Wiki-link to downloaded file (e.g. [[file.pdf]])' },
+            { name: 'localEmbed', desc: 'Wiki-embed for downloaded file (e.g. ![[file.pdf]])' },
+        ]);
+
+        this.renderCategory(container, 'Helper Functions', [
+            { name: 'uppercase var', desc: 'Converts variable to UPPERCASE' },
+            { name: 'lowercase var', desc: 'Converts variable to lowercase' },
+            { name: 'titlecase var', desc: 'Converts variable to Title Case' },
+            { name: 'truncate var length', desc: 'Truncates variable to specified length' },
+        ]);
+
+        const footer = contentEl.createDiv({ cls: 'make-it-rain-button-container' });
+        new ButtonComponent(footer)
+            .setButtonText('Close')
+            .onClick(() => this.close());
+    }
+
+    private renderCategory(container: HTMLElement, title: string, variables: { name: string, desc: string }[]) {
+        container.createEl('h3', { text: title });
+        const list = container.createEl('ul', { cls: 'make-it-rain-variable-list' });
+        
+        for (const v of variables) {
+            const item = list.createEl('li');
+            item.createEl('code', { text: `{{${v.name}}}` });
+            item.createSpan({ text: ` - ${v.desc}`, cls: 'variable-description' });
+        }
+    }
+}
+

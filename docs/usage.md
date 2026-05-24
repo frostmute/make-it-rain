@@ -14,11 +14,13 @@ Before using the plugin, ensure you have:
 
 Make It Rain provides two main ways to import your bookmarks, each with its own modal:
 
-1.  **Fetch Raindrops (for bulk/filtered imports)**:
-    *   Access via **Command Palette**: Press `Ctrl+P` (or `Cmd+P` on Mac) and search for "Make It Rain: Fetch Raindrops".
+1.  **Fetch raindrops (filtered) (for bulk/filtered imports)**:
+    *   Access via **Command Palette**: Press `Ctrl+P` (or `Cmd+P` on Mac) and search for "Make It Rain: Fetch raindrops (filtered)".
     *   Access via **Ribbon Icon**: Click the raindrop icon in the left sidebar (if enabled in plugin settings).
-2.  **Quick Import Raindrop by URL/ID (for single item imports)**:
-    *   Access via **Command Palette**: Press `Ctrl+P` (or `Cmd+P` on Mac) and search for "Make It Rain: Quick Import Raindrop by URL/ID".
+2.  **Quick import raindrop by URL or ID (for single item imports)**:
+    *   Access via **Command Palette**: Press `Ctrl+P` (or `Cmd+P` on Mac) and search for "Make It Rain: Quick import raindrop by URL or ID".
+3.  **Aggregate highlights by tag (for consolidating research)**:
+    *   Access via **Command Palette**: Press `Ctrl+P` (or `Cmd+P` on Mac) and search for "Make It Rain: Aggregate highlights by tag".
 
 ## Fetch Raindrops Modal Options
 
