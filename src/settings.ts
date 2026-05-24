@@ -57,8 +57,13 @@ tags:
 {{/if}}
 
 {{#if scrapedContent}}
-## Article Content
+## Content
 {{scrapedContent}}
+{{/if}}
+
+{{#if localEmbed}}
+## Local Attachment
+{{localEmbed}}
 {{/if}}
 
 ---
@@ -120,6 +125,11 @@ tags:
 {{scrapedContent}}
 {{/if}}
 
+{{#if localEmbed}}
+## Local Attachment
+{{localEmbed}}
+{{/if}}
+
 ---
 ## Details
 - **Type**: {{renderedType}}
@@ -174,6 +184,16 @@ tags:
 {{/each}}
 {{/if}}
 
+{{#if scrapedContent}}
+## Full Content
+{{scrapedContent}}
+{{/if}}
+
+{{#if localEmbed}}
+## Local Copy
+{{localEmbed}}
+{{/if}}
+
 ---
 ## Details
 - **Type**: {{renderedType}}
@@ -202,7 +222,11 @@ tags:
 {{bannerFieldName}}: {{cover}}
 ---
 
+{{#if localEmbed}}
+{{localEmbed}}
+{{else}}
 ![{{title}}]({{cover}})
+{{/if}}
 
 {{#if excerpt}}
 *{{excerpt}}*
@@ -243,8 +267,12 @@ tags:
 {{/if}}
 ---
 
+{{#if localEmbed}}
+{{localEmbed}}
+{{else}}
 {{#if cover}}
 ![{{title}}]({{cover}})
+{{/if}}
 {{/if}}
 
 # {{title}}
@@ -299,6 +327,11 @@ tags:
 
 # {{title}}
 
+{{#if localEmbed}}
+## Local File
+{{localEmbed}}
+{{/if}}
+
 {{#if excerpt}}
 ## Summary
 {{excerpt}}
@@ -347,8 +380,12 @@ tags:
 {{/if}}
 ---
 
+{{#if localEmbed}}
+{{localEmbed}}
+{{else}}
 {{#if cover}}
 ![{{title}}]({{cover}})
+{{/if}}
 {{/if}}
 
 # {{title}}
@@ -379,12 +416,7 @@ tags:
 - **Updated**: {{formattedUpdatedDate}}
 - **Tags**: {{formattedTags}}
 
-[Listen to Audio]({{link}})
-
-{{#if localEmbed}}
-## Local File
-{{localEmbed}}
-{{/if}}`,
+[Listen to Audio]({{link}})`,
         book: `---
 title: "{{title}}"
 source: {{link}}
@@ -412,6 +444,11 @@ tags:
 
 # {{title}}
 
+{{#if localEmbed}}
+## Local File
+{{localEmbed}}
+{{/if}}
+
 {{#if excerpt}}
 ## Description
 {{excerpt}}
@@ -428,11 +465,6 @@ tags:
 - {{text}}
 {{#if note}}  *Note:* {{note}}{{/if}}
 {{/each}}
-{{/if}}
-
-{{#if localEmbed}}
-## Local File
-{{localEmbed}}
 {{/if}}
 
 ---
@@ -601,8 +633,12 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
         containerEl.createEl('hr');
 
         // --- Template system Section ---
-        new Setting(containerEl).setName('Template settings').setHeading();
-        new Setting(containerEl)
+        const templateSection = containerEl.createEl('details', { cls: 'make-it-rain-advanced-options' });
+        templateSection.createEl('summary', { text: 'Template settings' });
+        const templateContent = templateSection.createDiv();
+
+        new Setting(templateContent).setName('Enable template system').setHeading();
+        new Setting(templateContent)
             .setName('Enable template system')
             .setDesc('Use custom templates for formatting imported notes. If disabled, a basic note structure will be used.')
             .addToggle((toggle: ToggleComponent) => {
@@ -615,8 +651,8 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
             });
 
         if (this.plugin.settings.isTemplateSystemEnabled) {
-            new Setting(containerEl).setName('Default template').setHeading();
-            new Setting(containerEl)
+            new Setting(templateContent).setName('Default template').setHeading();
+            new Setting(templateContent)
                 .setDesc('This template is used if no content-type specific template is active or defined below.')
                 .setClass('setting-item-stacked') // Added class
                 .addTextArea((text: TextAreaComponent) => {
@@ -643,8 +679,8 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                         });
                 });
 
-            new Setting(containerEl).setName('Content-type templates').setHeading();
-            const contentTypeDesc = containerEl.createEl('p', { cls: 'setting-item-description' });
+            new Setting(templateContent).setName('Content-type templates').setHeading();
+            const contentTypeDesc = templateContent.createEl('p', { cls: 'setting-item-description' });
             contentTypeDesc.appendText('Define specific templates for different raindrop types. If a type-specific template is enabled and filled, it will be used instead of the default template. If disabled or empty, the default template is used for that type. Visit the documentation at https://frostmute.github.io/make-it-rain/template-system/ for available variables and instructions.');
 
 
@@ -653,9 +689,9 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                 const typeStr = type as string;
                 const typeKey = type as keyof typeof this.plugin.settings.contentTypeTemplates;
                 
-                new Setting(containerEl).setName(`${typeStr.charAt(0).toUpperCase() + typeStr.slice(1)} template`).setHeading();
+                new Setting(templateContent).setName(`${typeStr.charAt(0).toUpperCase() + typeStr.slice(1)} template`).setHeading();
                 
-                new Setting(containerEl)
+                new Setting(templateContent)
                     .setName(`Enable ${typeStr} template`)
                     .setDesc(`Use a custom template for "${typeStr}" items.`)
                     .addToggle((toggle: ToggleComponent) => {
@@ -669,7 +705,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                     });
 
                 if (this.plugin.settings.contentTypeTemplateToggles[typeKey]) {
-                    new Setting(containerEl)
+                    new Setting(templateContent)
                         .setDesc(`Template for "${typeStr}" content. Leave empty to use the default template.`)
                         .setClass('setting-item-stacked') // Added class
                         .addTextArea((text: TextAreaComponent) => {
@@ -701,7 +737,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                                 });
                         });
                 }
-                 containerEl.createEl('hr');
+                 templateContent.createEl('hr');
             }
         }
 

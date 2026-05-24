@@ -20,6 +20,9 @@ Make It Rain enables you to seamlessly import your bookmarks from [Raindrop.io](
 - **Content Type Templates:** Create different templates for different types of content (articles, images, videos, etc.).
 - **Flexible Import Options:** Choose to fetch only new items or update existing notes.
 - **Customizable Filenames & Tags:** Define your note filenames and automatically append custom Obsidian tags.
+- **Archive Scraping:** Heuristically extract clean text content from Raindrop's permanent archives.
+- **Native File Downloads:** Automatically retrieve PDF, EPUB, and media attachments from Raindrop.io.
+- **Automatic Folder Notes:** Generate index notes for collection folders to improve navigation.
 
 ## Getting Started
 

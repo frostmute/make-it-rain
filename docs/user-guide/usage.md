@@ -34,32 +34,9 @@ The "Fetch raindrops" modal is designed for bulk imports and provides several op
   * Default is the path specified in your plugin settings.
   * You can change this for each import session.
 
-### Filter Options
+### Advanced Options (Collapsible)
 
-* **Filter by collections**: You can select collections from a dynamic, searchable list.
-  * Use the search box to find specific collections.
-  * Click a collection in the list to add it to the filter.
-  * You can also manually enter comma-separated raindrop.io collection *ids or names* into the text field.
-  * Leave empty to fetch from all collections (default behavior if no collections are specified).
-
-* **Include subcollections**: Toggle to include raindrops from subcollections.
-  * When enabled, fetches raindrops from all nested collections for all selected filters.
-  * Maintains proper folder hierarchy in your vault.
-
-* **Filter by tags**: Enter tags to filter by (comma-separated, case sensitive).
-  * Example: `research, important, to-read`
-
-* **Tag match type**: Choose between:
-  * **Match all tags (and)**: Raindrops must have all specified tags.
-  * **Match any tag (or)**: Raindrops can have any of the specified tags.
-
-* **Filter by type**: Select a specific content type.
-  * Options: All types, Link, Article, Image, Video, Document, Audio, Book.
-  * Useful for importing only specific types of content.
-
-  **Note**: If no filters are selected, all raindrops will be fetched. For large collections, this can take a while. The plugin will show a progress bar and rate limit warnings if any are encountered.
-
-### Import Options
+To keep the interface clean, secondary options are now grouped in a collapsible "Advanced options" section:
 
 * **Use raindrop title for file name**: Toggle to use raindrop titles as filenames.
   * When enabled: Uses the title (via filename template from settings) for filenames.
@@ -76,12 +53,35 @@ The "Fetch raindrops" modal is designed for bulk imports and provides several op
   * Compares the `last_update` timestamp from raindrop.io.
   * Only updates if the raindrop is newer than the existing note.
 
-### Template Options
+* **Note Template Overrides**: Temporarily override your global template settings for this specific import session.
 
-If you have enabled the [template system](template-system.md), you'll see additional options:
+### Filter Options
 
-* **Use default template only**: Ignore content-type specific templates and use the default template for all items in this fetch.
-* **Force use of content-type templates**: Use specific content-type templates even if they are disabled in global settings (for this fetch only).
+* **Filter by collections**: You can select collections from a dynamic, searchable list.
+  * Use the search box to find specific collections.
+  * Click a collection in the list to add it to the filter.
+  * Collections are sorted alphabetically by their full path.
+  * Leave empty to fetch from all collections (default behavior if no collections are specified).
+
+* **Include subcollections**: Toggle to include raindrops from subcollections.
+  * When enabled, fetches raindrops from all nested collections for all selected filters.
+  * Maintains proper folder hierarchy in your vault.
+
+* **Filter by tags**: Enter tags to filter by (comma-separated, case sensitive).
+  * Example: `research, important, to-read`
+
+* **Tag match type**: Choose between **Match all tags (and)** or **Match any tag (or)**.
+
+* **Filter by type**: Select a specific content type.
+  * Options: All types, Link, Article, Image, Video, Document, Audio, Book.
+
+### Automated Features
+
+When fetching, the plugin automatically handles:
+
+- **Archive Scraping**: If enabled in settings, the plugin will attempt to pull full content for articles.
+- **File Downloads**: Authenticated retrieval of PDF, EPUB, and media attachments.
+- **Folder Notes**: Generation of index files for collection folders.
 
 ## Fetching Process (Bulk/Filtered Import)
 

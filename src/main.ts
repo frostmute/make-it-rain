@@ -7,7 +7,7 @@
  * to promote code reuse and maintainability.
  */
 
-import { App, Notice, Plugin, PluginManifest, TFile, TFolder, TAbstractFile, normalizePath } from 'obsidian';
+import { App, Notice, Plugin, PluginManifest, TFile, TFolder, TAbstractFile, normalizePath, requestUrl } from 'obsidian';
 import { 
     MakeItRainSettings, 
     RaindropType, 
@@ -274,6 +274,15 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 group.collections.forEach(colId => {
                     collectionToGroupMap.set(colId, group.title);
                 });
+            });
+
+            // Add full paths to collection name map for resolution
+            allCollections.forEach(col => {
+                const pathSegments = getFullPathSegments(col._id, collectionHierarchy, collectionIdToNameMap);
+                if (pathSegments.length > 1) {
+                    const fullPath = pathSegments.join(' > ');
+                    collectionNameToIdMap.set(fullPath.toLowerCase(), col._id);
+                }
             });
 
             if (options.collections) {
@@ -658,9 +667,27 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 formattedTags: formatTags(templateData.tags || []),
             };
 
-            if (this.settings.downloadFiles && raindrop.link) {
-                // Simplified download logic for brevity, keeping core functionality
-                // ... (Existing download logic remains)
+            if (this.settings.downloadFiles && raindrop.link && (raindrop.link.includes('raindrop.io') && (raindrop.link.includes('/file') || raindrop.link.includes('/v2/')))) {
+                try {
+                    loadingNotice.setMessage(`Downloading file for '${raindrop.title || 'Untitled'}'... (${processed}/${total})`);
+                    const fileExtension = raindrop.file?.name?.split('.').pop() || (raindrop.file?.type?.split('/').pop()) || 'file';
+                    const binaryFileName = `${generatedFilename}.${fileExtension}`;
+                    const binaryFilePath = normalizePath(`${targetPath}/${binaryFileName}`);
+                    
+                    const fileResponse = await requestUrl({
+                        url: raindrop.link,
+                        method: 'GET',
+                        headers: { 'Authorization': `Bearer ${this.settings.apiToken}` }
+                    });
+                    
+                    if (fileResponse.status === 200) {
+                        await app.vault.adapter.writeBinary(binaryFilePath, fileResponse.arrayBuffer);
+                        enhancedDataForRender.localFile = `[[${binaryFileName}]]`;
+                        enhancedDataForRender.localEmbed = `![[${binaryFileName}]]`;
+                    }
+                } catch (error) {
+                    console.error(`Error downloading file for raindrop ${raindrop._id}:`, error);
+                }
             }
 
             let finalContent = '';
@@ -692,8 +719,8 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             else await app.vault.create(filePath, finalContent);
 
             return { success: true, type: processOutcome };
-        } catch {
-            console.error(`Error processing raindrop ${raindrop._id}`);
+        } catch (error) {
+            console.error(`Error processing raindrop ${raindrop._id}:`, error);
             return { success: false, type: 'skipped' };
         }
     }

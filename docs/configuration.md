@@ -56,6 +56,27 @@ This is the most important setting required for the plugin to function.
 - **Default**: `banner`
 - **Usage**: Some Obsidian themes and plugins look for specific banner/image field names in frontmatter. If you use a different theme or plugin that expects a different field name, you can customize it here. By default this field is populated with the cover image URL from Raindrop.io.
 
+### Create Folder Notes
+
+- **Setting**: Create Folder Notes
+- **Description**: Automatically generates an index note for each collection folder
+- **Default**: Enabled
+- **Note**: These notes provide a structured overview of all bookmarks in a collection, improving navigation and vault organization.
+
+### Download Files
+
+- **Setting**: Download Files
+- **Description**: Automatically fetches native Raindrop upload attachments (PDFs, EPUBs, images, etc.)
+- **Default**: Enabled
+- **Note**: Requires a valid API token with file access permissions. Downloaded files are saved alongside the bookmark note.
+
+### Archive Scraping
+
+- **Setting**: Archive Scraping
+- **Description**: Heuristically extracts clean text content from Raindrop.io's permanent archives
+- **Default**: Disabled
+- **Note**: This feature attempts to pull the full text of an article even if the original website is offline, using Raindrop's permanent cache. It provides the `{{scrapedContent}}` variable for templates.
+
 ## Template System
 
 The template system allows you to customize how your Raindrop bookmarks are formatted in Obsidian notes.

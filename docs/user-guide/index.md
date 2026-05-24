@@ -80,6 +80,16 @@ Once you've completed these three steps, you'll be ready to import all your book
   - Copy-paste ready templates
   - Customization tips
 
+- **[📂 Archive Scraping](configuration.md#archive-scraping)** `Intermediate`
+  - Extracting full text from archives
+  - Heuristic content extraction
+  - Using `{{scrapedContent}}` in templates
+
+- **[📥 File Downloads](configuration.md#download-files-locally)** `Intermediate`
+  - Native Raindrop upload retrieval
+  - PDF, EPUB, and media support
+  - Using `{{localFile}}` and `{{localEmbed}}`
+
 ### Help & Support
 
 **Troubleshooting and answers.**
@@ -351,6 +361,12 @@ Complete control over note format:
 - Content-type specific templates
 - Handlebars-like syntax for advanced formatting
 - Built-in helpers for common operations
+
+### 📂 Archive Scraping & Downloads
+
+- **Archive Scraping**: Pull full text from Raindrop's permanent archives (ideal for offline content).
+- **File Downloads**: Authenticated retrieval of PDF, EPUB, and media attachments directly into your vault.
+- **Folder Notes**: Automatic generation of index files for organized navigation.
 
 ### 🏷️ Tag Management
 

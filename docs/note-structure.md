@@ -18,6 +18,7 @@ lastupdate: 2023-10-28T10:20:00Z
 collectionId: 98765
 collectionTitle: "My Collection"
 collectionPath: "Research/My Collection"
+collectionGroup: "CORE KNOWLEDGE"
 collectionParentId: 12345 # Only if a parent exists
 tags:
   - example-tag
@@ -39,6 +40,12 @@ These are notes added to the raindrop in Raindrop.io
 - This is a highlighted text from the raindrop.
   *Note:* This is a note attached to the highlight.
 - Another highlighted text from the raindrop.
+
+## Full Content (Scraped)
+This is where the full article content would appear if Archive Scraping is enabled.
+
+## Local Attachment
+![[local-file.pdf]]
 ```
 
 ### Key Frontmatter Fields (Fallback Structure)
@@ -107,6 +114,16 @@ collectionPath: "{{collectionPath}}"
 - {{text}}
 {{#if note}}  *Note:* {{note}}{{/if}}
 {{/each}}
+{{/if}}
+
+{{#if scrapedContent}}
+## Content
+{{scrapedContent}}
+{{/if}}
+
+{{#if localEmbed}}
+## Local Attachment
+{{localEmbed}}
 {{/if}}
 
 ---

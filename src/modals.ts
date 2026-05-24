@@ -43,8 +43,13 @@ export class RaindropFetchModal extends Modal {
         new Setting(contentEl).setName('Fetch raindrops').setHeading();
 
         this.buildFetchCriteriaSection(contentEl);
-        this.buildNoteOptionsSection(contentEl);
-        this.buildTemplateOptionsSection(contentEl);
+        
+        const advancedDetails = contentEl.createEl('details', { cls: 'make-it-rain-advanced-options' });
+        advancedDetails.createEl('summary', { text: 'Advanced options' });
+        const advancedContent = advancedDetails.createDiv();
+
+        this.buildNoteOptionsSection(advancedContent);
+        this.buildTemplateOptionsSection(advancedContent);
 
         contentEl.createEl('hr');
 
@@ -91,7 +96,8 @@ export class RaindropFetchModal extends Modal {
             });
         searchInput.inputEl.addClass('make-it-rain-full-width');
         
-        const listContainer = selectionContainer.createDiv({ cls: 'make-it-rain-collection-list' });
+        const scrollContainer = selectionContainer.createDiv({ cls: 'make-it-rain-collections-container' });
+        const listContainer = scrollContainer.createDiv({ cls: 'make-it-rain-collection-list' });
 
         const renderCollections = async (filter: string = '') => {
             listContainer.empty();
@@ -124,9 +130,13 @@ export class RaindropFetchModal extends Modal {
                 return parts.join(' > ');
             };
 
-            filtered.forEach(col => {
+            const collectionsWithPaths = filtered.map(col => ({
+                col,
+                displayPath: getDisplayPath(col)
+            })).sort((a, b) => a.displayPath.localeCompare(b.displayPath));
+
+            collectionsWithPaths.forEach(({ col, displayPath }) => {
                 const item = listContainer.createDiv({ cls: 'make-it-rain-collection-item' });
-                const displayPath = getDisplayPath(col);
                 item.createEl('span', { text: displayPath });
                 item.onClickEvent(() => {
                     const current = collectionsTextComponent.getValue();

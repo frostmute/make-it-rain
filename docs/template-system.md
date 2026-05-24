@@ -75,7 +75,11 @@ String values marked with `(YAML-escaped)` are pre-processed to be safe for dire
 | `collectionId`       | `number`                 | ID of the Raindrop\'s collection.                                                                          | `{{collectionId}}`                        |
 | `collectionTitle`    | `string (YAML-escaped)`  | Title of the Raindrop\'s collection.                                                                       | `\"{{collectionTitle}}\"`                 |
 | `collectionPath`     | `string (YAML-escaped)`  | Full path of the collection, including parent folders (e.g., `Work/Projects/Active`).                      | `\"{{collectionPath}}\"`                  |
+| `collectionGroup`    | `string (YAML-escaped)`  | Name of the collection group the item belongs to.                                                          | `\"{{collectionGroup}}\"`                 |
 | `collectionParentId` | `number`                 | ID of the parent collection, if it exists. Use `{{#if collectionParentId}}...{{/if}}` to check.         | `{{collectionParentId}}`                  |
 | `tags`               | `string[] (YAML-escaped)`| Array of tag strings. Each tag string is individually pre-escaped for YAML.                              | `{{#each tags}}- {{this}}{{/each}}`       |
 | `highlights`         | `object[]`               | Array of highlight objects. Each object has `text (YAML-escaped)`, `note (YAML-escaped)`, `color`, `created`. | `{{#each highlights}}- {{text}}{{/each}}` |
-| `bannerFieldName`    | `string`                 | The user-defined frontmatter field name for banner images (from plugin settings, defaults to `banner`
+| `scrapedContent`     | `string`                 | Full text content extracted from Raindrop archive (requires "Archive Scraping" enabled).                   | `{{scrapedContent}}`                      |
+| `localFile`          | `string`                 | Wiki-link to downloaded attachment (e.g., `[[document.pdf]]`). Requires "Download files" enabled.        | `{{localFile}}`                           |
+| `localEmbed`         | `string`                 | Wiki-link embed to downloaded attachment (e.g., `![[image.png]]`). Requires "Download files" enabled.    | `{{localEmbed}}`                          |
+| `bannerFieldName`    | `string`                 | The user-defined frontmatter field name for banner images (from plugin settings, defaults to `banner`      | `{{bannerFieldName}}: {{cover}}`          |

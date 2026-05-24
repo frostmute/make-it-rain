@@ -58,6 +58,7 @@ Your imported notes organize themselves based on your Raindrop structure.
 - **Automatic folder hierarchy** mirroring your collections
 - **Automatic Folder Notes** (`FOLDER_NAME.md`) generated to serve as structured indexes
 - **Native File Downloads** to directly retrieve PDFs, EPUBs, video, and audio file attachments
+- **Archive Scraping** to extract clean text content from Raindrop.io's permanent archives
 - **Rich YAML frontmatter** with comprehensive metadata
 - **Customizable filenames** with template variables
 - **Auto-tagging** - append custom tags to all imports
@@ -154,6 +155,7 @@ Learn how to contribute to the project:
 | **Banner field name** | Frontmatter field for banner images | `banner` |
 | **Create folder notes** | Generate index notes for each collection folder | Enabled |
 | **Download files** | Fetch native Raindrop upload attachments | Enabled |
+| **Archive scraping** | Extract full text from Raindrop archives | Disabled |
 
 ### Filename template placeholders
 
@@ -185,6 +187,7 @@ id: 123456789
 collectionTitle: "Web Development"
 collectionPath: "Learning/Web Development"
 collectionGroup: "CORE KNOWLEDGE"
+collectionParentId: 987654321
 tags:
   - react
   - javascript
@@ -204,10 +207,10 @@ Your bookmark's description and highlights are formatted with:
 - Description section
 - Personal notes and annotations
 - Highlights with inline comments
+- Full article content (via Archive Scraping)
+- Local file attachments (PDFs, images, etc.)
 - Metadata and details
 - Source link
-
-All automatically organized and beautifully formatted!
 ```
 
 For complete details, see the [Note Structure documentation](https://frostmute.github.io/make-it-rain/user-guide/note-structure).

@@ -77,6 +77,16 @@ collectionPath: "{{collectionPath}}"
 {{/each}}
 {{/if}}
 
+{{#if scrapedContent}}
+## Full Content
+{{scrapedContent}}
+{{/if}}
+
+{{#if localEmbed}}
+## Attachment
+{{localEmbed}}
+{{/if}}
+
 ---
 [Source]({{link}})
 ```
@@ -127,6 +137,16 @@ collectionPath: "{{collectionPath}}"
 {{/each}}
 {{/if}}
 
+{{#if scrapedContent}}
+## Full Content
+{{scrapedContent}}
+{{/if}}
+
+{{#if localEmbed}}
+## Local Copy
+{{localEmbed}}
+{{/if}}
+
 ---
 ## Details
 - **Type**: {{renderedType}}
@@ -135,6 +155,7 @@ collectionPath: "{{collectionPath}}"
 - **Updated**: {{formattedUpdatedDate}}
 - **Tags**: {{formattedTags}}
 - **Collection**: {{collectionTitle}} (Path: {{collectionPath}})
+{{#if collectionGroup}}- **Group**: {{collectionGroup}}{{/if}}
 
 [Source]({{link}})
 ```
@@ -524,3 +545,90 @@ url: {{link}} # Using url as an alias for link
 
 [Link]({{link}})
 ```
+
+## Special Templates
+
+### The "Kitchen Sink" (Complete Test Template)
+
+This template makes use of **every single available variable** and feature in the Make It Rain plugin. It is ideal for testing your configuration or seeing everything Raindrop has to offer for a particular bookmark.
+
+```handlebars
+---
+title: "{{title}}"
+source: {{link}}
+url: {{url}}
+type: {{type}}
+id: {{id}}
+_id: {{_id}}
+created: {{created}}
+lastupdate: {{lastupdate}}
+collectionId: {{collectionId}}
+collectionTitle: "{{collectionTitle}}"
+collectionPath: "{{collectionPath}}"
+{{#if collectionGroup}}collectionGroup: "{{collectionGroup}}"{{/if}}
+{{#if collectionParentId}}collectionParentId: {{collectionParentId}}{{/if}}
+tags:
+{{#each tags}}
+  - {{this}}
+{{/each}}
+{{#if cover}}
+{{bannerFieldName}}: {{cover}}
+{{/if}}
+---
+
+{{#if cover}}
+![{{title}}]({{cover}})
+{{/if}}
+
+# {{title}}
+
+{{#if excerpt}}
+## Excerpt / Summary
+{{excerpt}}
+{{/if}}
+
+{{#if note}}
+## Personal Note
+{{note}}
+{{/if}}
+
+{{#if highlights}}
+## Highlights & Annotations
+{{#each highlights}}
+> {{text}}
+{{#if note}}*Note: {{note}}*{{/if}}
+*(Created: {{created}})*
+{{/each}}
+{{/if}}
+
+{{#if scrapedContent}}
+## Scraped Archive Content
+{{scrapedContent}}
+{{/if}}
+
+{{#if localEmbed}}
+## Local File Embed
+{{localEmbed}}
+{{/if}}
+
+{{#if localFile}}
+## Local File Link
+{{localFile}}
+{{/if}}
+
+---
+## Meta Information (Formatted)
+- **Rendered Type**: {{renderedType}}
+- **Source Domain**: {{domain}}
+- **Created Date**: {{formattedCreatedDate}}
+- **Updated Date**: {{formattedUpdatedDate}}
+- **All Tags**: {{formattedTags}}
+- **Collection**: {{collectionTitle}}
+- **Path**: {{collectionPath}}
+{{#if collectionGroup}}- **Group**: {{collectionGroup}}{{/if}}
+{{#if collectionParentId}}- **Parent Collection ID**: {{collectionParentId}}{{/if}}
+
+[Open in Raindrop.io](https://app.raindrop.io/my/0/item/{{id}})
+[Source URL]({{link}})
+```
+

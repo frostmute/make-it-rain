@@ -53,3 +53,28 @@
 .make-it-rain-input-hint-warning {
   color: var(--text-warning);
 }
+
+.make-it-rain-advanced-options {
+  margin-top: 15px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  padding: 0;
+}
+
+.make-it-rain-advanced-options summary {
+  padding: 10px;
+  cursor: pointer;
+  background-color: var(--background-secondary);
+  font-weight: var(--font-bold);
+  border-radius: var(--radius-m);
+}
+
+.make-it-rain-advanced-options[open] summary {
+  border-bottom: 1px solid var(--background-modifier-border);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.make-it-rain-advanced-options > div {
+  padding: 10px;
+}

@@ -32,31 +32,9 @@ The "Fetch Raindrops" modal is designed for bulk imports and provides several op
   - Default is the path specified in your plugin settings.
   - You can change this for each import session.
 
-### Filter Options
+### Advanced Options (Collapsible)
 
-- **Collections**: Select collections from a dynamic, filterable list populated directly from your Raindrop.io account by clicking on them. You can also still enter comma-separated Raindrop.io Collection *IDs or Names* manually into the text field.
-  - Leave empty to fetch from all collections (default behavior if no collections are specified).
-  - Example for manual entry: `Articles, RESEARCH, 12345678`
-
-- **Include Subcollections**: Toggle to include raindrops from subcollections.
-  - When enabled, fetches raindrops from all nested collections, for all selected filters.
-  - Maintains proper folder hierarchy in your vault.
-
-- **Filter by Tags**: Enter tags to filter by (comma-separated, case sensitive).
-  - Example: `research, important, to-read`
-
-- **Tag Match Type**: Choose between:
-  - **All**: Raindrops must have all specified tags (AND logic).
-  - **Any**: Raindrops can have any of the specified tags (OR logic).
-  - A `(?)` help icon next to this setting in the plugin provides a direct link to documentation on this feature.
-
-- **Filter by Type**: Select a specific content type.
-  - Options: All, Link, Article, Image, Video, Document, Audio.
-  - Useful for importing only specific types of content.
-
-  **Note**: If NO filters are selected, all raindrops will be fetched. For large collections, this can take a while... The plugin will show a progress bar and rate limit warnings, if any are encountered. This is normal behavior and the plugin will continue to fetch raindrops until all are fetched. The length of time it takes to fetch all raindrops depends on the number of raindrops in your collection, the size of each raindrop's content, and your internet connection speed.
-
-### Import Options
+To keep the interface clean, secondary options are now grouped in a collapsible "Advanced options" section:
 
 - **Use Raindrop Title for File Name**: Toggle to use raindrop titles as filenames.
   - When enabled: Uses the title (via filename template from settings) for filenames.
@@ -73,13 +51,30 @@ The "Fetch Raindrops" modal is designed for bulk imports and provides several op
   - Compares the `last_update` timestamp from Raindrop.io.
   - Only updates if the raindrop is newer than the existing note.
 
-### Template Options
+- **Note Template Overrides**: Temporarily override your global template settings for this specific import session.
 
-If you have enabled the [template system](template-system.md), you'll see additional options:
+### Filter Options
 
-- **Select Template**: Choose which template to use for generating notes.
-  - Options include "Auto (based on content type)" and any custom templates you've created.
-  - This selection overrides the content-type specific templates for this import session.
+- **Collections**: Select collections from a dynamic, alphabetically sorted list.
+  - Search/Filter through your collections for quick selection.
+  - Hierarchy is respected in the folder creation process.
+
+- **Include Subcollections**: Toggle to include raindrops from subcollections.
+  - Maintains proper folder hierarchy in your vault.
+
+- **Filter by Tags**: Enter tags to filter by (comma-separated, case sensitive).
+
+- **Tag Match Type**: Choose between **All** (AND) or **Any** (OR) logic.
+
+- **Filter by Type**: Select specific content types (All, Link, Article, Image, Video, Document, Audio).
+
+### Automated Features
+
+When fetching, the plugin automatically handles:
+
+- **Archive Scraping**: If enabled in settings, the plugin will attempt to pull full content for articles.
+- **File Downloads**: Authenticated retrieval of PDF, EPUB, and media attachments.
+- **Folder Notes**: Generation of index files for collection folders.
 
 ## Fetching Process (Bulk/Filtered Import)
 
