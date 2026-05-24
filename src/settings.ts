@@ -10,6 +10,7 @@ export const DEFAULT_SETTINGS: MakeItRainSettings = {
     showRibbonIcon: true,
     bannerFieldName: 'banner',
     isTemplateSystemEnabled: true,
+    archiveScraping: false,
     defaultTemplate: `---
 title: "{{title}}"
 source: {{link}}
@@ -53,6 +54,11 @@ tags:
 - {{text}}
 {{#if note}}  *Note:* {{note}}{{/if}}
 {{/each}}
+{{/if}}
+
+{{#if scrapedContent}}
+## Article Content
+{{scrapedContent}}
 {{/if}}
 
 ---
@@ -107,6 +113,11 @@ tags:
 - {{text}}
 {{#if note}}  *Note:* {{note}}{{/if}}
 {{/each}}
+{{/if}}
+
+{{#if scrapedContent}}
+## Article Content
+{{scrapedContent}}
 {{/if}}
 
 ---
@@ -547,6 +558,17 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                 toggle.setValue(this.plugin.settings.downloadFiles)
                     .onChange(async (value: boolean) => {
                         this.plugin.settings.downloadFiles = value;
+                        await this.plugin.saveSettings();
+                    });
+            });
+
+        new Setting(containerEl)
+            .setName('Archive scraping')
+            .setDesc('For Pro users: Automatically extract the full text content from Raindrop.io permanent archives and include it in your notes.')
+            .addToggle((toggle: ToggleComponent) => {
+                toggle.setValue(this.plugin.settings.archiveScraping)
+                    .onChange(async (value: boolean) => {
+                        this.plugin.settings.archiveScraping = value;
                         await this.plugin.saveSettings();
                     });
             });

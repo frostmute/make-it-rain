@@ -81,3 +81,9 @@ export {
 
 // Re-export all security utilities
 export { sanitizeMarkdownContent } from './securityUtils';
+
+// Re-export all scraping utilities
+export {
+    fetchArchiveContent,
+    extractContentFromHtml
+} from './scrapingUtils';
