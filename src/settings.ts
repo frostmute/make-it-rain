@@ -883,13 +883,15 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                     text.setValue(name)
                         .setPlaceholder('Template name')
                         .onChange(async (newName) => {
-                            if (!newName || newName === name || namedTemplates[newName]) return;
+                            if (!newName || newName === name) return;
+                            if (Object.prototype.hasOwnProperty.call(namedTemplates, newName)) {
+                                new Notice(`Template name "${newName}" already exists.`);
+                                return;
+                            }
                             const content = namedTemplates[name];
                             delete namedTemplates[name];
                             namedTemplates[newName] = content;
                             await this.plugin.saveSettings();
-                            // We don't refresh immediately to avoid losing focus, 
-                            // but the data is updated.
                         });
                 })
                 .addButton((button) => {
