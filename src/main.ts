@@ -836,11 +836,11 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             return parseNodes();
         };
 
-        const resolveTemplate = (name: string): string => {
-            if (this.settings.namedTemplates[name]) return this.settings.namedTemplates[name];
+        const resolveTemplate = (name: string): string | null => {
+            if (Object.prototype.hasOwnProperty.call(this.settings.namedTemplates, name)) return this.settings.namedTemplates[name];
             if (name === 'default') return this.settings.defaultTemplate;
-            if (name in this.settings.contentTypeTemplates) return this.settings.contentTypeTemplates[name as keyof typeof this.settings.contentTypeTemplates];
-            return '';
+            if (Object.prototype.hasOwnProperty.call(this.settings.contentTypeTemplates, name)) return this.settings.contentTypeTemplates[name as keyof typeof this.settings.contentTypeTemplates];
+            return null;
         };
 
         const renderAST = (nodes: ASTNode[], context: Record<string, unknown>, blocks: Map<string, ASTNode[]>): string => {
