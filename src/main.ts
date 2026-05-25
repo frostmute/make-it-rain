@@ -819,7 +819,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     }
                 } else if (node.type === 'block') {
                     const blockContent = blocks.has(node.blockName!) ? blocks.get(node.blockName!)! : node.thenBranch!;
-                    result += renderAST(blockContent, context, blocks);
+                    result += renderAST(blockContent, context, blocks, includeDepth);
                 } else if (node.type === 'extends') {
                     // This only happens if inheritance failed to resolve a parent
                     // In that case, we render the child content as a fallback
