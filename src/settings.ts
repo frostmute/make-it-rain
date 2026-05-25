@@ -68,12 +68,14 @@ tags:
 {{/if}}
 
 ---
+{{#block 'details'}}
 ## Details
 - **Type**: {{renderedType}}
 - **Domain**: {{domain}}
 - **Created**: {{formattedCreatedDate}}
 - **Updated**: {{formattedUpdatedDate}}
 - **Tags**: {{formattedTags}}
+{{/block}}
 `,
     contentTypeTemplates: {
         link: `---
@@ -132,12 +134,14 @@ tags:
 {{/if}}
 
 ---
+{{#block 'details'}}
 ## Details
 - **Type**: {{renderedType}}
 - **Domain**: {{domain}}
 - **Created**: {{formattedCreatedDate}}
 - **Updated**: {{formattedUpdatedDate}}
 - **Tags**: {{formattedTags}}
+{{/block}}
 
 [Source]({{link}})`,
         article: `---
@@ -196,12 +200,14 @@ tags:
 {{/if}}
 
 ---
+{{#block 'details'}}
 ## Details
 - **Type**: {{renderedType}}
 - **Domain**: {{domain}}
 - **Created**: {{formattedCreatedDate}}
 - **Updated**: {{formattedUpdatedDate}}
 - **Tags**: {{formattedTags}}
+{{/block}}
 
 [Read Article]({{link}})`,
         image: `---
@@ -239,12 +245,14 @@ tags:
 {{/if}}
 
 ---
+{{#block 'details'}}
 ## Details
 - **Type**: {{renderedType}}
 - **Domain**: {{domain}}
 - **Created**: {{formattedCreatedDate}}
 - **Updated**: {{formattedUpdatedDate}}
 - **Tags**: {{formattedTags}}
+{{/block}}
 
 [View Original]({{link}})`,
         video: `---
@@ -297,12 +305,14 @@ tags:
 {{/if}}
 
 ---
+{{#block 'details'}}
 ## Details
 - **Type**: {{renderedType}}
 - **Domain**: {{domain}}
 - **Created**: {{formattedCreatedDate}}
 - **Updated**: {{formattedUpdatedDate}}
 - **Tags**: {{formattedTags}}
+{{/block}}
 
 [Watch Video]({{link}})`,
         document: `---
@@ -352,12 +362,14 @@ tags:
 {{/if}}
 
 ---
+{{#block 'details'}}
 ## Details
 - **Type**: {{renderedType}}
 - **Domain**: {{domain}}
 - **Created**: {{formattedCreatedDate}}
 - **Updated**: {{formattedUpdatedDate}}
 - **Tags**: {{formattedTags}}
+{{/block}}
 
 [Open Document]({{link}})`,
         audio: `---
@@ -410,12 +422,14 @@ tags:
 {{/if}}
 
 ---
+{{#block 'details'}}
 ## Details
 - **Type**: {{renderedType}}
 - **Domain**: {{domain}}
 - **Created**: {{formattedCreatedDate}}
 - **Updated**: {{formattedUpdatedDate}}
 - **Tags**: {{formattedTags}}
+{{/block}}
 
 [Listen to Audio]({{link}})`,
         book: `---
@@ -469,11 +483,13 @@ tags:
 {{/if}}
 
 ---
+{{#block 'details'}}
 ## Details
 - **Type**: {{renderedType}}
 - **Created**: {{formattedCreatedDate}}
 - **Updated**: {{formattedUpdatedDate}}
 - **Tags**: {{formattedTags}}
+{{/block}}
 
 [Open Book]({{link}})`
     },
@@ -487,7 +503,8 @@ tags:
         book: true
     },
     downloadFiles: false,
-    createFolderNotes: false
+    createFolderNotes: false,
+    namedTemplates: {}
 };
 
 export class RaindropToObsidianSettingTab extends PluginSettingTab {
@@ -752,6 +769,25 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                 }
                  templateContent.createEl('hr');
             }
+
+            new Setting(templateContent).setName('Named Templates (Bases & Partials)').setHeading();
+            const namedDesc = templateContent.createEl('p', { cls: 'setting-item-description' });
+            namedDesc.appendText('Create reusable template snippets that can be included in other templates using {{#include "name"}} or extended using {{#extends "name"}}. These are useful for maintaining a consistent structure across different content types.');
+
+            const namedTemplatesContainer = templateContent.createDiv('make-it-rain-named-templates-container');
+            this.renderNamedTemplates(namedTemplatesContainer);
+
+            new Setting(templateContent)
+                .addButton((button: ButtonComponent) => {
+                    button.setButtonText("Add new named template")
+                        .setCta()
+                        .onClick(async () => {
+                            const name = "new-template-" + Date.now();
+                            this.plugin.settings.namedTemplates[name] = "";
+                            await this.plugin.saveSettings();
+                            this.display();
+                        });
+                });
         }
 
         // --- About/Footer Section ---
@@ -826,6 +862,62 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
             else if (typeof error === 'string') errorMsg = error;
             new Notice(`API token verification failed: ${errorMsg}`, 10000);
             console.error('Error verifying API token:', error);
+        }
+    }
+
+    private renderNamedTemplates(container: HTMLElement) {
+        const { namedTemplates } = this.plugin.settings;
+        const templateNames = Object.keys(namedTemplates).sort();
+
+        if (templateNames.length === 0) {
+            container.createEl('p', { text: 'No named templates created yet.', cls: 'setting-item-description' });
+            return;
+        }
+
+        for (const name of templateNames) {
+            const templateDiv = container.createDiv('make-it-rain-named-template-item');
+            
+            const header = new Setting(templateDiv)
+                .setName(`Template: ${name}`)
+                .addText((text) => {
+                    text.setValue(name)
+                        .setPlaceholder('Template name')
+                        .onChange(async (newName) => {
+                            if (!newName || newName === name || namedTemplates[newName]) return;
+                            const content = namedTemplates[name];
+                            delete namedTemplates[name];
+                            namedTemplates[newName] = content;
+                            await this.plugin.saveSettings();
+                            // We don't refresh immediately to avoid losing focus, 
+                            // but the data is updated.
+                        });
+                })
+                .addButton((button) => {
+                    button.setIcon('trash')
+                        .setWarning()
+                        .setTooltip('Delete template')
+                        .onClick(async () => {
+                            delete namedTemplates[name];
+                            await this.plugin.saveSettings();
+                            this.display();
+                        });
+                });
+
+            new Setting(templateDiv)
+                .setClass('setting-item-stacked')
+                .addTextArea((text) => {
+                    text.setValue(namedTemplates[name])
+                        .setPlaceholder('Template content...')
+                        .onChange(async (value) => {
+                            namedTemplates[name] = value;
+                            await this.plugin.saveSettings();
+                        });
+                    text.inputEl.rows = 5;
+                    text.inputEl.addClass('make-it-rain-full-width');
+                    text.inputEl.addClass('make-it-rain-monospace');
+                });
+            
+            container.createEl('hr');
         }
     }
 }
