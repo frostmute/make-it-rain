@@ -135,6 +135,7 @@ Learn how to contribute to the project:
 
 | Resource | Purpose |
 |----------|---------|
+| **[Architecture](ARCHITECTURE.md)** | Deep dive into design |
 | **[Developer Guide](https://frostmute.github.io/make-it-rain/developer-guide/)** | Architecture & setup |
 | **[Contributing Guide](CONTRIBUTING.md)** | How to contribute |
 | **[Testing Guide](https://frostmute.github.io/make-it-rain/developer-guide/testing-guide)** | Write tests |
