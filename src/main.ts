@@ -843,7 +843,12 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             return null;
         };
 
-        const renderAST = (nodes: ASTNode[], context: Record<string, unknown>, blocks: Map<string, ASTNode[]>): string => {
+        const renderAST = (
+            nodes: ASTNode[],
+            context: Record<string, unknown>,
+            blocks: Map<string, ASTNode[]>,
+            includeDepth = 0
+        ): string => {
             let result = '';
             for (const node of nodes) {
                 if (node.type === 'text') {
@@ -894,9 +899,9 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     const value = this.getNestedProperty(context, node.cond!);
                     const isTrue = !!(value && (Array.isArray(value) ? value.length > 0 : !!value));
                     if (isTrue) {
-                        result += renderAST(node.thenBranch!, context, blocks);
+                        result += renderAST(node.thenBranch!, context, blocks, includeDepth);
                     } else if (node.elseBranch) {
-                        result += renderAST(node.elseBranch, context, blocks);
+                        result += renderAST(node.elseBranch, context, blocks, includeDepth);
                     }
                 } else if (node.type === 'each') {
                     const array = this.getNestedProperty(context, node.arrayVar!);
@@ -905,13 +910,17 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                             const nextContext = typeof item === 'object' && item !== null
                                 ? { ...context, ...item } as Record<string, unknown>
                                 : { ...context, 'this': item } as Record<string, unknown>;
-                            result += renderAST(node.thenBranch!, nextContext, blocks);
+                            result += renderAST(node.thenBranch!, nextContext, blocks, includeDepth);
                         }
                     }
                 } else if (node.type === 'include') {
+                    if (includeDepth >= 10) continue; // hard cap, matches extends limit
                     const partialTemplate = resolveTemplate(node.templateName!);
                     if (partialTemplate) {
-                        result += renderAST(parseTemplate(partialTemplate), context, blocks);
+                        const partialAst = parseTemplate(partialTemplate);
+                        // Also resolves bug from the flag: includes whose body uses #extends
+                        const resolved = resolveInheritance(partialAst, blocks);
+                        result += renderAST(resolved.ast, context, resolved.blocks, includeDepth + 1);
                     }
                 } else if (node.type === 'block') {
                     const blockContent = blocks.has(node.blockName!) ? blocks.get(node.blockName!)! : node.thenBranch!;
@@ -925,42 +934,40 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             return result;
         };
 
-        const initialAst = parseTemplate(template);
-        const rootContext = { ...data, id: data._id, domain: getDomain(data.link as string || ''), updated: data.lastupdate || '' };
-        
-        // Handle Inheritance
-        let currentAst = initialAst;
-        const blockOverrides = new Map<string, ASTNode[]>();
-        const seenTemplates = new Set<string>();
-        
-        // Extract blocks from child (child blocks take precedence)
-        const extractBlocks = (nodes: ASTNode[]) => {
-            for (const node of nodes) {
-                if (node.type === 'block' && !blockOverrides.has(node.blockName!)) {
-                    blockOverrides.set(node.blockName!, node.thenBranch!);
+        const resolveInheritance = (
+            ast: ASTNode[],
+            inheritedBlocks: Map<string, ASTNode[]>
+        ): { ast: ASTNode[]; blocks: Map<string, ASTNode[]> } => {
+            let currentAst = ast;
+            const blocks = new Map(inheritedBlocks);
+            const seen = new Set<string>();
+            const extractBlocks = (nodes: ASTNode[]) => {
+                for (const node of nodes) {
+                    if (node.type === 'block' && !blocks.has(node.blockName!)) {
+                        blocks.set(node.blockName!, node.thenBranch!);
+                    }
+                    if (node.thenBranch) extractBlocks(node.thenBranch);
+                    if (node.elseBranch) extractBlocks(node.elseBranch);
                 }
-                if (node.thenBranch) extractBlocks(node.thenBranch);
-                if (node.elseBranch) extractBlocks(node.elseBranch);
+            };
+            let extendsNode = currentAst.find(n => n.type === 'extends');
+            while (extendsNode) {
+                const tName = extendsNode.templateName!;
+                if (seen.has(tName) || seen.size >= 10) break;
+                seen.add(tName);
+                extractBlocks(currentAst);
+                const parent = resolveTemplate(tName);
+                if (!parent) break;
+                currentAst = parseTemplate(parent);
+                extendsNode = currentAst.find(n => n.type === 'extends');
             }
+            return { ast: currentAst, blocks };
         };
 
-        let extendsNode = currentAst.find(n => n.type === 'extends');
-        while (extendsNode) {
-            const templateName = extendsNode.templateName!;
-            if (seenTemplates.has(templateName) || seenTemplates.size >= 10) break; 
-            seenTemplates.add(templateName);
-            
-            extractBlocks(currentAst);
-            const parentTemplate = resolveTemplate(templateName);
-            if (parentTemplate) {
-                currentAst = parseTemplate(parentTemplate);
-                extendsNode = currentAst.find(n => n.type === 'extends');
-            } else {
-                break;
-            }
-        }
-
-        return renderAST(currentAst, rootContext, blockOverrides);
+        const initialAst = parseTemplate(template);
+        const rootContext = { ...data, id: data._id, domain: getDomain(data.link as string || ''), updated: data.lastupdate || '' };
+        const { ast: finalAst, blocks } = resolveInheritance(initialAst, new Map());
+        return renderAST(finalAst, rootContext, blocks);
     }
 
     private getNestedProperty(obj: Record<string, unknown>, path: string): unknown {

@@ -71,4 +71,22 @@ describe('Template Inheritance Reproduction', () => {
         const result = (plugin as any).renderTemplate("{{#extends 'non-existent'}}CHILD{{/extends}}", {});
         expect(result).toBe("CHILD"); // Falls back to child template if parent not found
     });
+
+    it('should not cause infinite recursion with #include', () => {
+        plugin.settings.namedTemplates['loop'] = "{{#include 'loop'}}";
+        
+        // This should not crash or hang. It should hit the depth limit.
+        const result = (plugin as any).renderTemplate("{{#include 'loop'}}", {});
+        expect(result).toBe("");
+    });
+
+    it('should support #include containing #extends correctly', () => {
+        plugin.settings.namedTemplates['base'] = "BASE: {{#block 'content'}}DEFAULT{{/block}}";
+        plugin.settings.namedTemplates['partial'] = "{{#extends 'base'}}{{#block 'content'}}OVERRIDE{{/block}}{{/extends}}";
+        
+        const template = "START {{#include 'partial'}} END";
+        const result = (plugin as any).renderTemplate(template, {});
+        
+        expect(result).toBe("START BASE: OVERRIDE END");
+    });
 });
