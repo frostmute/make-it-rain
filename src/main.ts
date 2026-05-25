@@ -56,7 +56,11 @@ import {
     
     // Scraping utilities
     fetchArchiveContent,
-    extractContentFromHtml
+    extractContentFromHtml,
+
+    // Template utilities
+    ASTNode,
+    parseTemplate
 } from './utils';
 
 // System collection IDs from raindrop.io API docs
@@ -658,7 +662,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 }
             }
 
-            const enhancedDataForRender: Record<string, unknown> = {
+            const enhancedDataForRender: TemplateData = {
                 ...templateData,
                 domain: getDomain(templateData.link || ''),
                 renderedType: raindropType(templateData.type),
@@ -725,96 +729,21 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         }
     }
 
-    private renderTemplate(template: string, data: Record<string, unknown>): string {
-        interface ASTNode {
-            type: 'text' | 'var' | 'if' | 'each';
-            raw?: string;
-            name?: string;
-            cond?: string;
-            arrayVar?: string;
-            thenBranch?: ASTNode[];
-            elseBranch?: ASTNode[];
-        }
+    public renderTemplate(template: string, data: TemplateData): string {
 
-        const parseTemplate = (tmpl: string): ASTNode[] => {
-            const tokens: Array<{ type: 'text' | 'tag'; value: string }> = [];
-            let lastIdx = 0;
-
-            while (lastIdx < tmpl.length) {
-                const openIdx = tmpl.indexOf('{{', lastIdx);
-                if (openIdx === -1) {
-                    tokens.push({ type: 'text', value: tmpl.substring(lastIdx) });
-                    break;
-                }
-
-                if (openIdx > lastIdx) {
-                    tokens.push({ type: 'text', value: tmpl.substring(lastIdx, openIdx) });
-                }
-
-                const closeIdx = tmpl.indexOf('}}', openIdx + 2);
-                if (closeIdx === -1) {
-                    tokens.push({ type: 'text', value: tmpl.substring(openIdx) });
-                    break;
-                }
-
-                const tagValue = tmpl.substring(openIdx + 2, closeIdx).trim();
-                tokens.push({ type: 'tag', value: tagValue });
-                lastIdx = closeIdx + 2;
-            }
-
-            let tokenIdx = 0;
-
-            const parseNodes = (endTag?: string): ASTNode[] => {
-                const nodes: ASTNode[] = [];
-
-                while (tokenIdx < tokens.length) {
-                    const token = tokens[tokenIdx];
-                    if (token.type === 'text') {
-                        nodes.push({ type: 'text', raw: token.value });
-                        tokenIdx++;
-                    } else {
-                        const val = token.value;
-                        if (endTag && (val === endTag || (endTag === '/if' && val === 'else'))) {
-                            break;
-                        }
-
-                        if (val.startsWith('#if ')) {
-                            const cond = val.substring(4).trim();
-                            tokenIdx++;
-                            const thenBranch = parseNodes('/if');
-                            let elseBranch: ASTNode[] = [];
-                            if (tokenIdx < tokens.length && tokens[tokenIdx].value === 'else') {
-                                tokenIdx++;
-                                elseBranch = parseNodes('/if');
-                            }
-                            if (tokenIdx < tokens.length && tokens[tokenIdx].value === '/if') {
-                                tokenIdx++;
-                            }
-                            nodes.push({ type: 'if', cond, thenBranch, elseBranch });
-                        } else if (val.startsWith('#each ')) {
-                            const arrayVar = val.substring(6).trim();
-                            tokenIdx++;
-                            const thenBranch = parseNodes('/each');
-                            if (tokenIdx < tokens.length && tokens[tokenIdx].value === '/each') {
-                                tokenIdx++;
-                            }
-                            nodes.push({ type: 'each', arrayVar, thenBranch });
-                        } else if (val === '/if' || val === '/each' || val === 'else') {
-                            nodes.push({ type: 'text', raw: `{{${val}}}` });
-                            tokenIdx++;
-                        } else {
-                            nodes.push({ type: 'var', name: val });
-                            tokenIdx++;
-                        }
-                    }
-                }
-                return nodes;
-            };
-
-            return parseNodes();
+        const resolveTemplate = (name: string): string | null => {
+            if (Object.prototype.hasOwnProperty.call(this.settings.namedTemplates, name)) return this.settings.namedTemplates[name];
+            if (name === 'default') return this.settings.defaultTemplate;
+            if (Object.prototype.hasOwnProperty.call(this.settings.contentTypeTemplates, name)) return this.settings.contentTypeTemplates[name as keyof typeof this.settings.contentTypeTemplates];
+            return null;
         };
 
-        const renderAST = (nodes: ASTNode[], context: Record<string, unknown>): string => {
+        const renderAST = (
+            nodes: ASTNode[],
+            context: Record<string, unknown>,
+            blocks: Map<string, ASTNode[]>,
+            includeDepth = 0
+        ): string => {
             let result = '';
             for (const node of nodes) {
                 if (node.type === 'text') {
@@ -865,9 +794,9 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     const value = this.getNestedProperty(context, node.cond!);
                     const isTrue = !!(value && (Array.isArray(value) ? value.length > 0 : !!value));
                     if (isTrue) {
-                        result += renderAST(node.thenBranch!, context);
+                        result += renderAST(node.thenBranch!, context, blocks, includeDepth);
                     } else if (node.elseBranch) {
-                        result += renderAST(node.elseBranch, context);
+                        result += renderAST(node.elseBranch, context, blocks, includeDepth);
                     }
                 } else if (node.type === 'each') {
                     const array = this.getNestedProperty(context, node.arrayVar!);
@@ -876,17 +805,64 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                             const nextContext = typeof item === 'object' && item !== null
                                 ? { ...context, ...item } as Record<string, unknown>
                                 : { ...context, 'this': item } as Record<string, unknown>;
-                            result += renderAST(node.thenBranch!, nextContext);
+                            result += renderAST(node.thenBranch!, nextContext, blocks, includeDepth);
                         }
                     }
+                } else if (node.type === 'include') {
+                    if (includeDepth >= 10) continue; // hard cap, matches extends limit
+                    const partialTemplate = resolveTemplate(node.templateName!);
+                    if (partialTemplate) {
+                        const partialAst = parseTemplate(partialTemplate);
+                        // Also resolves bug from the flag: includes whose body uses #extends
+                        const resolved = resolveInheritance(partialAst, blocks);
+                        result += renderAST(resolved.ast, context, resolved.blocks, includeDepth + 1);
+                    }
+                } else if (node.type === 'block') {
+                    const blockContent = blocks.has(node.blockName!) ? blocks.get(node.blockName!)! : node.thenBranch!;
+                    result += renderAST(blockContent, context, blocks, includeDepth);
+                } else if (node.type === 'extends') {
+                    // This only happens if inheritance failed to resolve a parent
+                    // In that case, we render the child content as a fallback
+                    result += renderAST(node.thenBranch!, context, blocks, includeDepth);
                 }
             }
             return result;
         };
 
-        const ast = parseTemplate(template);
+        const resolveInheritance = (
+            ast: ASTNode[],
+            inheritedBlocks: Map<string, ASTNode[]>
+        ): { ast: ASTNode[]; blocks: Map<string, ASTNode[]> } => {
+            let currentAst = ast;
+            const blocks = new Map(inheritedBlocks);
+            const seen = new Set<string>();
+            const extractBlocks = (nodes: ASTNode[]) => {
+                for (const node of nodes) {
+                    if (node.type === 'block' && !blocks.has(node.blockName!)) {
+                        blocks.set(node.blockName!, node.thenBranch!);
+                    }
+                    if (node.thenBranch) extractBlocks(node.thenBranch);
+                    if (node.elseBranch) extractBlocks(node.elseBranch);
+                }
+            };
+            let extendsNode = currentAst.find(n => n.type === 'extends');
+            while (extendsNode) {
+                const tName = extendsNode.templateName!;
+                if (seen.has(tName) || seen.size >= 10) break;
+                seen.add(tName);
+                extractBlocks(currentAst);
+                const parent = resolveTemplate(tName);
+                if (!parent) break;
+                currentAst = parseTemplate(parent);
+                extendsNode = currentAst.find(n => n.type === 'extends');
+            }
+            return { ast: currentAst, blocks };
+        };
+
+        const initialAst = parseTemplate(template);
         const rootContext = { ...data, id: data._id, domain: getDomain(data.link as string || ''), updated: data.lastupdate || '' };
-        return renderAST(ast, rootContext);
+        const { ast: finalAst, blocks } = resolveInheritance(initialAst, new Map());
+        return renderAST(finalAst, rootContext, blocks);
     }
 
     private getNestedProperty(obj: Record<string, unknown>, path: string): unknown {

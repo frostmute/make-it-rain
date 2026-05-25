@@ -3,6 +3,7 @@ import type RaindropToObsidian from './main';
 import { RaindropTypes } from './types';
 import { MakeItRainSettings } from './types';
 import { VariableBrowserModal } from './modals';
+import { validateTemplate, ValidationResult } from './template-validator';
 
 export const DEFAULT_SETTINGS: MakeItRainSettings = {
     apiToken: '',
@@ -68,12 +69,14 @@ tags:
 {{/if}}
 
 ---
+{{#block 'details'}}
 ## Details
 - **Type**: {{renderedType}}
 - **Domain**: {{domain}}
 - **Created**: {{formattedCreatedDate}}
 - **Updated**: {{formattedUpdatedDate}}
 - **Tags**: {{formattedTags}}
+{{/block}}
 `,
     contentTypeTemplates: {
         link: `---
@@ -132,12 +135,14 @@ tags:
 {{/if}}
 
 ---
+{{#block 'details'}}
 ## Details
 - **Type**: {{renderedType}}
 - **Domain**: {{domain}}
 - **Created**: {{formattedCreatedDate}}
 - **Updated**: {{formattedUpdatedDate}}
 - **Tags**: {{formattedTags}}
+{{/block}}
 
 [Source]({{link}})`,
         article: `---
@@ -196,12 +201,14 @@ tags:
 {{/if}}
 
 ---
+{{#block 'details'}}
 ## Details
 - **Type**: {{renderedType}}
 - **Domain**: {{domain}}
 - **Created**: {{formattedCreatedDate}}
 - **Updated**: {{formattedUpdatedDate}}
 - **Tags**: {{formattedTags}}
+{{/block}}
 
 [Read Article]({{link}})`,
         image: `---
@@ -239,12 +246,14 @@ tags:
 {{/if}}
 
 ---
+{{#block 'details'}}
 ## Details
 - **Type**: {{renderedType}}
 - **Domain**: {{domain}}
 - **Created**: {{formattedCreatedDate}}
 - **Updated**: {{formattedUpdatedDate}}
 - **Tags**: {{formattedTags}}
+{{/block}}
 
 [View Original]({{link}})`,
         video: `---
@@ -297,12 +306,14 @@ tags:
 {{/if}}
 
 ---
+{{#block 'details'}}
 ## Details
 - **Type**: {{renderedType}}
 - **Domain**: {{domain}}
 - **Created**: {{formattedCreatedDate}}
 - **Updated**: {{formattedUpdatedDate}}
 - **Tags**: {{formattedTags}}
+{{/block}}
 
 [Watch Video]({{link}})`,
         document: `---
@@ -352,12 +363,14 @@ tags:
 {{/if}}
 
 ---
+{{#block 'details'}}
 ## Details
 - **Type**: {{renderedType}}
 - **Domain**: {{domain}}
 - **Created**: {{formattedCreatedDate}}
 - **Updated**: {{formattedUpdatedDate}}
 - **Tags**: {{formattedTags}}
+{{/block}}
 
 [Open Document]({{link}})`,
         audio: `---
@@ -410,12 +423,14 @@ tags:
 {{/if}}
 
 ---
+{{#block 'details'}}
 ## Details
 - **Type**: {{renderedType}}
 - **Domain**: {{domain}}
 - **Created**: {{formattedCreatedDate}}
 - **Updated**: {{formattedUpdatedDate}}
 - **Tags**: {{formattedTags}}
+{{/block}}
 
 [Listen to Audio]({{link}})`,
         book: `---
@@ -469,11 +484,13 @@ tags:
 {{/if}}
 
 ---
+{{#block 'details'}}
 ## Details
 - **Type**: {{renderedType}}
 - **Created**: {{formattedCreatedDate}}
 - **Updated**: {{formattedUpdatedDate}}
 - **Tags**: {{formattedTags}}
+{{/block}}
 
 [Open Book]({{link}})`
     },
@@ -487,7 +504,8 @@ tags:
         book: true
     },
     downloadFiles: false,
-    createFolderNotes: false
+    createFolderNotes: false,
+    namedTemplates: {}
 };
 
 export class RaindropToObsidianSettingTab extends PluginSettingTab {
@@ -554,13 +572,21 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
             .setName('Filename template')
             .setDesc('Define the filename for notes when "use Raindrop title" is enabled. Placeholders: {{title}}, {{id}}, {{collectionTitle}}, {{date}} (YYYY-MM-DD).')
             .addText((text: TextComponent) => {
+                const validationContainer = containerEl.createDiv('make-it-rain-validation-container');
+                const updateValidation = (val: string) => {
+                    const result = validateTemplate(val, this.plugin.settings);
+                    this.renderValidationResult(validationContainer, result);
+                };
+
                 text.setPlaceholder('{{title}}')
                     .setValue(this.plugin.settings.fileNameTemplate)
                     .onChange(async (value: string) => {
                         this.plugin.settings.fileNameTemplate = value;
                         await this.plugin.saveSettings();
+                        updateValidation(value);
                     });
                 text.inputEl.addClass('make-it-rain-full-width');
+                updateValidation(this.plugin.settings.fileNameTemplate);
             });
         
         const fileNameTemplateHelpLink = fileNameTemplateSetting.nameEl.createEl('a', {
@@ -669,15 +695,23 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                 .setDesc('This template is used if no content-type specific template is active or defined below.')
                 .setClass('setting-item-stacked') // Added class
                 .addTextArea((text: TextAreaComponent) => {
+                    const validationContainer = templateContent.createDiv('make-it-rain-validation-container');
+                    const updateValidation = (val: string) => {
+                        const result = validateTemplate(val, this.plugin.settings);
+                        this.renderValidationResult(validationContainer, result);
+                    };
+
                     text.setPlaceholder('Enter your default handlebars template here. Visit the documentation for available variables.')
                         .setValue(this.plugin.settings.defaultTemplate)
                         .onChange(async (value: string) => {
                             this.plugin.settings.defaultTemplate = value;
                             await this.plugin.saveSettings();
+                            updateValidation(value);
                         });
                     text.inputEl.rows = 15;
                     text.inputEl.addClass('make-it-rain-full-width');
                     text.inputEl.addClass('make-it-rain-monospace');
+                    updateValidation(this.plugin.settings.defaultTemplate);
                 })
                 .addButton((button: ButtonComponent) => {
                     button
@@ -722,15 +756,23 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                         .setDesc(`Template for "${typeStr}" content. Leave empty to use the default template.`)
                         .setClass('setting-item-stacked') // Added class
                         .addTextArea((text: TextAreaComponent) => {
+                            const validationContainer = templateContent.createDiv('make-it-rain-validation-container');
+                            const updateValidation = (val: string) => {
+                                const result = validateTemplate(val, this.plugin.settings);
+                                this.renderValidationResult(validationContainer, result);
+                            };
+
                             text.setPlaceholder(`Enter template for ${typeStr} items...`)
                                 .setValue(this.plugin.settings.contentTypeTemplates[typeKey])
                                 .onChange(async (value: string) => {
                                     this.plugin.settings.contentTypeTemplates[typeKey] = value;
                                     await this.plugin.saveSettings();
+                                    updateValidation(value);
                                 });
                             text.inputEl.rows = 10;
                             text.inputEl.addClass('make-it-rain-full-width');
                             text.inputEl.addClass('make-it-rain-monospace');
+                            updateValidation(this.plugin.settings.contentTypeTemplates[typeKey]);
                         })
                         .addButton((button: ButtonComponent) => { // Add Reset Button for specific type
                             button
@@ -752,6 +794,25 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                 }
                  templateContent.createEl('hr');
             }
+
+            new Setting(templateContent).setName('Named Templates (Bases & Partials)').setHeading();
+            const namedDesc = templateContent.createEl('p', { cls: 'setting-item-description' });
+            namedDesc.appendText('Create reusable template snippets that can be included in other templates using {{#include "name"}} or extended using {{#extends "name"}}. These are useful for maintaining a consistent structure across different content types.');
+
+            const namedTemplatesContainer = templateContent.createDiv('make-it-rain-named-templates-container');
+            this.renderNamedTemplates(namedTemplatesContainer);
+
+            new Setting(templateContent)
+                .addButton((button: ButtonComponent) => {
+                    button.setButtonText("Add new named template")
+                        .setCta()
+                        .onClick(async () => {
+                            const name = "new-template-" + Date.now();
+                            this.plugin.settings.namedTemplates[name] = "";
+                            await this.plugin.saveSettings();
+                            this.display();
+                        });
+                });
         }
 
         // --- About/Footer Section ---
@@ -826,6 +887,87 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
             else if (typeof error === 'string') errorMsg = error;
             new Notice(`API token verification failed: ${errorMsg}`, 10000);
             console.error('Error verifying API token:', error);
+        }
+    }
+
+    private renderValidationResult(container: HTMLElement, result: ValidationResult) {
+        container.empty();
+        if (result.errors.length === 0 && result.warnings.length === 0) {
+            container.createEl('div', { text: '✓ Template is valid', cls: 'make-it-rain-validation-valid' });
+            return;
+        }
+
+        for (const error of result.errors) {
+            container.createEl('div', { text: `✗ ${error}`, cls: 'make-it-rain-validation-error' });
+        }
+        for (const warning of result.warnings) {
+            container.createEl('div', { text: `⚠ ${warning}`, cls: 'make-it-rain-validation-warning' });
+        }
+    }
+
+    private renderNamedTemplates(container: HTMLElement) {
+        const { namedTemplates } = this.plugin.settings;
+        const templateNames = Object.keys(namedTemplates).sort();
+
+        if (templateNames.length === 0) {
+            container.createEl('p', { text: 'No named templates created yet.', cls: 'setting-item-description' });
+            return;
+        }
+
+        for (const name of templateNames) {
+            const templateDiv = container.createDiv('make-it-rain-named-template-item');
+            
+            const header = new Setting(templateDiv)
+                .setName(`Template: ${name}`)
+                .addText((text) => {
+                    text.setValue(name)
+                        .setPlaceholder('Template name')
+                        .onChange(async (newName) => {
+                            if (!newName || newName === name) return;
+                            if (Object.prototype.hasOwnProperty.call(namedTemplates, newName)) {
+                                new Notice(`Template name "${newName}" already exists.`);
+                                return;
+                            }
+                            const content = namedTemplates[name];
+                            delete namedTemplates[name];
+                            namedTemplates[newName] = content;
+                            await this.plugin.saveSettings();
+                        });
+                })
+                .addButton((button) => {
+                    button.setIcon('trash')
+                        .setWarning()
+                        .setTooltip('Delete template')
+                        .onClick(async () => {
+                            delete namedTemplates[name];
+                            await this.plugin.saveSettings();
+                            this.display();
+                        });
+                });
+
+            new Setting(templateDiv)
+                .setClass('setting-item-stacked')
+                .addTextArea((text) => {
+                    const validationContainer = templateDiv.createDiv('make-it-rain-validation-container');
+                    const updateValidation = (val: string) => {
+                        const result = validateTemplate(val, this.plugin.settings);
+                        this.renderValidationResult(validationContainer, result);
+                    };
+
+                    text.setValue(namedTemplates[name])
+                        .setPlaceholder('Template content...')
+                        .onChange(async (value) => {
+                            namedTemplates[name] = value;
+                            await this.plugin.saveSettings();
+                            updateValidation(value);
+                        });
+                    text.inputEl.rows = 5;
+                    text.inputEl.addClass('make-it-rain-full-width');
+                    text.inputEl.addClass('make-it-rain-monospace');
+                    updateValidation(namedTemplates[name]);
+                });
+            
+            container.createEl('hr');
         }
     }
 }

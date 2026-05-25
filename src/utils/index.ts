@@ -87,3 +87,9 @@ export {
     fetchArchiveContent,
     extractContentFromHtml
 } from './scrapingUtils';
+
+// Re-export all template utilities
+export {
+    ASTNode,
+    parseTemplate
+} from './templateUtils';

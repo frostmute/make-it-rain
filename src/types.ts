@@ -56,6 +56,7 @@ export interface MakeItRainSettings {
     downloadFiles: boolean;
     createFolderNotes: boolean;
     archiveScraping: boolean;
+    namedTemplates: Record<string, string>;
 }
 
 export interface ModalFetchOptions {
