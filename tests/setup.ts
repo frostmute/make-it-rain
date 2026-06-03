@@ -303,7 +303,11 @@ jest.mock('obsidian', () => ({
     request: mockRequest,
     requestUrl: mockRequestUrl,
     normalizePath: mockNormalizePath,
-    App: jest.fn(() => mockApp)
+    App: jest.fn(() => mockApp),
+    // Minimal stand-in for Obsidian's built-in HTML→Markdown converter.
+    // The real implementation lives inside Obsidian; this is sufficient for
+    // tests that don't override it in their own jest.mock call.
+    htmlToMarkdown: jest.fn((html: string) => html.replace(/<[^>]+>/g, '').trim())
 }), { virtual: true });
 
 // Export for use in tests
