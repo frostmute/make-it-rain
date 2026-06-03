@@ -84,12 +84,16 @@ Get started in 3 simple steps:
 
 ### Step 1️⃣: Install the Plugin
 
-1. Download `make-it-rain.zip` from the [latest release](https://github.com/frostmute/make-it-rain/releases/latest)
-   > ⚠️ Download `make-it-rain.zip`, **not** the source code
-2. Extract to get `main.js`, `manifest.json`, and `styles.css`
-3. Copy these files to your vault's `.obsidian/plugins/make-it-rain/` folder
-4. Restart Obsidian
-5. Enable the plugin in `Settings` → `Community Plugins`
+**Option A: Official Community Plugins (Recommended)**
+1. Open Obsidian and go to **Settings** → **Community Plugins**.
+2. Make sure Safe Mode is turned off.
+3. Click **Browse** and search for **Make It Rain** or click [this link to open the plugin directly](obsidian://show-plugin?id=make-it-rain).
+4. Click **Install**, then **Enable**.
+
+**Option B: Manual Installation**
+1. Download `make-it-rain.zip` from the [latest release](https://github.com/frostmute/make-it-rain/releases/latest).
+2. Extract to get `main.js`, `manifest.json`, and `styles.css`.
+3. Copy these files to your vault's `.obsidian/plugins/make-it-rain/` folder and restart Obsidian.
 
 ### Step 2️⃣: Get Your API Token
 
