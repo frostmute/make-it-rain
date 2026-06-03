@@ -33,9 +33,9 @@ Make It Rain is a powerful Obsidian plugin that brings your Raindrop.io bookmark
 
 Fully customize how your notes look with our flexible template system. Choose from pre-configured templates for different content types, or build your own with smart variables.
 
-- **Customizable templates** with Handlebars-like syntax
-- **Pre-configured templates** for articles, videos, images, links, and more
-- **Smart variables** (formatted dates, domains, tag lists)
+- **Nesting-aware AST Parser** for complex conditional Handlebars-like logic (`{{#if}}`, `{{#each}}`)
+- **Pre-configured templates** for articles, books, videos, images, links, and more
+- **Smart variables** (formatted dates, domains, tag lists, collection groups)
 - **One-click reset** to default templates
 - **Per-import overrides** to use different templates on demand
 
@@ -55,9 +55,9 @@ Import exactly what you need with granular filtering options.
 
 Your imported notes organize themselves based on your Raindrop structure.
 
-- **Automatic folder hierarchy** mirroring your collections
+- **Automatic folder hierarchy** seamlessly mirroring your Raindrop Groups and Collections
 - **Automatic Folder Notes** (`FOLDER_NAME.md`) generated to serve as structured indexes
-- **Native File Downloads** to directly retrieve PDFs, EPUBs, video, and audio file attachments
+- **Native File Downloads** to directly retrieve PDFs, EPUBs (Books), video, and audio file attachments, with full S3 secure redirect support
 - **Archive Scraping** to extract clean text content from Raindrop.io's permanent archives
 - **Rich YAML frontmatter** with comprehensive metadata
 - **Customizable filenames** with template variables

@@ -10,17 +10,21 @@ Make It Rain is an Obsidian plugin that acts as a bridge between the [Raindrop.i
 
 1.  **Authentication**: The plugin uses a developer token to authenticate requests via Bearer token in the `Authorization` header.
 2.  **Discovery**:
-    *   **Collections**: The plugin fetches the user's collection hierarchy (root and nested).
+    *   **Groups & Collections**: The plugin fetches the user's Raindrop Group hierarchy and maps collections to their respective groups.
+    *   **Collections**: It resolves parent/child collection nesting.
     *   **Raindrops**: It iterates through selected collections to retrieve bookmark metadata.
 3.  **Transformation**:
     *   Each Raindrop item is processed through a **Template System**.
     *   Variables (title, excerpt, note, highlights, tags, etc.) are extracted and sanitized.
-    *   Content-type-specific templates (Article, Image, Video, Document, etc.) are applied to generate the final Markdown string.
+    *   Content-type-specific templates (Article, Book, Image, Video, Document, etc.) are applied to generate the final Markdown string.
 4.  **Persistence**:
-    *   **Folder Mapping**: Collections are mapped to a nested folder structure in the Obsidian vault.
+    *   **Folder Mapping**: Groups and Collections are mapped to a nested folder structure in the Obsidian vault.
     *   **Note Creation**: Markdown files are written to the vault using the `app.vault` API.
     *   **Folder Notes**: Index notes are optionally generated for each collection folder.
-    *   **Binary Downloads**: File attachments (PDFs, images, etc.) are downloaded and stored locally.
+    *   **Binary Download Pipeline**: File attachments (PDFs, EPUBs, MP4s, images) are fetched. The pipeline natively handles S3 secure redirects and derives file extensions directly from HTTP headers when Raindrop's API lacks them.
+
+### Sub-System: Template Engine
+Historically, the plugin used simple regex replacements. To support complex logic like `{{#if excerpt}}` and `{{#each highlights}}`, the architecture was upgraded to a **Nesting-Aware AST Parser** (`template-validator.ts`). This allows recursive evaluation of nested blocks and conditional arrays without adding bulky external dependencies like Handlebars.
 
 ## Code Map
 
