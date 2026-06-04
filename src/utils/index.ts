@@ -85,7 +85,8 @@ export { sanitizeMarkdownContent } from './securityUtils';
 // Re-export all scraping utilities
 export {
     fetchArchiveContent,
-    extractContentFromHtml
+    extractContentFromHtml,
+    htmlToMarkdown
 } from './scrapingUtils';
 
 // Re-export all template utilities

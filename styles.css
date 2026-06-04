@@ -144,3 +144,217 @@
   margin-bottom: 4px;
 }
 
+/* Modernized Elegant Settings UI Styles */
+.make-it-rain-settings-section-header {
+  font-size: 1.25em;
+  font-weight: 600;
+  color: var(--text-normal);
+  border-bottom: 1px solid var(--background-modifier-border);
+  padding-bottom: 8px;
+  margin-top: 24px;
+  margin-bottom: 16px;
+}
+
+.make-it-rain-settings-card {
+  background-color: var(--background-primary-alt);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.make-it-rain-template-select-container {
+  margin-bottom: 12px;
+}
+
+.make-it-rain-template-editor-box {
+  border-top: 1px solid var(--background-modifier-border);
+  padding-top: 12px;
+  margin-top: 12px;
+}
+
+.make-it-rain-help-link {
+  color: var(--text-accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+.make-it-rain-help-link:hover {
+  text-decoration: underline;
+}
+
+/* Fetch Modal Layout updates */
+.make-it-rain-modal {
+  max-width: 600px;
+}
+
+.make-it-rain-modal-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 480px) {
+  .make-it-rain-modal-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* Make It Rain Modern Settings Layout */
+.make-it-rain-settings-container {
+    padding-bottom: 2rem;
+}
+
+.make-it-rain-settings-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.make-it-rain-settings-header h2 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+}
+
+.make-it-rain-settings-section {
+    margin-bottom: 1rem;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: var(--radius-m);
+    background-color: var(--background-secondary);
+}
+
+.make-it-rain-section-summary {
+    padding: 1rem;
+    font-weight: 600;
+    font-size: var(--h4-size);
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s ease;
+    border-radius: var(--radius-m);
+}
+
+.make-it-rain-section-summary:hover {
+    background-color: var(--background-modifier-hover);
+}
+
+.make-it-rain-settings-section[open] .make-it-rain-section-summary {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.make-it-rain-section-content {
+    padding: 0 1rem 1rem 1rem;
+    background-color: var(--background-primary);
+    border-bottom-left-radius: var(--radius-m);
+    border-bottom-right-radius: var(--radius-m);
+}
+
+.make-it-rain-h3 {
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--background-modifier-border);
+    color: var(--text-normal);
+}
+
+.make-it-rain-mt-large {
+    margin-top: 2.5rem;
+}
+
+.make-it-rain-footer {
+    opacity: 0.8;
+    font-size: var(--font-ui-smaller);
+}
+
+.make-it-rain-footer-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.make-it-rain-footer-right {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+/* Make It Rain Modals */
+.make-it-rain-modal {
+    padding-bottom: 1rem;
+}
+
+.make-it-rain-modal-header {
+    margin-bottom: 1rem;
+}
+
+.make-it-rain-modal-header h2 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+}
+
+.make-it-rain-modal-group {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background-color: var(--background-secondary);
+    border-radius: var(--radius-m);
+    border: 1px solid var(--background-modifier-border);
+}
+
+.make-it-rain-modal-group .make-it-rain-h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--background-modifier-border-hover);
+    color: var(--text-normal);
+}
+
+.make-it-rain-modal-group .setting-item {
+    border-top: none;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+}
+
+.make-it-rain-modal-group .setting-item:first-of-type {
+    padding-top: 0;
+}
+
+.make-it-rain-modal-group .setting-item:last-of-type {
+    padding-bottom: 0;
+}
+
+/* Collection Multi-Select List */
+.make-it-rain-collections-list-container {
+    width: 100%;
+    margin-top: 0.5rem;
+}
+
+.make-it-rain-collections-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: var(--radius-s);
+    padding: 0.5rem;
+    background-color: var(--background-primary);
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.make-it-rain-collection-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    cursor: pointer;
+    border-radius: var(--radius-s);
+}
+
+.make-it-rain-collection-label:hover {
+    background-color: var(--background-modifier-hover);
+}
+
+.make-it-rain-collection-label input[type="checkbox"] {
+    margin: 0;
+}

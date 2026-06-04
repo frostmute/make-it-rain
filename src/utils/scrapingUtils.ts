@@ -1,4 +1,4 @@
-import { requestUrl, htmlToMarkdown } from 'obsidian';
+import { requestUrl, htmlToMarkdown as obsidianHtmlToMarkdown } from 'obsidian';
 
 /**
  * Scraping Utilities for Make It Rain
@@ -107,6 +107,16 @@ export async function fetchArchiveContent(raindropId: number, apiToken: string):
  * @param html - Raw HTML string from the Raindrop cache
  * @returns Clean Markdown string, or empty string if input is empty or parsing fails
  */
+export function htmlToMarkdown(html: string): string {
+    if (!html) return '';
+    try {
+        return obsidianHtmlToMarkdown(html).trim();
+    } catch (e) {
+        console.error('Error in htmlToMarkdown fallback:', e);
+        return html; // Return raw if conversion fails
+    }
+}
+
 export function extractContentFromHtml(html: string): string {
     if (!html || html.trim().length === 0) return '';
 
@@ -116,11 +126,11 @@ export function extractContentFromHtml(html: string): string {
         // this function usable in both browser and test environments.
         const cleaned = removeNoisyElements(html);
 
-        // Delegate to Obsidian's native converter — same one used by Obsidian Importer.
-        const markdown = htmlToMarkdown(cleaned);
+        // Delegate to Obsidian's native converter
+        const markdownContent = obsidianHtmlToMarkdown(cleaned);
 
         // Trim leading/trailing whitespace; collapse 3+ consecutive blank lines to 2.
-        return markdown
+        return markdownContent
             .trim()
             .replace(/\n{3,}/g, '\n\n');
 

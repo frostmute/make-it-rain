@@ -33,8 +33,7 @@ import {
     sanitizeFileName,
     sanitizeMarkdownContent,
     createFolderStructure,
-    
-    // API utilities
+    htmlToMarkdown,
     RateLimiter,
     createRateLimiter,
     fetchWithRetry,
@@ -630,8 +629,8 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             const templateData: TemplateData = {
                 _id: raindrop._id,
                 title: escapeYamlString(raindrop.title),
-                excerpt: escapeYamlString(raindrop.excerpt || ''),
-                note: escapeYamlString(raindrop.note || ''),
+                excerpt: escapeYamlString(htmlToMarkdown(raindrop.excerpt || '')),
+                note: escapeYamlString(htmlToMarkdown(raindrop.note || '')),
                 link: raindrop.link,
                 cover: raindrop.cover || '',
                 created: raindrop.created,
@@ -643,8 +642,8 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 collectionGroup: groupTitle || '',
                 tags: [...(raindrop.tags || []), ...settingsFMTags].map(tag => escapeYamlString(tag)),
                 highlights: (raindrop.highlights || []).map(h => ({
-                    text: escapeYamlString(h.text),
-                    note: escapeYamlString(h.note || ''),
+                    text: escapeYamlString(htmlToMarkdown(h.text || '')),
+                    note: escapeYamlString(htmlToMarkdown(h.note || '')),
                     created: h.created || ''
                 })),
                 bannerFieldName: this.settings.bannerFieldName,
