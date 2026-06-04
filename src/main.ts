@@ -57,6 +57,10 @@ import {
     fetchArchiveContent,
     extractContentFromHtml,
 
+    // Download utilities
+    downloadBinaryFile,
+    validateBinaryMagicBytes,
+
     // Template utilities
     ASTNode,
     parseTemplate
@@ -531,10 +535,10 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
 
         if (this.settings.createFolderNotes) {
             loadingNotice.setMessage('Generating collection folder notes...');
-            await Promise.all(Array.from(verifiedFolderPaths).map(async (folderPath) => {
+            for (const folderPath of Array.from(verifiedFolderPaths)) {
                 try {
                     const folderName = folderPath.split('/').pop();
-                    if (!folderName) return;
+                    if (!folderName) continue;
                     const folderNotePath = normalizePath(`${folderPath}/${folderName}.md`);
                     const abstractFile = app.vault.getAbstractFileByPath(folderPath);
                     if (abstractFile instanceof TFolder) {
@@ -544,11 +548,16 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                             .sort((a: TAbstractFile, b: TAbstractFile) => a.name.localeCompare(b.name))
                             .map((child: TAbstractFile) => `- [[${child.name.replace('.md', '')}]]\n`);
                         content += listItems.join('');
-                        if (await app.vault.adapter.exists(folderNotePath)) await app.vault.adapter.write(folderNotePath, content);
-                        else await app.vault.create(folderNotePath, content);
+                        if (await app.vault.adapter.exists(folderNotePath)) {
+                            await app.vault.adapter.write(folderNotePath, content);
+                        } else {
+                            await app.vault.create(folderNotePath, content);
+                        }
                     }
-                } catch (e) { console.error(`Error generating folder note for ${folderPath}:`, e); }
-            }));
+                } catch (e) {
+                    console.error(`Error generating folder note for ${folderPath}:`, e);
+                }
+            }
         }
 
         loadingNotice.hide();
@@ -671,25 +680,54 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             };
 
             if (this.settings.downloadFiles && raindrop.link && (raindrop.link.includes('raindrop.io') && (raindrop.link.includes('/file') || raindrop.link.includes('/v2/')))) {
+                let fileExtension = raindrop.file?.name?.split('.').pop() || (raindrop.file?.type?.split('/').pop()) || 'file';
+                let binaryFileName = `${generatedFilename}.${fileExtension}`;
+                let binaryFilePath = normalizePath(`${targetPath}/${binaryFileName}`);
+                
                 try {
                     loadingNotice.setMessage(`Downloading file for '${raindrop.title || 'Untitled'}'... (${processed}/${total})`);
-                    const fileExtension = raindrop.file?.name?.split('.').pop() || (raindrop.file?.type?.split('/').pop()) || 'file';
-                    const binaryFileName = `${generatedFilename}.${fileExtension}`;
-                    const binaryFilePath = normalizePath(`${targetPath}/${binaryFileName}`);
                     
-                    const fileResponse = await requestUrl({
-                        url: raindrop.link,
-                        method: 'GET',
-                        headers: { 'Authorization': `Bearer ${this.settings.apiToken}` }
-                    });
+                    const fileResponse = await downloadBinaryFile(raindrop.link, this.settings.apiToken);
                     
-                    if (fileResponse.status === 200) {
-                        await app.vault.adapter.writeBinary(binaryFilePath, fileResponse.arrayBuffer);
-                        enhancedDataForRender.localFile = `[[${binaryFileName}]]`;
-                        enhancedDataForRender.localEmbed = `![[${binaryFileName}]]`;
+                    if (fileResponse.status === 200 && fileResponse.arrayBuffer) {
+                        const verification = validateBinaryMagicBytes(fileResponse.arrayBuffer, fileExtension);
+                        if (verification.isValid) {
+                            const detectedExt = verification.detectedExtension || fileExtension;
+                            binaryFileName = `${generatedFilename}.${detectedExt}`;
+                            binaryFilePath = normalizePath(`${targetPath}/${binaryFileName}`);
+                            
+                            await app.vault.adapter.writeBinary(binaryFilePath, fileResponse.arrayBuffer);
+                            enhancedDataForRender.localFile = `[[${binaryFileName}]]`;
+                            enhancedDataForRender.localEmbed = `![[${binaryFileName}]]`;
+                        } else {
+                            const errorMsg = `Binary verification failed: ${verification.error}`;
+                            console.error(`Error downloading file for raindrop ${raindrop._id}:`, errorMsg);
+                            
+                            // Write debug file
+                            const debugFilePath = normalizePath(`${targetPath}/${generatedFilename}.download-error.log`);
+                            const debugContent = `URL: ${raindrop.link}\nStatus: ${fileResponse.status}\nRedirect URL: ${fileResponse.redirectUrl || 'None'}\nError: ${errorMsg}\nBuffer Size: ${fileResponse.arrayBuffer.byteLength} bytes\n`;
+                            await app.vault.adapter.write(debugFilePath, debugContent);
+                        }
+                    } else {
+                        const errorMsg = fileResponse.error || `Server returned status ${fileResponse.status}`;
+                        console.error(`Error downloading file for raindrop ${raindrop._id}:`, errorMsg);
+                        
+                        // Write debug file
+                        const debugFilePath = normalizePath(`${targetPath}/${generatedFilename}.download-error.log`);
+                        const debugContent = `URL: ${raindrop.link}\nStatus: ${fileResponse.status}\nRedirect URL: ${fileResponse.redirectUrl || 'None'}\nError: ${errorMsg}\n`;
+                        await app.vault.adapter.write(debugFilePath, debugContent);
                     }
                 } catch (error) {
+                    const errorMsg = error instanceof Error ? error.message : String(error);
                     console.error(`Error downloading file for raindrop ${raindrop._id}:`, error);
+                    
+                    try {
+                        const debugFilePath = normalizePath(`${targetPath}/${generatedFilename}.download-error.log`);
+                        const debugContent = `URL: ${raindrop.link}\nError: ${errorMsg}\n`;
+                        await app.vault.adapter.write(debugFilePath, debugContent);
+                    } catch (writeErr) {
+                        console.error('Failed to write download error log:', writeErr);
+                    }
                 }
             }
 

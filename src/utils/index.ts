@@ -94,3 +94,11 @@ export {
     ASTNode,
     parseTemplate
 } from './templateUtils';
+
+// Re-export all download utilities
+export {
+    downloadBinaryFile,
+    validateBinaryMagicBytes,
+    isHtmlOrText,
+    getExtensionFromMagicBytes
+} from './downloadUtils';
