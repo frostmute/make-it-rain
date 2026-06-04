@@ -45,9 +45,19 @@ describe('downloadUtils', () => {
             expect(getExtensionFromMagicBytes(binary.buffer)).toBe('pdf');
         });
 
-        it('detects JPEG magic bytes', () => {
+        it('detects JPEG magic bytes (3 bytes)', () => {
             const binary = new Uint8Array([0xFF, 0xD8, 0xFF]);
             expect(getExtensionFromMagicBytes(binary.buffer)).toBe('jpg');
+        });
+
+        it('detects JPEG magic bytes (4+ bytes)', () => {
+            const binary = new Uint8Array([0xFF, 0xD8, 0xFF, 0xE0]);
+            expect(getExtensionFromMagicBytes(binary.buffer)).toBe('jpg');
+        });
+
+        it('returns null for buffers shorter than 3 bytes', () => {
+            const binary = new Uint8Array([0xFF, 0xD8]);
+            expect(getExtensionFromMagicBytes(binary.buffer)).toBeNull();
         });
 
         it('detects GIF magic bytes', () => {

@@ -7,7 +7,7 @@
  * to promote code reuse and maintainability.
  */
 
-import { App, Notice, Plugin, PluginManifest, TFile, TFolder, TAbstractFile, normalizePath, requestUrl } from 'obsidian';
+import { App, Notice, Plugin, PluginManifest, TFile, TFolder, TAbstractFile, normalizePath } from 'obsidian';
 import { 
     MakeItRainSettings, 
     RaindropType, 
