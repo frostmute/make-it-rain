@@ -12,21 +12,23 @@ This guide explains how Make It Rain handles Raindrop.io collections and their i
 
 ## Collection Structure
 
-Raindrop.io collections can be organized in a hierarchical structure:
+Raindrop.io collections are organized in a multi-level hierarchy:
 
-- **Root Collections**: Top-level collections
-- **Nested Collections**: Collections within other collections
-- **Smart Collections**: Automatically organized collections based on rules
+- **Groups**: The top-level sidebar categories (e.g., "Work", "Personal").
+- **Root Collections**: Primary folders within a Group.
+- **Nested Collections**: Subfolders within other collections.
+- **Smart Collections**: Automatically organized collections based on rules (e.g. Unsorted, Trash).
 
 ### Collection Properties
 
-Each collection has the following properties:
+Each collection processed by the plugin includes:
 
-- `id`: Unique identifier
-- `title`: Collection name
-- `parent_id`: ID of parent collection (if nested)
-- `path`: Full path from root to collection
-- `count`: Number of items in collection
+- `id`: Unique identifier.
+- `title`: Collection name.
+- `parent_id`: ID of parent collection (if nested).
+- `group`: The name of the top-level Group it belongs to.
+- `path`: Full path from the Group to the collection.
+- `count`: Number of items in the collection.
 
 ## Importing Collections
 
@@ -57,17 +59,18 @@ You can import from:
 
 ### Folder Structure
 
-The plugin can create a folder structure in your vault that mirrors your Raindrop.io collections:
+The plugin creates a folder structure in your vault that mirrors your Raindrop.io sidebar, starting with the **Group** name as the root folder:
 
 ```plaintext
 Vault Root/
-├── Collection 1/
-│   ├── Subcollection 1.1/
-│   │   └── Note 1.1.1.md
-│   └── Note 1.1.md
-├── Collection 2/
-│   └── Note 2.1.md
-└── Note 1.md
+└── MY GROUP/
+    ├── Collection 1/
+    │   ├── Subcollection 1.1/
+    │   │   └── Note 1.1.1.md
+    │   └── Note 1.1.md
+    ├── Collection 2/
+    │   └── Note 2.1.md
+    └── Note 1.md
 ```
 
 ### Hierarchy Options

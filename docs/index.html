@@ -1,0 +1,1212 @@
+---
+layout: null
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Make It Rain - Raindrop.io Import for Obsidian</title>
+    
+    <!-- Premium Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-dark: #090a0f;
+            --bg-card: rgba(17, 19, 31, 0.65);
+            --bg-card-hover: rgba(23, 26, 43, 0.85);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(0, 240, 255, 0.3);
+            --color-text: #e2e8f0;
+            --color-muted: #8e9bb0;
+            --color-primary: #00f0ff;
+            --color-secondary: #bd00ff;
+            --glow-primary: rgba(0, 240, 255, 0.15);
+            --glow-secondary: rgba(189, 0, 255, 0.15);
+            --font-display: 'Outfit', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --font-mono: 'Space Grotesk', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--color-text);
+            font-family: var(--font-body);
+            line-height: 1.6;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Subtle Background Rain Effect */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: 
+                radial-gradient(circle at 10% 20%, rgba(0, 240, 255, 0.03) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(189, 0, 255, 0.03) 0%, transparent 40%);
+            z-index: -2;
+            pointer-events: none;
+        }
+
+        .rain-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            opacity: 0.15;
+            overflow: hidden;
+        }
+
+        .drop {
+            position: absolute;
+            background: linear-gradient(transparent, var(--color-primary));
+            width: 1px;
+            height: 80px;
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-100px); }
+            100% { transform: translateY(100vh); }
+        }
+
+        /* Header / Navbar */
+        header {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        nav a {
+            color: var(--color-muted);
+            text-decoration: none;
+            margin-left: 2rem;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: var(--color-primary);
+        }
+
+        /* Main Container */
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem 5rem;
+        }
+
+        /* Hero Section */
+        .hero {
+            display: flex;
+            align-items: center;
+            gap: 4rem;
+            padding: 4rem 0 6rem;
+        }
+
+        @media (max-width: 968px) {
+            .hero {
+                flex-direction: column;
+                text-align: center;
+                gap: 3rem;
+                padding: 2rem 0 4rem;
+            }
+        }
+
+        .hero-content {
+            flex: 1.2;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        @media (max-width: 968px) {
+            .hero-content {
+                align-items: center;
+            }
+        }
+
+        .hero-image-container {
+            flex: 1;
+            position: relative;
+        }
+
+        .hero-image {
+            width: 100%;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transition: transform 0.5s ease;
+        }
+
+        .hero-image:hover {
+            transform: scale(1.02) rotate(1deg);
+        }
+
+        .hero-badge {
+            background: rgba(0, 240, 255, 0.1);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            color: var(--color-primary);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 1.5rem;
+            font-family: var(--font-mono);
+            letter-spacing: 0.05em;
+        }
+
+        h1 {
+            font-family: var(--font-display);
+            font-size: 4rem;
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        @media (max-width: 968px) {
+            h1 {
+                text-align: center;
+                font-size: 3rem;
+            }
+        }
+
+        h1 span {
+            background: linear-gradient(135deg, var(--color-primary) 30%, var(--color-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-desc {
+            font-size: 1.15rem;
+            color: var(--color-muted);
+            margin-bottom: 2.5rem;
+            max-width: 540px;
+            text-align: left;
+        }
+
+        @media (max-width: 968px) {
+            .hero-desc {
+                text-align: center;
+            }
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        @media (max-width: 968px) {
+            .cta-buttons {
+                justify-content: center;
+            }
+        }
+
+        .btn {
+            padding: 0.85rem 1.8rem;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--color-primary), #00d2e5);
+            color: #040814;
+            box-shadow: 0 4px 20px var(--glow-primary);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 240, 255, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--color-text);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--color-muted);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        /* Features Section */
+        .features-section {
+            padding: 4rem 0;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-header h2 {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+
+        .section-header p {
+            color: var(--color-muted);
+            font-size: 1.1rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2.5rem;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--glow-primary), transparent 60%);
+            opacity: 0;
+            transition: opacity 0.4s;
+            pointer-events: none;
+        }
+
+        .feature-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-hover);
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px -15px rgba(0, 240, 255, 0.1);
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            display: inline-block;
+        }
+
+        .feature-card h3 {
+            font-family: var(--font-display);
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card p {
+            color: var(--color-muted);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* Interactive Simulator */
+        .simulator-section {
+            padding: 4rem 0;
+        }
+
+        .simulator-wrapper {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            display: flex;
+            overflow: hidden;
+            box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.6);
+        }
+
+        @media (max-width: 900px) {
+            .simulator-wrapper {
+                flex-direction: column;
+            }
+        }
+
+        .sim-editor, .sim-output {
+            flex: 1;
+            padding: 2.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sim-editor {
+            border-right: 1px solid var(--border-color);
+        }
+
+        @media (max-width: 900px) {
+            .sim-editor {
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+        }
+
+        .sim-title {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--color-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .sim-btn {
+            background: rgba(0, 240, 255, 0.1);
+            border: 1px solid var(--color-primary);
+            color: var(--color-primary);
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            font-family: var(--font-body);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sim-btn:hover {
+            background: var(--color-primary);
+            color: #040814;
+        }
+
+        pre {
+            background: #06070b;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 8px;
+            padding: 1.2rem;
+            font-family: 'Space Grotesk', monospace;
+            font-size: 0.85rem;
+            color: #c9d1d9;
+            overflow-x: auto;
+            flex-grow: 1;
+            tab-size: 4;
+        }
+
+        /* Documentation Section (Prominent Cards) */
+        .docs-section {
+            padding: 6rem 0 4rem;
+        }
+
+        .docs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .doc-card {
+            background: linear-gradient(135deg, rgba(17, 19, 31, 0.8), rgba(23, 26, 43, 0.5));
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2.5rem;
+            text-align: left;
+            text-decoration: none;
+            color: var(--color-text);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+        }
+
+        .doc-card:hover {
+            border-color: var(--color-secondary);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px -10px rgba(189, 0, 255, 0.15);
+        }
+
+        .doc-card h3 {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .doc-card p {
+            color: var(--color-muted);
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+            flex-grow: 1;
+        }
+
+        .doc-card-link {
+            color: var(--color-primary);
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        /* Quick Start */
+        .quickstart-section {
+            padding: 4rem 0;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .steps {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .step {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .step-num {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            color: #040814;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-family: var(--font-display);
+            flex-shrink: 0;
+        }
+
+        .step-content h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            font-family: var(--font-display);
+        }
+
+        .step-content p {
+            color: var(--color-muted);
+            font-size: 0.95rem;
+        }
+
+        .code-box {
+            background: #06070b;
+            border: 1px solid var(--border-color);
+            padding: 0.8rem 1.2rem;
+            border-radius: 6px;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            margin-top: 0.75rem;
+            display: inline-block;
+        }
+
+        /* Premium Code-Based Dashboard Mockup */
+        .mock-window {
+            background: rgba(10, 12, 22, 0.75);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            width: 100%;
+            max-width: 580px;
+            margin: 0 auto;
+            overflow: hidden;
+            font-family: var(--font-body);
+            text-align: left;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .mock-window:hover {
+            border-color: rgba(0, 240, 255, 0.25);
+            box-shadow: 0 35px 70px -15px rgba(0, 240, 255, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .mock-window-header {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 0.85rem 1.2rem;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            position: relative;
+        }
+
+        .mock-dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .mock-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .mock-dot.red { background: #ff5f56; }
+        .mock-dot.yellow { background: #ffbd2e; }
+        .mock-dot.green { background: #27c93f; }
+
+        .mock-window-title {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.75rem;
+            font-family: var(--font-mono);
+            color: var(--color-muted);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .mock-status-pill {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: rgba(39, 201, 63, 0.1);
+            border: 1px solid rgba(39, 201, 63, 0.2);
+            color: #27c93f;
+            padding: 0.2rem 0.5rem;
+            border-radius: 50px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .mock-status-indicator {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #27c93f;
+            box-shadow: 0 0 8px #27c93f;
+            animation: pulse-green 2s infinite;
+        }
+
+        @keyframes pulse-green {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+
+        .mock-window-body {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            height: 320px;
+            position: relative;
+        }
+
+        @media (max-width: 500px) {
+            .mock-window-body {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+        }
+
+        /* Raindrop Source Pane */
+        .mock-pane-left {
+            padding: 1.2rem;
+            border-right: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            background: rgba(0, 0, 0, 0.15);
+        }
+
+        .mock-pane-title {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--color-muted);
+            font-weight: 700;
+            font-family: var(--font-mono);
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .mock-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            overflow-y: auto;
+        }
+
+        .mock-list-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 8px;
+            padding: 0.6rem 0.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+            transition: all 0.2s;
+            cursor: default;
+        }
+
+        .mock-list-item:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(0, 240, 255, 0.15);
+        }
+
+        .mock-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .mock-item-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--color-text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 170px;
+        }
+
+        .mock-item-meta {
+            display: flex;
+            gap: 0.3rem;
+            align-items: center;
+        }
+
+        .mock-badge {
+            font-size: 0.6rem;
+            padding: 0.1rem 0.3rem;
+            border-radius: 4px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .mock-badge.blue {
+            background: rgba(0, 240, 255, 0.1);
+            color: var(--color-primary);
+        }
+
+        .mock-badge.purple {
+            background: rgba(189, 0, 255, 0.1);
+            color: var(--color-secondary);
+        }
+
+        .mock-item-excerpt {
+            font-size: 0.7rem;
+            color: var(--color-muted);
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Obsidian Target Pane */
+        .mock-pane-right {
+            padding: 1.2rem;
+            background: rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .mock-obsidian-note {
+            background: rgba(6, 7, 11, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 8px;
+            padding: 1rem;
+            height: 100%;
+            overflow-y: auto;
+            font-family: var(--font-body);
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .mock-frontmatter {
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+            padding-bottom: 0.6rem;
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            color: #8b949e;
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .mock-fm-key { color: var(--color-primary); }
+        .mock-fm-val { color: #f2cc60; }
+        .mock-fm-tag { color: var(--color-secondary); }
+
+        .mock-note-content {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .mock-note-h1 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--color-text);
+            margin-bottom: 0.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .mock-note-p {
+            font-size: 0.7rem;
+            color: var(--color-muted);
+            line-height: 1.4;
+        }
+
+        .mock-note-quote {
+            border-left: 2px solid var(--color-primary);
+            padding-left: 0.5rem;
+            margin: 0.2rem 0;
+            font-size: 0.7rem;
+            color: #c9d1d9;
+            font-style: italic;
+        }
+
+        /* Flow Indicator Lines */
+        .mock-flow-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.25);
+        }
+
+        .mock-flow-icon {
+            font-size: 1rem;
+            animation: rotate-loader 3s linear infinite;
+        }
+
+        @keyframes rotate-loader {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .mock-window-footer {
+            background: rgba(255, 255, 255, 0.01);
+            padding: 0.6rem 1.2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.65rem;
+            color: var(--color-muted);
+            font-family: var(--font-mono);
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--border-color);
+            padding: 4rem 2rem;
+            text-align: center;
+            color: var(--color-muted);
+            font-size: 0.9rem;
+        }
+
+        footer p {
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="rain-container" id="rain"></div>
+
+    <header>
+        <div class="logo">🌧️ Make It Rain</div>
+        <nav>
+            <a href="user-guide/index.html" id="link-user-guide">User Guide</a>
+            <a href="developer-guide/index.html" id="link-dev-guide">Developer Guide</a>
+            <a href="https://github.com/frostmute/make-it-rain" id="link-github">GitHub</a>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Hero -->
+        <section class="hero">
+            <div class="hero-content">
+                <div class="hero-badge">1.9.1 RELEASE</div>
+                <h1>Pull Raindrop.io to Obsidian <span>Beautifully</span></h1>
+                <p class="hero-desc">Import bookmarks, articles, highlights, and annotations from Raindrop.io directly into your local Markdown vault with complete rendering control.</p>
+                <div class="cta-buttons">
+                    <a href="#quickstart" class="btn btn-primary" id="btn-hero-get-started">Get Started</a>
+                    <a href="#docs" class="btn btn-secondary" id="btn-hero-docs">Read Docs</a>
+                </div>
+            </div>
+            <div class="hero-image-container">
+                <div class="mock-window">
+                    <!-- Top Window Bar -->
+                    <div class="mock-window-header">
+                        <div class="mock-dots">
+                            <span class="mock-dot red"></span>
+                            <span class="mock-dot yellow"></span>
+                            <span class="mock-dot green"></span>
+                        </div>
+                        <div class="mock-window-title">make-it-rain-pull.db</div>
+                        <div class="mock-status-pill">
+                            <span class="mock-status-indicator"></span>
+                            <span>Connected</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Window Body -->
+                    <div class="mock-window-body">
+                        <!-- Middle Flow Overlay -->
+                        <div class="mock-flow-container">
+                            <span class="mock-flow-icon">🌧️</span>
+                        </div>
+
+                        <!-- Left Pane: Raindrop.io -->
+                        <div class="mock-pane-left">
+                            <div class="mock-pane-title">
+                                <span>📥 Raindrop.io Source</span>
+                            </div>
+                            <div class="mock-list">
+                                <div class="mock-list-item">
+                                    <div class="mock-item-header">
+                                        <span class="mock-item-title">Designing for Dark Mode</span>
+                                        <span class="mock-badge blue">Link</span>
+                                    </div>
+                                    <span class="mock-item-excerpt">Best practices for UI color palettes, typography and contrast...</span>
+                                </div>
+                                <div class="mock-list-item">
+                                    <div class="mock-item-header">
+                                        <span class="mock-item-title">Understanding AST Parsers</span>
+                                        <span class="mock-badge purple">Article</span>
+                                    </div>
+                                    <span class="mock-item-excerpt">A deep-dive tutorial into Abstract Syntax Trees in TypeScript...</span>
+                                </div>
+                                <div class="mock-list-item">
+                                    <div class="mock-item-header">
+                                        <span class="mock-item-title">Obsidian CSS Themes</span>
+                                        <span class="mock-badge blue">Link</span>
+                                    </div>
+                                    <span class="mock-item-excerpt">Customizing your Obsidian vault appearance with clean CSS rules...</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Pane: Obsidian Notes -->
+                        <div class="mock-pane-right">
+                            <div class="mock-pane-title">
+                                <span>📂 Obsidian Vault Target</span>
+                            </div>
+                            <div class="mock-obsidian-note">
+                                <div class="mock-frontmatter">
+                                    <span>---</span>
+                                    <span><span class="mock-fm-key">title</span>: "Designing for Dark Mode"</span>
+                                    <span><span class="mock-fm-key">type</span>: <span class="mock-fm-val">link</span></span>
+                                    <span><span class="mock-fm-key">tags</span>:</span>
+                                    <span>  - <span class="mock-fm-tag">design</span></span>
+                                    <span>  - <span class="mock-fm-tag">ui-ux</span></span>
+                                    <span>---</span>
+                                </div>
+                                <div class="mock-note-content">
+                                    <div class="mock-note-h1"># Designing for Dark Mode</div>
+                                    <div class="mock-note-quote">> A collection of guidelines and color schemes for dark systems.</div>
+                                    <p class="mock-note-p">This note was auto-imported via the Make It Rain plugin API pull.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Window Footer -->
+                    <div class="mock-window-footer">
+                        <span>Imported: 1,482 items</span>
+                        <span>Rate Limit: 60 req/min</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features -->
+        <section class="features-section" id="features">
+            <div class="section-header">
+                <h2>Fully Custom Vault Import</h2>
+                <p>Designed for power users who care about note design and structure.</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🎨</div>
+                    <h3>Flexible Custom Templates</h3>
+                    <p>Customize how notes look with Handlebars-like templates, including dedicated templates for articles, videos, and links, allowing full control over note layouts.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📂</div>
+                    <h3>Sidebar & Collection Structure</h3>
+                    <p>Replicates your entire Raindrop sidebar structure, including top-level Groups, Collections, and Sub-collections as nested Obsidian folders.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📥</div>
+                    <h3>Native File Downloads</h3>
+                    <p>Downloads PDF, EPUB, MOBI, and audio files behind the scenes directly to your vault, with smart MIME-to-extension mapping.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Simulator -->
+        <section class="simulator-section">
+            <div class="section-header">
+                <h2>Interactive Template Preview</h2>
+                <p>See how the plugin compiles nested templates into clean Obsidian Markdown notes.</p>
+            </div>
+
+            <div class="simulator-wrapper">
+                <div class="sim-editor">
+                    <div class="sim-title">
+                        <span>Template Input</span>
+                        <button class="sim-btn" onclick="toggleTemplate()" id="btn-sim-toggle">Switch Template</button>
+                    </div>
+                    <pre id="template-editor"></pre>
+                </div>
+                <div class="sim-output">
+                    <div class="sim-title" style="color: var(--color-secondary);">
+                        <span>Rendered Output (.md)</span>
+                    </div>
+                    <pre id="template-output"></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Documentation Prominent Links -->
+        <section class="docs-section" id="docs">
+            <div class="section-header">
+                <h2>📖 In-Depth Documentation</h2>
+                <p>Explore detailed guides, configurations, and developer blueprints.</p>
+            </div>
+            
+            <div class="docs-grid">
+                <a href="user-guide/index.html" class="doc-card" id="card-user-guide">
+                    <div>
+                        <h3>📖 User Guide</h3>
+                        <p>Complete guide on installing, configuring, and getting the most out of templates, collection folder imports, and tag systems.</p>
+                    </div>
+                    <span class="doc-card-link">READ GUIDE &rarr;</span>
+                </a>
+                
+                <a href="developer-guide/index.html" class="doc-card" id="card-developer-guide">
+                    <div>
+                        <h3>👨‍💻 Developer Guide</h3>
+                        <p>Blueprints for setting up the development workspace, running tests locally, and understanding the core architecture.</p>
+                    </div>
+                    <span class="doc-card-link">EXPLORE DEV GUIDE &rarr;</span>
+                </a>
+
+                <a href="meta/PROJECT_POLISH_COMPLETE.html" class="doc-card" id="card-polish-checklist">
+                    <div>
+                        <h3>✅ Polish Checklist</h3>
+                        <p>The complete checklist of resolved lints, testing matrix verifications, and quality assurance passes.</p>
+                    </div>
+                    <span class="doc-card-link">VIEW POLISH LIST &rarr;</span>
+                </a>
+            </div>
+        </section>
+
+        <!-- Quickstart -->
+        <section class="quickstart-section" id="quickstart">
+            <div class="section-header">
+                <h2>Quick Installation</h2>
+                <p>Set up the plugin in three simple steps.</p>
+            </div>
+
+            <div class="steps">
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <div class="step-content">
+                        <h3>Download the Release Zip</h3>
+                        <p>Download the latest pre-packaged release <strong>make-it-rain.zip</strong> from the GitHub Releases tab.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <div class="step-content">
+                        <h3>Extract to Plugins Directory</h3>
+                        <p>Unzip the files and place the folder directly into your Obsidian vault's plugins folder:</p>
+                        <div class="code-box">.obsidian/plugins/make-it-rain/</div>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <div class="step-content">
+                        <h3>Enable & Setup</h3>
+                        <p>In Obsidian, go to Settings → Community Plugins, enable <strong>Make It Rain</strong>, add your API Token, and import your bookmarks!</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Make It Rain Plugin. Crafted for Obsidian. Released under the MIT License.</p>
+    </footer>
+
+    <script>
+        // Rain Generation
+        const rainContainer = document.getElementById('rain');
+        const dropCount = 40;
+        
+        for (let i = 0; i < dropCount; i++) {
+            const drop = document.createElement('div');
+            drop.className = 'drop';
+            drop.style.left = `${Math.random() * 100}vw`;
+            drop.style.animationDuration = `${0.5 + Math.random() * 0.8}s`;
+            drop.style.animationDelay = `${Math.random() * 2}s`;
+            drop.style.opacity = `${0.1 + Math.random() * 0.4}`;
+            rainContainer.appendChild(drop);
+        }
+
+        // Simulator Logic
+        const templates = [
+            {
+                tmpl: `---
+title: "{{title}}"
+link: {{link}}
+collection: "{{collectionTitle}}"
+group: "{{collectionGroup}}"
+tags: {{#each tags}}
+  - {{this}}
+{{/each}}
+---
+# {{title}}
+
+> {{excerpt}}
+
+{{#if note}}
+## My Notes
+{{note}}
+{{/if}}
+
+{{#if highlights}}
+## Highlights
+{{#each highlights}}
+- {{text}}{{#if note}}  *Note:* {{note}}{{/if}}
+{{/each}}
+{{/if}}`,
+                out: `---
+title: "Understanding AST Parsers"
+link: https://example.com/ast-parser
+collection: "Programming"
+group: "Knowledge Base"
+tags: 
+  - parsing
+  - guides
+  - typescript
+---
+# Understanding AST Parsers
+
+> A comprehensive guide to understanding how Abstract Syntax Trees work and how to write a lightweight parser in TypeScript.
+
+## My Notes
+This article is extremely helpful for our template compiler rewrite.
+
+## Highlights
+- Abstract Syntax Trees represent the structure of program code.  *Note:* Focus on recursive descent parsing.
+- Regular expressions are not nesting-aware.`
+            },
+            {
+                tmpl: `---
+title: "{{title}}"
+type: {{type}}
+domain: {{domain}}
+---
+# {{title}}
+
+Watch here: {{link}}
+
+{{#if cover}}
+![Cover Image]({{cover}})
+{{/if}}
+
+## Details
+- Saved: {{created}}
+- Collection: {{collectionTitle}}`,
+                out: `---
+title: "Obsidian Advanced Workflows"
+type: video
+domain: youtube.com
+---
+# Obsidian Advanced Workflows
+
+Watch here: https://youtube.com/watch?v=12345
+
+![Cover Image](https://img.youtube.com/vi/12345/0.jpg)
+
+## Details
+- Saved: 2026-05-23T02:35:19Z
+- Collection: Obsidian Video Guides`
+            }
+        ];
+
+        let currentTemplateIdx = 0;
+        
+        function updateSimulator() {
+            document.getElementById('template-editor').innerText = templates[currentTemplateIdx].tmpl;
+            document.getElementById('template-output').innerText = templates[currentTemplateIdx].out;
+        }
+
+        function toggleTemplate() {
+            currentTemplateIdx = (currentTemplateIdx + 1) % templates.length;
+            updateSimulator();
+        }
+
+        // Initialize Simulator
+        updateSimulator();
+    </script>
+</body>
+</html>

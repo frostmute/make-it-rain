@@ -15,6 +15,7 @@ import {
     RaindropItem, 
     RaindropResponse, 
     RaindropCollection, 
+    RaindropGroup,
     CollectionResponse, 
     IRaindropToObsidian,
     TagMatchTypes,
@@ -32,8 +33,7 @@ import {
     sanitizeFileName,
     sanitizeMarkdownContent,
     createFolderStructure,
-    
-    // API utilities
+    htmlToMarkdown,
     RateLimiter,
     createRateLimiter,
     fetchWithRetry,
@@ -51,7 +51,19 @@ import {
     toUppercase,
     toLowercase,
     toTitleCase,
-    truncateString
+    truncateString,
+    
+    // Scraping utilities
+    fetchArchiveContent,
+    extractContentFromHtml,
+
+    // Download utilities
+    downloadBinaryFile,
+    validateBinaryMagicBytes,
+
+    // Template utilities
+    ASTNode,
+    parseTemplate
 } from './utils';
 
 // System collection IDs from raindrop.io API docs
@@ -75,7 +87,9 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
     private rateLimiter: RateLimiter;
     private ribbonIconEl: HTMLElement | undefined;
     private collectionCache: RaindropCollection[] | null = null;
+    private groupCache: RaindropGroup[] | null = null;
     private lastCollectionFetch: number = 0;
+    private lastGroupFetch: number = 0;
     private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache
 
     constructor(app: App, manifest: PluginManifest) {
@@ -243,9 +257,13 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             const collectionNameToIdMap = new Map<string, number>();
             const collectionIdToNameMap = new Map<number, string>();
             const collectionHierarchy = new Map<number, { title: string, parentId?: number }>();
+            const collectionToGroupMap = new Map<number, string>();
 
-            loadingNotice.setMessage('Fetching collections hierarchy...');
-            const allCollections = await this.fetchAllUserCollections();
+            loadingNotice.setMessage('Fetching collections hierarchy and groups...');
+            const [allCollections, allGroups] = await Promise.all([
+                this.fetchAllUserCollections(),
+                this.fetchUserGroups()
+            ]);
 
             if (allCollections.length === 0) {
                 loadingNotice.hide();
@@ -256,6 +274,22 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 collectionNameToIdMap.set(col.title.toLowerCase(), col._id);
                 collectionIdToNameMap.set(col._id, col.title);
                 collectionHierarchy.set(col._id, { title: col.title, parentId: col.parent?.$id });
+            });
+
+            // Map root collections to their groups
+            allGroups.forEach(group => {
+                group.collections.forEach(colId => {
+                    collectionToGroupMap.set(colId, group.title);
+                });
+            });
+
+            // Add full paths to collection name map for resolution
+            allCollections.forEach(col => {
+                const pathSegments = getFullPathSegments(col._id, collectionHierarchy, collectionIdToNameMap);
+                if (pathSegments.length > 1) {
+                    const fullPath = pathSegments.join(' > ');
+                    collectionNameToIdMap.set(fullPath.toLowerCase(), col._id);
+                }
             });
 
             if (options.collections) {
@@ -435,7 +469,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     }
                 }
                 const collectionsData: CollectionResponse = { result: true, items: allCollections };
-                await this.processRaindrops(filteredData, options.vaultPath, options.appendTagsToNotes, options.useRaindropTitleForFileName, loadingNotice, options, collectionsData, collectionIdToNameMap);
+                await this.processRaindrops(filteredData, options.vaultPath, options.appendTagsToNotes, options.useRaindropTitleForFileName, loadingNotice, options, collectionsData, collectionIdToNameMap, new Set<string>(), collectionToGroupMap);
             }
         } catch (error) {
             loadingNotice.hide();
@@ -454,7 +488,8 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         options: ModalFetchOptions,
         collectionsData?: CollectionResponse,
         collectionIdToNameMap: Map<number, string> = new Map<number, string>(),
-        verifiedFolderPaths: Set<string> = new Set<string>()
+        verifiedFolderPaths: Set<string> = new Set<string>(),
+        collectionToGroupMap: Map<number, string> = new Map<number, string>()
     ): Promise<void> {
         const { app } = this;
         const settingsFMTags = appendTagsToNotes.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag !== '');
@@ -480,7 +515,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 const raindrop = raindrops[processed++];
                 if (!raindrop) break;
                 try {
-                    const result = await this.processRaindrop(raindrop, baseTargetFolderPath, settingsFMTags, options, loadingNotice, processed, total, collectionHierarchy, collectionIdToNameMap, verifiedFolderPaths, pendingFolderCreations);
+                    const result = await this.processRaindrop(raindrop, baseTargetFolderPath, settingsFMTags, options, loadingNotice, processed, total, collectionHierarchy, collectionIdToNameMap, verifiedFolderPaths, pendingFolderCreations, collectionToGroupMap);
                     if (result.success) {
                         if (result.type === 'created') createdCount++;
                         else if (result.type === 'updated') updatedCount++;
@@ -500,10 +535,10 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
 
         if (this.settings.createFolderNotes) {
             loadingNotice.setMessage('Generating collection folder notes...');
-            await Promise.all(Array.from(verifiedFolderPaths).map(async (folderPath) => {
+            for (const folderPath of Array.from(verifiedFolderPaths)) {
                 try {
                     const folderName = folderPath.split('/').pop();
-                    if (!folderName) return;
+                    if (!folderName) continue;
                     const folderNotePath = normalizePath(`${folderPath}/${folderName}.md`);
                     const abstractFile = app.vault.getAbstractFileByPath(folderPath);
                     if (abstractFile instanceof TFolder) {
@@ -513,11 +548,16 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                             .sort((a: TAbstractFile, b: TAbstractFile) => a.name.localeCompare(b.name))
                             .map((child: TAbstractFile) => `- [[${child.name.replace('.md', '')}]]\n`);
                         content += listItems.join('');
-                        if (await app.vault.adapter.exists(folderNotePath)) await app.vault.adapter.write(folderNotePath, content);
-                        else await app.vault.create(folderNotePath, content);
+                        if (await app.vault.adapter.exists(folderNotePath)) {
+                            await app.vault.adapter.write(folderNotePath, content);
+                        } else {
+                            await app.vault.create(folderNotePath, content);
+                        }
                     }
-                } catch (e) { console.error(`Error generating folder note for ${folderPath}:`, e); }
-            }));
+                } catch (e) {
+                    console.error(`Error generating folder note for ${folderPath}:`, e);
+                }
+            }
         }
 
         loadingNotice.hide();
@@ -539,16 +579,38 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         collectionHierarchy: Map<number, { title: string, parentId?: number }>,
         collectionIdToNameMap: Map<number, string>,
         verifiedFolderPaths: Set<string>,
-        pendingFolderCreations: Map<string, Promise<boolean>>
+        pendingFolderCreations: Map<string, Promise<boolean>>,
+        collectionToGroupMap: Map<number, string> = new Map<number, string>()
     ): Promise<{ success: boolean; type: 'created' | 'updated' | 'skipped' }> {
         try {
             const { app } = this;
             const generatedFilename = this.generateFileName(raindrop, options.useRaindropTitleForFileName);
-            let targetPath = baseTargetFolderPath;
+            
+            let pathSegments: string[] = [];
+            let groupTitle: string | undefined;
+
             if (raindrop.collection?.$id) {
-                const segments = getFullPathSegments(raindrop.collection.$id, collectionHierarchy, collectionIdToNameMap);
-                if (segments.length > 0) targetPath = normalizePath(`${baseTargetFolderPath}/${segments.join('/')}`);
+                pathSegments = getFullPathSegments(raindrop.collection.$id, collectionHierarchy, collectionIdToNameMap);
+                
+                // Find root collection to get group
+                let rootCollectionId: number | undefined = raindrop.collection.$id;
+                if (rootCollectionId !== 0 && rootCollectionId !== -1) {
+                    let parent = collectionHierarchy.get(rootCollectionId);
+                    while (parent && parent.parentId !== undefined && parent.parentId !== 0 && parent.parentId !== -1) {
+                        rootCollectionId = parent.parentId;
+                        parent = collectionHierarchy.get(rootCollectionId);
+                    }
+                    groupTitle = collectionToGroupMap.get(rootCollectionId);
+                }
             }
+
+            if (groupTitle) {
+                pathSegments.unshift(sanitizeFileName(groupTitle));
+            }
+
+            const targetPath = pathSegments.length > 0 
+                ? normalizePath(`${baseTargetFolderPath}/${pathSegments.join('/')}`) 
+                : baseTargetFolderPath;
 
             if (targetPath && !verifiedFolderPaths.has(targetPath)) {
                 if (pendingFolderCreations.has(targetPath)) {
@@ -576,8 +638,8 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             const templateData: TemplateData = {
                 _id: raindrop._id,
                 title: escapeYamlString(raindrop.title),
-                excerpt: escapeYamlString(raindrop.excerpt || ''),
-                note: escapeYamlString(raindrop.note || ''),
+                excerpt: escapeYamlString(htmlToMarkdown(raindrop.excerpt || '')),
+                note: escapeYamlString(htmlToMarkdown(raindrop.note || '')),
                 link: raindrop.link,
                 cover: raindrop.cover || '',
                 created: raindrop.created,
@@ -585,11 +647,12 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 type: raindrop.type,
                 collectionId: raindrop.collection?.$id || 0,
                 collectionTitle: escapeYamlString(collectionIdToNameMap.get(raindrop.collection?.$id || 0) || 'Unknown'),
-                collectionPath: escapeYamlString(getFullPathSegments(raindrop.collection?.$id || 0, collectionHierarchy, collectionIdToNameMap).join('/')),
+                collectionPath: escapeYamlString(pathSegments.join('/')),
+                collectionGroup: groupTitle || '',
                 tags: [...(raindrop.tags || []), ...settingsFMTags].map(tag => escapeYamlString(tag)),
                 highlights: (raindrop.highlights || []).map(h => ({
-                    text: escapeYamlString(h.text),
-                    note: escapeYamlString(h.note || ''),
+                    text: escapeYamlString(htmlToMarkdown(h.text || '')),
+                    note: escapeYamlString(htmlToMarkdown(h.note || '')),
                     created: h.created || ''
                 })),
                 bannerFieldName: this.settings.bannerFieldName,
@@ -599,7 +662,15 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 templateData.collectionParentId = collectionHierarchy.get(raindrop.collection?.$id || 0)?.parentId;
             }
 
-            const enhancedDataForRender: Record<string, unknown> = {
+            if (this.settings.archiveScraping && raindrop.cache?.status === 'ready') {
+                loadingNotice.setMessage(`Scraping archive for '${raindrop.title || 'Untitled'}'... (${processed}/${total})`);
+                const archiveHtml = await fetchArchiveContent(raindrop._id, this.settings.apiToken);
+                if (archiveHtml) {
+                    templateData.scrapedContent = extractContentFromHtml(archiveHtml);
+                }
+            }
+
+            const enhancedDataForRender: TemplateData = {
                 ...templateData,
                 domain: getDomain(templateData.link || ''),
                 renderedType: raindropType(templateData.type),
@@ -608,9 +679,56 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 formattedTags: formatTags(templateData.tags || []),
             };
 
-            if (this.settings.downloadFiles && raindrop.link) {
-                // Simplified download logic for brevity, keeping core functionality
-                // ... (Existing download logic remains)
+            if (this.settings.downloadFiles && raindrop.link && (raindrop.link.includes('raindrop.io') && (raindrop.link.includes('/file') || raindrop.link.includes('/v2/')))) {
+                let fileExtension = raindrop.file?.name?.split('.').pop() || (raindrop.file?.type?.split('/').pop()) || 'file';
+                let binaryFileName = `${generatedFilename}.${fileExtension}`;
+                let binaryFilePath = normalizePath(`${targetPath}/${binaryFileName}`);
+                
+                try {
+                    loadingNotice.setMessage(`Downloading file for '${raindrop.title || 'Untitled'}'... (${processed}/${total})`);
+                    
+                    const fileResponse = await downloadBinaryFile(raindrop.link, this.settings.apiToken);
+                    
+                    if (fileResponse.status === 200 && fileResponse.arrayBuffer) {
+                        const verification = validateBinaryMagicBytes(fileResponse.arrayBuffer, fileExtension);
+                        if (verification.isValid) {
+                            const detectedExt = verification.detectedExtension || fileExtension;
+                            binaryFileName = `${generatedFilename}.${detectedExt}`;
+                            binaryFilePath = normalizePath(`${targetPath}/${binaryFileName}`);
+                            
+                            await app.vault.adapter.writeBinary(binaryFilePath, fileResponse.arrayBuffer);
+                            enhancedDataForRender.localFile = `[[${binaryFileName}]]`;
+                            enhancedDataForRender.localEmbed = `![[${binaryFileName}]]`;
+                        } else {
+                            const errorMsg = `Binary verification failed: ${verification.error}`;
+                            console.error(`Error downloading file for raindrop ${raindrop._id}:`, errorMsg);
+                            
+                            // Write debug file
+                            const debugFilePath = normalizePath(`${targetPath}/${generatedFilename}.download-error.log`);
+                            const debugContent = `URL: ${raindrop.link}\nStatus: ${fileResponse.status}\nRedirect URL: ${fileResponse.redirectUrl || 'None'}\nError: ${errorMsg}\nBuffer Size: ${fileResponse.arrayBuffer.byteLength} bytes\n`;
+                            await app.vault.adapter.write(debugFilePath, debugContent);
+                        }
+                    } else {
+                        const errorMsg = fileResponse.error || `Server returned status ${fileResponse.status}`;
+                        console.error(`Error downloading file for raindrop ${raindrop._id}:`, errorMsg);
+                        
+                        // Write debug file
+                        const debugFilePath = normalizePath(`${targetPath}/${generatedFilename}.download-error.log`);
+                        const debugContent = `URL: ${raindrop.link}\nStatus: ${fileResponse.status}\nRedirect URL: ${fileResponse.redirectUrl || 'None'}\nError: ${errorMsg}\n`;
+                        await app.vault.adapter.write(debugFilePath, debugContent);
+                    }
+                } catch (error) {
+                    const errorMsg = error instanceof Error ? error.message : String(error);
+                    console.error(`Error downloading file for raindrop ${raindrop._id}:`, error);
+                    
+                    try {
+                        const debugFilePath = normalizePath(`${targetPath}/${generatedFilename}.download-error.log`);
+                        const debugContent = `URL: ${raindrop.link}\nError: ${errorMsg}\n`;
+                        await app.vault.adapter.write(debugFilePath, debugContent);
+                    } catch (writeErr) {
+                        console.error('Failed to write download error log:', writeErr);
+                    }
+                }
             }
 
             let finalContent = '';
@@ -620,6 +738,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 let frontmatter = `---\nid: ${raindrop._id}\ntitle: "${raindrop.title.replace(/"/g, '\\"')}"\ndescription: "${(raindrop.excerpt || '').replace(/"/g, '\\"')}"\nsource: ${raindrop.link}\ntype: ${raindrop.type}\ncreated: ${raindrop.created}\nlastupdate: ${raindrop.lastUpdate}\n`;
                 if (templateData.collectionId) {
                     frontmatter += `collectionId: ${templateData.collectionId}\ncollectionTitle: "${templateData.collectionTitle}"\ncollectionPath: "${templateData.collectionPath}"\n`;
+                    if (templateData.collectionGroup) frontmatter += `collectionGroup: "${templateData.collectionGroup}"\n`;
                     if (templateData.collectionParentId) frontmatter += `collectionParentId: ${templateData.collectionParentId}\n`;
                 }
                 frontmatter += `tags:\n${[...(raindrop.tags || []), ...settingsFMTags].map(t => `  - ${t.trim().replace(TAG_SPACE_REGEX, '_').replace(TAG_INVALID_CHARS_REGEX, '')}`).join('\n')}\n`;
@@ -628,6 +747,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
 
                 let noteBody = (raindrop.cover ? `![${sanitizeFileName(raindrop.title) || 'Cover'}](${raindrop.cover})\n\n` : "") + `# ${sanitizeMarkdownContent(raindrop.title)}\n\n`;
                 if (raindrop.excerpt) noteBody += `## Description\n${sanitizeMarkdownContent(raindrop.excerpt)}\n\n`;
+                if (templateData.scrapedContent) noteBody += `## Article Content\n${templateData.scrapedContent}\n\n`;
                 if (templateData.note) noteBody += `## Notes\n${sanitizeMarkdownContent(templateData.note)}\n\n`;
                 if (templateData.highlights?.length) {
                     noteBody += `## Highlights\n${templateData.highlights.map(h => `- ${sanitizeMarkdownContent(h.text).replace(/\n/g, ' ')}${h.note ? `\n  *Note:* ${sanitizeMarkdownContent(h.note).replace(/\n/g, ' ')}` : ""}`).join('\n')}\n\n`;
@@ -640,60 +760,169 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             else await app.vault.create(filePath, finalContent);
 
             return { success: true, type: processOutcome };
-        } catch {
-            console.error(`Error processing raindrop ${raindrop._id}`);
+        } catch (error) {
+            console.error(`Error processing raindrop ${raindrop._id}:`, error);
             return { success: false, type: 'skipped' };
         }
     }
 
-    private renderTemplate(template: string, data: Record<string, unknown>): string {
-        const renderBlock = (blockContent: string, context: Record<string, unknown>): string => {
-            const IF_REGEX = /{{#if ([^}]+)}}([\s\S]*?)(?:{{else}}([\s\S]*?))?{{\/if}}/g;
-            const EACH_REGEX = /{{#each ([^}]+)}}([\s\S]*?){{\/each}}/g;
-            const VAR_REGEX = /{{([^}]+)}}/g;
+    public renderTemplate(template: string, data: TemplateData): string {
 
-            return blockContent
-                .replace(IF_REGEX, (_, cond, content, elseContent) => {
-                    const value = this.getNestedProperty(context, cond.trim());
-                    return (value && (Array.isArray(value) ? value.length > 0 : !!value)) ? renderBlock(content, context) : (elseContent ? renderBlock(elseContent, context) : '');
-                })
-                .replace(EACH_REGEX, (_, arrayVar, content) => {
-                    const array = this.getNestedProperty(context, arrayVar.trim());
-                    return Array.isArray(array) ? array.map(item => renderBlock(content, typeof item === 'object' && item !== null ? { ...context, ...item } as Record<string, unknown> : { ...context, 'this': item } as Record<string, unknown>)).join('') : '';
-                })
-                .replace(VAR_REGEX, (_, key) => {
-                    const trimmedKey = key.trim();
-                    const parts = trimmedKey.split(/\s+/);
+        const resolveTemplate = (name: string): string | null => {
+            if (Object.prototype.hasOwnProperty.call(this.settings.namedTemplates, name)) return this.settings.namedTemplates[name];
+            if (name === 'default') return this.settings.defaultTemplate;
+            if (Object.prototype.hasOwnProperty.call(this.settings.contentTypeTemplates, name)) return this.settings.contentTypeTemplates[name as keyof typeof this.settings.contentTypeTemplates];
+            return null;
+        };
 
+        const renderAST = (
+            nodes: ASTNode[],
+            context: Record<string, unknown>,
+            blocks: Map<string, ASTNode[]>,
+            includeDepth = 0
+        ): string => {
+            let result = '';
+            for (const node of nodes) {
+                if (node.type === 'text') {
+                    result += node.raw;
+                } else if (node.type === 'var') {
+                    const key = node.name!;
+                    const parts = key.split(/\s+/);
                     if (parts.length >= 2) {
                         const helper = parts[0].toLowerCase();
                         const varName = parts[1];
                         const value = this.getNestedProperty(context, varName);
-
                         if (value !== undefined && value !== null) {
                             const strValue = String(value);
+                            let resolved = false;
                             switch (helper) {
-                                case 'uppercase': return toUppercase(strValue);
-                                case 'lowercase': return toLowercase(strValue);
-                                case 'titlecase': return toTitleCase(strValue);
-                                case 'truncate':
+                                case 'uppercase':
+                                    result += toUppercase(strValue);
+                                    resolved = true;
+                                    break;
+                                case 'lowercase':
+                                    result += toLowercase(strValue);
+                                    resolved = true;
+                                    break;
+                                case 'titlecase':
+                                    result += toTitleCase(strValue);
+                                    resolved = true;
+                                    break;
+                                case 'truncate': {
                                     const length = parseInt(parts[2], 10);
-                                    return !isNaN(length) ? truncateString(strValue, length) : strValue;
+                                    result += !isNaN(length) ? truncateString(strValue, length) : strValue;
+                                    resolved = true;
+                                    break;
+                                }
                             }
+                            if (resolved) continue;
                         }
                     }
 
-                    const value = this.getNestedProperty(context, trimmedKey);
-                    if (value === null || value === undefined) return '';
-                    if (typeof value === 'object') return formatYamlValue(value);
-                    return String(value);
-                });
+                    const value = this.getNestedProperty(context, key);
+                    if (value === null || value === undefined) {
+                        // Keep result unchanged
+                    } else if (typeof value === 'object') {
+                        result += formatYamlValue(value);
+                    } else {
+                        result += String(value);
+                    }
+                } else if (node.type === 'if') {
+                    const value = this.getNestedProperty(context, node.cond!);
+                    const isTrue = !!(value && (Array.isArray(value) ? value.length > 0 : !!value));
+                    if (isTrue) {
+                        result += renderAST(node.thenBranch!, context, blocks, includeDepth);
+                    } else if (node.elseBranch) {
+                        result += renderAST(node.elseBranch, context, blocks, includeDepth);
+                    }
+                } else if (node.type === 'each') {
+                    const array = this.getNestedProperty(context, node.arrayVar!);
+                    if (Array.isArray(array)) {
+                        for (const item of array) {
+                            const nextContext = typeof item === 'object' && item !== null
+                                ? { ...context, ...item } as Record<string, unknown>
+                                : { ...context, 'this': item } as Record<string, unknown>;
+                            result += renderAST(node.thenBranch!, nextContext, blocks, includeDepth);
+                        }
+                    }
+                } else if (node.type === 'include') {
+                    if (includeDepth >= 10) continue; // hard cap, matches extends limit
+                    const partialTemplate = resolveTemplate(node.templateName!);
+                    if (partialTemplate) {
+                        const partialAst = parseTemplate(partialTemplate);
+                        // Also resolves bug from the flag: includes whose body uses #extends
+                        const resolved = resolveInheritance(partialAst, blocks);
+                        result += renderAST(resolved.ast, context, resolved.blocks, includeDepth + 1);
+                    }
+                } else if (node.type === 'block') {
+                    const blockContent = blocks.has(node.blockName!) ? blocks.get(node.blockName!)! : node.thenBranch!;
+                    result += renderAST(blockContent, context, blocks, includeDepth);
+                } else if (node.type === 'extends') {
+                    // This only happens if inheritance failed to resolve a parent
+                    // In that case, we render the child content as a fallback
+                    result += renderAST(node.thenBranch!, context, blocks, includeDepth);
+                }
+            }
+            return result;
         };
-        return renderBlock(template, { ...data, id: data._id, domain: getDomain(data.link as string || ''), updated: data.lastupdate || '' });
+
+        const resolveInheritance = (
+            ast: ASTNode[],
+            inheritedBlocks: Map<string, ASTNode[]>
+        ): { ast: ASTNode[]; blocks: Map<string, ASTNode[]> } => {
+            let currentAst = ast;
+            const blocks = new Map(inheritedBlocks);
+            const seen = new Set<string>();
+            const extractBlocks = (nodes: ASTNode[]) => {
+                for (const node of nodes) {
+                    if (node.type === 'block' && !blocks.has(node.blockName!)) {
+                        blocks.set(node.blockName!, node.thenBranch!);
+                    }
+                    if (node.thenBranch) extractBlocks(node.thenBranch);
+                    if (node.elseBranch) extractBlocks(node.elseBranch);
+                }
+            };
+            let extendsNode = currentAst.find(n => n.type === 'extends');
+            while (extendsNode) {
+                const tName = extendsNode.templateName!;
+                if (seen.has(tName) || seen.size >= 10) break;
+                seen.add(tName);
+                extractBlocks(currentAst);
+                const parent = resolveTemplate(tName);
+                if (!parent) break;
+                currentAst = parseTemplate(parent);
+                extendsNode = currentAst.find(n => n.type === 'extends');
+            }
+            return { ast: currentAst, blocks };
+        };
+
+        const initialAst = parseTemplate(template);
+        const rootContext = { ...data, id: data._id, domain: getDomain(data.link as string || ''), updated: data.lastupdate || '' };
+        const { ast: finalAst, blocks } = resolveInheritance(initialAst, new Map());
+        return renderAST(finalAst, rootContext, blocks);
     }
 
     private getNestedProperty(obj: Record<string, unknown>, path: string): unknown {
         return path.split('.').reduce((current: unknown, prop: string) => (current && typeof current === 'object' && prop in current) ? (current as Record<string, unknown>)[prop] : undefined, obj);
+    }
+
+    async fetchUserGroups(): Promise<RaindropGroup[]> {
+        const now = Date.now();
+        if (this.groupCache && (now - this.lastGroupFetch < this.CACHE_TTL)) return this.groupCache;
+        if (!this.settings.apiToken) return [];
+
+        const baseApiUrl = 'https://api.raindrop.io/rest/v1';
+        const fetchOptions: RequestInit = { method: 'GET', headers: { 'Authorization': `Bearer ${this.settings.apiToken}` } };
+
+        try {
+            const userRes = await fetchWithRetry<{ user: { groups: RaindropGroup[] } }>(this.app, `${baseApiUrl}/user`, fetchOptions, this.rateLimiter);
+            const groups = userRes.user?.groups || [];
+            this.groupCache = groups;
+            this.lastGroupFetch = now;
+            return groups;
+        } catch {
+            return this.groupCache || [];
+        }
     }
 
     async fetchAllUserCollections(): Promise<RaindropCollection[]> {
@@ -747,14 +976,25 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             }
 
             const collectionIdToNameMap = new Map<number, string>();
+            const collectionToGroupMap = new Map<number, string>();
             let collectionsData: CollectionResponse | undefined;
-            if (raindropItem.collection?.$id) {
-                const allUserCollections = await this.fetchAllUserCollections();
-                if (allUserCollections.length > 0) {
-                    collectionsData = { result: true, items: allUserCollections };
-                    allUserCollections.forEach(col => collectionIdToNameMap.set(col._id, col.title));
-                }
+            
+            const [allUserCollections, allGroups] = await Promise.all([
+                this.fetchAllUserCollections(),
+                this.fetchUserGroups()
+            ]);
+
+            if (allUserCollections.length > 0) {
+                collectionsData = { result: true, items: allUserCollections };
+                allUserCollections.forEach(col => collectionIdToNameMap.set(col._id, col.title));
             }
+
+            // Map root collections to their groups
+            allGroups.forEach(group => {
+                group.collections.forEach(colId => {
+                    collectionToGroupMap.set(colId, group.title);
+                });
+            });
             
             const singleItemOptions: ModalFetchOptions = {
                 vaultPath: vaultPath,
@@ -770,8 +1010,8 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 useDefaultTemplate: false,
                 overrideTemplates: false
             };
-            
-            await this.processRaindrops([raindropItem], vaultPath, appendTags || '', singleItemOptions.useRaindropTitleForFileName, loadingNotice, singleItemOptions, collectionsData, collectionIdToNameMap);
+
+            await this.processRaindrops([raindropItem], vaultPath, appendTags || '', singleItemOptions.useRaindropTitleForFileName, loadingNotice, singleItemOptions, collectionsData, collectionIdToNameMap, new Set<string>(), collectionToGroupMap);
         } catch (error) {
             loadingNotice.hide();
             new Notice(`Error during quick import of item ${itemId}: ${error instanceof Error ? error.message : (typeof error === 'object' && error !== null ? JSON.stringify(error) : String(error))}`, 10000);

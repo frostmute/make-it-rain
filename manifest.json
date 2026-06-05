@@ -2,10 +2,10 @@
 	"id": "make-it-rain",
 	"name": "Make It Rain",
 	"minAppVersion": "1.8.10",
-	"description": "Pull your Raindrop.io bookmarks with flexible filtering, customization, and location options.",
+	"description": "Pull Raindrop.io bookmarks, highlights, and attachments into Markdown notes with rich metadata, smart folder structures, and native file support.",
 	"author": "frostmute",
 	"authorUrl": "https://www.github.io/frostmute",
-	"fundingUrl": "https://www.paypal.me/deepspaceghost",
+	"fundingUrl": "https://ko-fi.com/frostmute",
 	"isDesktopOnly": false,
-	"version": "1.9.0"
+	"version": "1.9.2"
 }

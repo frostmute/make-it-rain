@@ -58,7 +58,7 @@ jobs:
         run: npm run build
 
       - name: List files for debugging
-        run: ls -la build/
+        run: ls -la
 
       - name: Update version in files
         if: steps.check_version.outputs.versions_match == 'false' && inputs.skip_version_bump == false
@@ -74,19 +74,19 @@ jobs:
             fs.writeFileSync('package.json', JSON.stringify(packageJson, null, 2));
           " $VERSION
 
-          # Update manifest.json (in build directory)
+          # Update manifest.json
           node -e "
             const fs = require('fs');
-            const manifestJson = JSON.parse(fs.readFileSync('build/manifest.json', 'utf8'));
+            const manifestJson = JSON.parse(fs.readFileSync('manifest.json', 'utf8'));
             manifestJson.version = process.argv[1];
-            fs.writeFileSync('build/manifest.json', JSON.stringify(manifestJson, null, '\t'));
+            fs.writeFileSync('manifest.json', JSON.stringify(manifestJson, null, '\t'));
           " $VERSION
 
           # Update versions.json (in root)
           node -e "
             const fs = require('fs');
             const versionsJson = JSON.parse(fs.readFileSync('versions.json', 'utf8'));
-            const manifestJson = JSON.parse(fs.readFileSync('build/manifest.json', 'utf8'));
+            const manifestJson = JSON.parse(fs.readFileSync('manifest.json', 'utf8'));
             versionsJson[process.argv[1]] = manifestJson.minAppVersion;
             fs.writeFileSync('versions.json', JSON.stringify(versionsJson, null, '\t'));
           " $VERSION
@@ -98,8 +98,7 @@ jobs:
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git add package.json versions.json
-          git add -f build/manifest.json
+          git add package.json versions.json manifest.json
           # Check if there are changes to commit
           if git diff --staged --quiet; then
             echo "No changes to commit - skipping"
@@ -129,9 +128,7 @@ jobs:
 
       - name: Create Plugin Zip
         run: |
-          cd build
-          zip -r ../make-it-rain.zip main.js manifest.json styles.css
-          cd ..
+          zip -r make-it-rain.zip main.js manifest.json styles.css
           echo "Created make-it-rain.zip with contents:"
           unzip -l make-it-rain.zip
 
@@ -169,9 +166,9 @@ jobs:
           prerelease: false
           files: |
             make-it-rain.zip
-            build/main.js
-            build/manifest.json
-            build/styles.css
+            main.js
+            manifest.json
+            styles.css
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -180,6 +177,6 @@ jobs:
         run: |
           TAG_NAME=v${{ inputs.version }}
           echo "Uploading assets to existing release $TAG_NAME"
-          gh release upload "$TAG_NAME" make-it-rain.zip build/main.js build/manifest.json build/styles.css --repo ${{ github.repository }} --clobber
+          gh release upload "$TAG_NAME" make-it-rain.zip main.js manifest.json styles.css --repo ${{ github.repository }} --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

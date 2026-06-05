@@ -81,3 +81,24 @@ export {
 
 // Re-export all security utilities
 export { sanitizeMarkdownContent } from './securityUtils';
+
+// Re-export all scraping utilities
+export {
+    fetchArchiveContent,
+    extractContentFromHtml,
+    htmlToMarkdown
+} from './scrapingUtils';
+
+// Re-export all template utilities
+export {
+    ASTNode,
+    parseTemplate
+} from './templateUtils';
+
+// Re-export all download utilities
+export {
+    downloadBinaryFile,
+    validateBinaryMagicBytes,
+    isHtmlOrText,
+    getExtensionFromMagicBytes
+} from './downloadUtils';

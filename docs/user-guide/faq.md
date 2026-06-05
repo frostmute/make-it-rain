@@ -106,37 +106,31 @@ Yes, highlights are automatically imported with their notes.
 
 The template system allows you to customize how your notes are formatted using Handlebars-like syntax.
 
-### How do I create a custom template?
+### How do I customize templates?
 
-1. Open plugin settings
-2. Go to Templates tab
-3. Click "Add Template"
-4. Enter name and content
-5. Save changes
+1. Open Obsidian Settings → Make It Rain.
+2. Toggle **Enable Template System** to ON.
+3. Edit the **Default Template** or enable and edit **Content Type Templates** (for articles, videos, etc.).
+4. Use the **Reset** buttons to revert to the built-in defaults if needed.
 
 ### What variables can I use in templates?
 
-- `title`: Bookmark title
-- `url`: Source URL
-- `created`: Creation date
-- `updated`: Last update date
-- `type`: Content type
-- `cover`: Cover image URL
-- `excerpt`: Webpage excerpt
-- `note`: Your note
-- `tags`: Array of tags
-- `highlights`: Array of highlights
-- `collection`: Collection info
+There are many variables available, including:
+- `{{title}}`, `{{link}}`, `{{excerpt}}`, `{{note}}`, `{{id}}`
+- `{{collectionTitle}}`, `{{collectionPath}}`
+- `{{formattedCreatedDate}}`, `{{domain}}`, `{{renderedType}}`
+- `{{tags}}` (array for looping)
+- `{{highlights}}` (array for looping)
 
+For a complete list, click the **Browse available variables** button in the plugin settings or see the [Template System guide](template-system.md).
 ### Are there built-in helpers?
 
-Yes, including:
+Yes, the template system supports several built-in features:
+- **Text Helpers**: `{{uppercase}}`, `{{lowercase}}`, `{{titlecase}}`, and `{{truncate}}`.
+- **Conditional Logic**: `{{#if condition}}...{{/if}}` for optional fields.
+- **Loops**: `{{#each array}}...{{/each}}` for tags and highlights.
 
-- Date formatting
-- Text manipulation
-- Array operations
-- Conditional checks
-- Comparison helpers
+Formatting (like dates or tags) is provided via pre-calculated variables like `{{formattedCreatedDate}}` or `{{formattedTags}}`.
 
 ## Troubleshooting
 

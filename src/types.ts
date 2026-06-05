@@ -55,6 +55,8 @@ export interface MakeItRainSettings {
     contentTypeTemplateToggles: ContentTypeToggles;
     downloadFiles: boolean;
     createFolderNotes: boolean;
+    archiveScraping: boolean;
+    namedTemplates: Record<string, string>;
 }
 
 export interface ModalFetchOptions {
@@ -88,6 +90,11 @@ export interface RaindropItem {
     };
     readonly highlights?: ReadonlyArray<RaindropHighlight>;
     readonly type: RaindropType;
+    readonly cache?: {
+        readonly status: string;
+        readonly size?: number;
+        readonly created?: string;
+    };
     readonly file?: {
         readonly name?: string;
         readonly size?: number;
@@ -110,6 +117,7 @@ export interface TemplateData {
     collectionTitle: string;
     collectionPath: string;
     collectionParentId?: number;
+    collectionGroup?: string;
     tags: string[];
     highlights: {
         text: string;
@@ -121,6 +129,7 @@ export interface TemplateData {
     url: string;
     domain?: string;
     renderedType?: string;
+    scrapedContent?: string;
     [key: string]: unknown; // Allow for custom fields if needed, but primary fields are typed
 }
 
@@ -170,7 +179,13 @@ export interface IRaindropToObsidian {
     saveSettings(): Promise<void>;
     updateRibbonIcon(): void;
     fetchAllUserCollections(): Promise<RaindropCollection[]>;
+    fetchUserGroups(): Promise<RaindropGroup[]>;
     fetchSingleRaindrop(itemId: number, vaultPath?: string, appendTags?: string): Promise<void>;
+}
+
+export interface RaindropGroup {
+    title: string;
+    collections: number[];
 }
 
 export type RaindropHighlight = {

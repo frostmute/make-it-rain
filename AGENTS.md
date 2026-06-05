@@ -1,6 +1,6 @@
 # Make It Rain - AI Coding Agent Guide
 
-*Current Version: 1.9.0*
+*Current Version: 1.9.1*
 
 ## Architecture Overview
 
@@ -59,6 +59,12 @@ npm run version      # Bump version in manifest.json and versions.json
 npm run lint         # Run ESLint on source files
 npm run lint:md      # Lint markdown files
 ```
+
+### Submission Standards
+
+- **Deliverables**: Always push completed work to `main` or create a Pull Request. Verify this for all autonomous tasks.
+- **Quality Gate**: All submissions must pass `npm test`, `npm run lint`, and `npm run build`.
+- **CI Integration**: If CI actions fail, create a subtask for the failure and resolve it before considering the task complete.
 
 ## Project-Specific Patterns
 

@@ -8,8 +8,7 @@ export const copyToVaults = () => {
     }
 
     const targetVaultPaths = [
-        '/home/frost/Obsidian Vault/.obsidian/plugins/make-it-rain/',
-        '/home/frost/Make-It-Rain Test/.obsidian/plugins/make-it-rain/'
+        '/Users/thewytchhaus/Documents/Obsidian Vault/.obsidian/plugins/make-it-rain/',
     ];
     const sourceFiles = [
         'main.js',
@@ -33,10 +32,10 @@ export const copyToVaults = () => {
 
             // Copy each file to the target vault
             for (const file of sourceFiles) {
-                // Try build directory first, then root
-                let sourcePath = `build/${file}`;
+                // Try root directory first, then build
+                let sourcePath = file;
                 if (!existsSync(sourcePath)) {
-                    sourcePath = file;
+                    sourcePath = `build/${file}`;
                 }
                 
                 if (!existsSync(sourcePath)) {

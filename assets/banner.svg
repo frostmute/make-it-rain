@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" width="100%" height="100%">
+  <!-- Definitions for Gradients and Filters -->
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0c16"/>
+      <stop offset="50%" stop-color="#06070b"/>
+      <stop offset="100%" stop-color="#020305"/>
+    </linearGradient>
+    
+    <!-- Text / Accent Gradient (Cyan to Violet) -->
+    <linearGradient id="primary-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00f0ff"/>
+      <stop offset="100%" stop-color="#bd00ff"/>
+    </linearGradient>
+
+    <!-- Cloud Glow -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="12" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <!-- Subtle Grid Pattern -->
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255, 255, 255, 0.02)" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="400" fill="url(#bg-grad)"/>
+  <rect width="1200" height="400" fill="url(#grid)"/>
+
+  <!-- Decorative Subtle Ambient Lights -->
+  <circle cx="200" cy="100" r="150" fill="#00f0ff" opacity="0.03" filter="blur(50px)"/>
+  <circle cx="1000" cy="300" r="180" fill="#bd00ff" opacity="0.03" filter="blur(60px)"/>
+
+  <!-- Content Group -->
+  <g transform="translate(100, 0)">
+    <!-- Cloud and Rain Icon (Left aligned inside content) -->
+    <g transform="translate(50, 200)" filter="url(#glow)">
+      <!-- Cloud Outline & Semi-transparent fill -->
+      <path d="M -30,20 
+               A 25,25 0 0,1 -30,-30 
+               A 35,35 0 0,1 30,-35 
+               A 25,25 0 0,1 50,20 
+               Z" 
+            fill="none" 
+            stroke="url(#primary-grad)" 
+            stroke-width="4" 
+            stroke-linejoin="round" 
+            stroke-linecap="round"/>
+      
+      <!-- Rain Drops (Stylized clean diagonal lines) -->
+      <line x1="-15" y1="40" x2="-25" y2="70" stroke="#00f0ff" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+      <line x1="5" y1="45" x2="-5" y2="75" stroke="#00f0ff" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+      <line x1="25" y1="40" x2="15" y2="70" stroke="#bd00ff" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+      
+      <!-- Tiny splash droplets -->
+      <circle cx="-25" cy="85" r="2" fill="#00f0ff" opacity="0.6"/>
+      <circle cx="-5" cy="90" r="2" fill="#00f0ff" opacity="0.6"/>
+      <circle cx="15" cy="85" r="2" fill="#bd00ff" opacity="0.6"/>
+    </g>
+
+    <!-- Typography (Right of Icon) -->
+    <g transform="translate(180, 210)">
+      <!-- Main Title -->
+      <text x="0" y="0" 
+            font-family="'Outfit', 'Inter', sans-serif" 
+            font-size="64" 
+            font-weight="800" 
+            fill="url(#primary-grad)" 
+            letter-spacing="-0.03em">Make It Rain</text>
+      
+      <!-- Subtitle -->
+      <text x="5" y="45" 
+            font-family="'Inter', sans-serif" 
+            font-size="18" 
+            font-weight="500" 
+            fill="#8e9bb0" 
+            letter-spacing="0.25em" 
+            opacity="0.8">PULL RAINDROP.IO TO OBSIDIAN</text>
+
+      <!-- Badge -->
+      <rect x="5" y="70" width="85" height="24" rx="12" fill="rgba(0, 240, 255, 0.1)" stroke="rgba(0, 240, 255, 0.2)" stroke-width="1"/>
+      <text x="47.5" y="86" 
+            font-family="'Space Grotesk', monospace" 
+            font-size="10" 
+            font-weight="700" 
+            fill="#00f0ff" 
+            letter-spacing="0.05em" 
+            text-anchor="middle">v1.9.1</text>
+    </g>
+  </g>
+</svg>

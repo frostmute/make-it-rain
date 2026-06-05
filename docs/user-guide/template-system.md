@@ -5,77 +5,182 @@ The Make It Rain plugin includes a powerful template system that gives you compl
 ## Table of Contents
 
 - [Enabling & Managing Templates](#enabling--managing-templates)
-- [Enabling the Template System](#enabling-the-template-system)
-  - [Default Template](#default-template)
-  - [Content-Type Specific Templates](#content-type-specific-templates)
-  - [Modal Fetch Options for Templates](#modal-fetch-options-for-templates)
 - [Available Template Variables](#available-template-variables)
   - [Core Raindrop Data](#core-raindrop-data)
-  - [Pre-calculated & Formatting Variables](#pre-calculated--formatting-variables)
-- [Essential Template Features (Handlebars Syntax)](#essential-template-features-handlebars-syntax)
+  - [Collection Information](#collection-information)
+  - [Formatted & Pre-calculated Variables](#formatted--pre-calculated-variables)
+  - [Lists & Loops](#lists--loops)
+  - [Attachments & Scraping](#attachments--scraping)
+- [Essential Template Features (Handlebars-like Syntax)](#essential-template-features)
   - [Displaying Variables](#displaying-variables)
+  - [Helper Functions](#helper-functions)
   - [Conditional Blocks (`if`)](#conditional-blocks-if)
   - [Looping Through Arrays (`each`)](#looping-through-arrays-each)
-- [Default Template Structure (Built-in)](#default-template-structure-built-in)
+- [Default Template Structure](#default-template-structure)
 - [Example Templates](#example-templates)
-  - [Minimal Template Example](#minimal-template-example)
-  - [Link to Full Template Gallery](#link-to-full-template-gallery)
-- [Best Practices for Templates](#best-practices-for-templates)
-- [Troubleshooting Common Issues](#troubleshooting-common-issues)
+- [Best Practices](#best-practices)
+- [Troubleshooting Common Issues](#troubleshooting)
 
 ## Enabling & Managing Templates
 
 ### Enabling the Template System
 
 1. Navigate to Obsidian Settings → Community Plugins → Make It Rain.
-2. Toggle "Enable Template System" to ON.
+2. Toggle **Enable Template System** to ON.
     - This reveals options for the "Default Template" and "Content Type Templates".
 
 ### Default Template
 
 - Located in the plugin settings under "Template System".
-- This template is used for any Raindrop item if:
-    1. Its specific content type template (e.g., for `article`) is disabled or empty.
-    2. The "Use Default Template Only" option is checked in the fetch modal.
-- The plugin comes with a comprehensive [built-in default template structure](#default-template-structure-built-in).
-- You can easily revert to the original system default template using the **"Reset to Default"** button next to the template editor in the settings.
+- This template is used for any Raindrop item if its specific content type template is disabled or empty.
+- You can revert to the original system default template using the **Reset to Default** button.
 
 ### Content-Type Specific Templates
 
-- In plugin settings, under "Content Type Templates", you can enable and define custom templates for each Raindrop type (`link`, `article`, `image`, `video`, `document`, `audio`).
-- If a specific content type template is enabled and has content, it will be used for items of that type, unless overridden by modal options. Each specific content-type template can also be individually reset to its original system default using its own **"Reset"** button next to its editor in the settings.
-
-### Modal Fetch Options for Templates
-
-When you trigger a fetch, the modal provides these choices if the template system is enabled:
-
-- **Use Default Template Only**: If checked, forces all items to use the "Default Template" from settings, ignoring any content-type specific templates.
-- **Override Disabled Templates**: If checked, uses any defined content-type specific templates *even if their toggle in settings is off*. The main "Enable Template System" toggle must still be on.
-- If neither is checked, behavior follows standard settings: enabled content-type templates are used for their respective types, and the default template is used for others.
+- Enable and define custom templates for each Raindrop type (`link`, `article`, `image`, `video`, `document`, `audio`, `book`).
+- If enabled, these take precedence over the default template for that specific type.
 
 ## Available Template Variables
 
-These variables can be used within your templates by wrapping them in double curly braces, e.g., `{{title}}`.
-
 ### Core Raindrop Data
 
-String values marked with `(YAML-escaped)` are pre-processed to be safe for direct use in YAML frontmatter (e.g., quotes are escaped). For body content, they render as normal strings.
+| Variable | Type | Description |
+| --- | --- | --- |
+| `id` | `number` | Unique Raindrop.io ID (Alias for `_id`). |
+| `title` | `string` | Title of the bookmark (YAML-escaped). |
+| `link` | `string` | The primary URL of the bookmark. |
+| `excerpt` | `string` | Summary or excerpt (YAML-escaped). |
+| `note` | `string` | Your personal notes on the bookmark (YAML-escaped). |
+| `type` | `string` | Raw Raindrop type (e.g., `article`, `link`). |
+| `created` | `string` | Creation timestamp (ISO 8601). |
+| `lastupdate` | `string` | Last update timestamp (ISO 8601). |
+| `cover` | `string` | URL of the cover image. |
+| `url` | `string` | Alias for `link`. |
 
-| Variable             | Type                     | Description                                                                                                | Example (in template)                     |
-| -------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
-| `id`                 | `number`                 | Unique Raindrop.io ID. **Required in frontmatter for updates to work.**                                  | `{{id}}`                                  |
-| `title`              | `string (YAML-escaped)`  | Title of the Raindrop.                                                                                     | `\"{{title}}\"`                           |
-| `excerpt`            | `string (YAML-escaped)`  | Description or summary of the Raindrop.                                                                    | `\"{{excerpt}}\"`                         |
-| `note`               | `string (YAML-escaped)`  | Your personal notes on the Raindrop.                                                                       | `\"{{note}}\"`                            |
-| `link`               | `string`                 | The primary URL of the bookmark.                                                                           | `{{link}}`                                |
-| `cover`              | `string`                 | URL of the cover image, if available.                                                                      | `{{cover}}`                               |
-| `created`            | `string`                 | Creation timestamp in ISO 8601 format (e.g., `2023-10-27T14:30:00Z`).                                      | `{{created}}`                             |
-| `lastupdate`         | `string`                 | Last update timestamp in ISO 8601 format. **Required in frontmatter for updates to work.**                 | `{{lastupdate}}`                          |
-| `type`               | `string`                 | The raw Raindrop type (e.g., `link`, `article`, `image`, `video`, `document`, `audio`).                      | `{{type}}`                                |
-| `collectionId`       | `number`                 | ID of the Raindrop\'s collection.                                                                          | `{{collectionId}}`                        |
-| `collectionTitle`    | `string (YAML-escaped)`  | Title of the Raindrop\'s collection.                                                                       | `\"{{collectionTitle}}\"`                 |
-| `collectionPath`     | `string (YAML-escaped)`  | Full path of the collection, including parent folders (e.g., `Work/Projects/Active`).                      | `\"{{collectionPath}}\"`                  |
-| `collectionParentId` | `number`                 | ID of the parent collection, if it exists. Use `{{#if collectionParentId}}...{{/if}}` to check.         | `{{collectionParentId}}`                  |
-| `tags`               | `string[] (YAML-escaped)`| Array of tag strings. Each tag string is individually pre-escaped for YAML.                              | `{{#each tags}}- {{this}}{{/each}}`       |
-| `highlights`         | `object[]`               | Array of highlight objects. Each object has `text (YAML-escaped)`, `note (YAML-escaped)`, `color`, `created`. | `{{#each highlights}}- {{text}}{{/each}}` |
-| `bannerFieldName`    | `string`                 | The user-defined frontmatter field name for banner images (from plugin settings, defaults to `banner`
+### Collection Information
+
+| Variable | Type | Description |
+| --- | --- | --- |
+| `collectionId` | `number` | ID of the parent collection. |
+| `collectionTitle` | `string` | Name of the collection (YAML-escaped). |
+| `collectionPath` | `string` | Full folder path (e.g., `Group / Parent / Child`). |
+| `collectionGroup` | `string` | Name of the sidebar Group. |
+| `collectionParentId` | `number` | ID of the parent collection (if any). |
+
+### Formatted & Pre-calculated Variables
+
+| Variable | Type | Description |
+| --- | --- | --- |
+| `formattedCreatedDate` | `string` | Created date in local format (e.g., `10/27/2023`). |
+| `formattedUpdatedDate` | `string` | Updated date in local format. |
+| `renderedType` | `string` | Human-friendly type (e.g., `web link` instead of `link`). |
+| `domain` | `string` | Website domain (e.g., `google.com`). |
+| `formattedTags` | `string` | Tags as space-separated hashtags (e.g., `#tag1 #tag2`). |
+
+### Lists & Loops
+
+| Variable | Type | Description |
+| --- | --- | --- |
+| `tags` | `string[]` | Array of tags. Use with `{{#each tags}}`. |
+| `highlights` | `object[]` | Array of highlights. Each has `text`, `note`, and `created`. |
+
+### Attachments & Scraping
+
+| Variable | Type | Description |
+| --- | --- | --- |
+| `scrapedContent` | `string` | Full article content (if Archive Scraping is enabled). |
+| `localFile` | `string` | Wiki-link to downloaded file (e.g., `[[document.pdf]]`). |
+| `localEmbed` | `string` | Wiki-embed for downloaded file (e.g., `![[image.png]]`). |
+
+## Essential Template Features
+
+### Displaying Variables
+Use double curly braces: `{{title}}`.
+
+### Helper Functions
+The template system supports basic text transformation helpers:
+- `{{uppercase title}}`: TITLE OF THE BOOKMARK
+- `{{lowercase type}}`: article
+- `{{titlecase collectionTitle}}`: My Collection Name
+- `{{truncate excerpt 100}}`: Truncates text to 100 characters and adds `...` if needed.
+
+### Conditional Blocks (`if`)
+```handlebars
+{{#if excerpt}}
+## Description
+{{excerpt}}
+{{/if}}
+```
+
+### Looping Through Arrays (`each`)
+```handlebars
+## Tags
+{{#each tags}}
+- {{this}}
+{{/each}}
+
+## Highlights
+{{#each highlights}}
+- {{text}}
+{{#if note}}  *Note:* {{note}}{{/if}}
+{{/each}}
+```
+
+## Default Template Structure
+The built-in default template is designed to be a comprehensive starting point, including frontmatter for Obsidian properties and a structured body.
+
+```markdown
+---
+title: "{{title}}"
+source: {{link}}
+type: {{type}}
+created: {{created}}
+lastupdate: {{lastupdate}}
+id: {{id}}
+collectionId: {{collectionId}}
+collectionTitle: "{{collectionTitle}}"
+collectionPath: "{{collectionPath}}"
+{{#if collectionParentId}}collectionParentId: {{collectionParentId}}{{/if}}
+tags:
+{{#each tags}}
+  - {{this}}
+{{/each}}
+{{#if cover}}
+{{bannerFieldName}}: {{cover}}
+{{/if}}
+---
+
+{{#if cover}}
+![{{title}}]({{cover}})
+{{/if}}
+
+# {{title}}
+
+{{#if excerpt}}
+## Description
+{{excerpt}}
+{{/if}}
+
+{{#if note}}
+## Notes
+{{note}}
+{{/if}}
+
+{{#if highlights}}
+## Highlights
+{{#each highlights}}
+- {{text}}
+{{#if note}}  *Note:* {{note}}{{/if}}
+{{/each}}
+{{/if}}
+```
+
+## Best Practices
+1. **YAML Quotes**: Always wrap string variables in double quotes in the frontmatter: `title: "{{title}}"`.
+2. **Handlebars Spacing**: Use single spaces within tags: `{{#if condition}}`, not `{{#ifcondition}}`.
+3. **Escaping**: The plugin automatically escapes special YAML characters in `title`, `excerpt`, and `note`.
+
+## Troubleshooting
+- **Variables not rendering**: Check for typos in variable names. Use the **Template Variable Browser** in settings to verify names.
+- **Empty values**: Some variables (like `scrapedContent`) require specific settings to be enabled.
+- **Looping issues**: Ensure you use `{{this}}` for simple arrays like `tags`, and specific property names (like `text`) for object arrays like `highlights`.

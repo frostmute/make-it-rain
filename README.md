@@ -1,5 +1,3 @@
-![Make It Rain Hero](https://github.com/frostmute/make-it-rain/blob/main/assets/1748151599078.webp)
-
 <div align="center">
 
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/frostmute/make-it-rain)](https://github.com/frostmute/make-it-rain/releases/latest)
@@ -23,7 +21,7 @@ Transform your web clippings, articles, and research into a powerful knowledge b
 
 Make It Rain is a powerful Obsidian plugin that brings your Raindrop.io bookmarks, highlights, and notes directly into your vault. Whether you're a researcher collecting articles, a reader saving interesting finds, or a developer curating resources, Make It Rain helps you integrate your web discoveries seamlessly into your knowledge base.
 
-**The Problem:** Your bookmarks live in Raindrop.io, but your knowledge base lives in Obsidian. Keeping them in sync is tedious.
+**The Problem:** Your bookmarks live in Raindrop.io, but your knowledge base lives in Obsidian. Keeping your vault manually updated is tedious.
 
 **The Solution:** Make It Rain automates the import process with flexible filtering, customizable templates, and smart organization.
 
@@ -35,9 +33,9 @@ Make It Rain is a powerful Obsidian plugin that brings your Raindrop.io bookmark
 
 Fully customize how your notes look with our flexible template system. Choose from pre-configured templates for different content types, or build your own with smart variables.
 
-- **Customizable templates** with Handlebars-like syntax
-- **Pre-configured templates** for articles, videos, images, links, and more
-- **Smart variables** (formatted dates, domains, tag lists)
+- **Nesting-aware AST Parser** for complex conditional Handlebars-like logic (`{{#if}}`, `{{#each}}`)
+- **Pre-configured templates** for articles, books, videos, images, links, and more
+- **Smart variables** (formatted dates, domains, tag lists, collection groups)
 - **One-click reset** to default templates
 - **Per-import overrides** to use different templates on demand
 
@@ -51,15 +49,16 @@ Import exactly what you need with granular filtering options.
 - **Tag filtering** with AND/OR logic
 - **Aggregate highlights by tag** - Consolidate highlights from across your vault into a single summary note
 - **Content type filtering** (links, articles, images, videos, documents, audio, books)
-- **Selective sync** - fetch only new items or update existing notes
+- **Selective imports** - fetch only new items or update existing notes
 
 ### 🗂️ Smart Organization
 
 Your imported notes organize themselves based on your Raindrop structure.
 
-- **Automatic folder hierarchy** mirroring your collections
+- **Automatic folder hierarchy** seamlessly mirroring your Raindrop Groups and Collections
 - **Automatic Folder Notes** (`FOLDER_NAME.md`) generated to serve as structured indexes
-- **Native File Downloads** to directly retrieve PDFs, EPUBs, video, and audio file attachments
+- **Native File Downloads** to directly retrieve PDFs, EPUBs (Books), video, and audio file attachments, with full S3 secure redirect support
+- **Archive Scraping** to extract clean text content from Raindrop.io's permanent archives
 - **Rich YAML frontmatter** with comprehensive metadata
 - **Customizable filenames** with template variables
 - **Auto-tagging** - append custom tags to all imports
@@ -85,12 +84,16 @@ Get started in 3 simple steps:
 
 ### Step 1️⃣: Install the Plugin
 
-1. Download `make-it-rain.zip` from the [latest release](https://github.com/frostmute/make-it-rain/releases/latest)
-   > ⚠️ Download `make-it-rain.zip`, **not** the source code
-2. Extract to get `main.js`, `manifest.json`, and `styles.css`
-3. Copy these files to your vault's `.obsidian/plugins/make-it-rain/` folder
-4. Restart Obsidian
-5. Enable the plugin in `Settings` → `Community Plugins`
+**Option A: Official Community Plugins (Recommended)**
+1. Open Obsidian and go to **Settings** → **Community Plugins**.
+2. Make sure Safe Mode is turned off.
+3. Click **Browse** and search for **Make It Rain** or click [this link to open the plugin directly](obsidian://show-plugin?id=make-it-rain).
+4. Click **Install**, then **Enable**.
+
+**Option B: Manual Installation**
+1. Download `make-it-rain.zip` from the [latest release](https://github.com/frostmute/make-it-rain/releases/latest).
+2. Extract to get `main.js`, `manifest.json`, and `styles.css`.
+3. Copy these files to your vault's `.obsidian/plugins/make-it-rain/` folder and restart Obsidian.
 
 ### Step 2️⃣: Get Your API Token
 
@@ -136,6 +139,7 @@ Learn how to contribute to the project:
 
 | Resource | Purpose |
 |----------|---------|
+| **[Architecture](ARCHITECTURE.md)** | Deep dive into design |
 | **[Developer Guide](https://frostmute.github.io/make-it-rain/developer-guide/)** | Architecture & setup |
 | **[Contributing Guide](CONTRIBUTING.md)** | How to contribute |
 | **[Testing Guide](https://frostmute.github.io/make-it-rain/developer-guide/testing-guide)** | Write tests |
@@ -156,6 +160,7 @@ Learn how to contribute to the project:
 | **Banner field name** | Frontmatter field for banner images | `banner` |
 | **Create folder notes** | Generate index notes for each collection folder | Enabled |
 | **Download files** | Fetch native Raindrop upload attachments | Enabled |
+| **Archive scraping** | Extract full text from Raindrop archives | Disabled |
 
 ### Filename template placeholders
 
@@ -186,6 +191,8 @@ lastupdate: 2024-01-16T14:20:00Z
 id: 123456789
 collectionTitle: "Web Development"
 collectionPath: "Learning/Web Development"
+collectionGroup: "CORE KNOWLEDGE"
+collectionParentId: 987654321
 tags:
   - react
   - javascript
@@ -205,10 +212,10 @@ Your bookmark's description and highlights are formatted with:
 - Description section
 - Personal notes and annotations
 - Highlights with inline comments
+- Full article content (via Archive Scraping)
+- Local file attachments (PDFs, images, etc.)
 - Metadata and details
 - Source link
-
-All automatically organized and beautifully formatted!
 ```
 
 For complete details, see the [Note Structure documentation](https://frostmute.github.io/make-it-rain/user-guide/note-structure).
@@ -296,7 +303,7 @@ For more tips and workflows, see the [Usage Guide](https://frostmute.github.io/m
 
 Active development focuses on these features:
 
-- 🔄 **Bi-directional sync** - Keep Obsidian and Raindrop in sync
+- 🔄 **Two-way updates** - (Roadmap) Send notes and annotations back to Raindrop.io
 - 📌 **Enhanced highlights** - Better highlight handling in notes
 - 💾 **Saved presets** - Store and reuse fetch configurations
 - 🎬 **Video tutorials** - Learn by watching

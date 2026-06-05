@@ -18,10 +18,11 @@ lastupdate: 2023-10-28T10:20:00Z
 collectionId: 98765
 collectionTitle: "My Collection"
 collectionPath: "Research/My Collection"
+collectionGroup: "CORE KNOWLEDGE"
 collectionParentId: 12345 # Only if a parent exists
 tags:
   - example-tag
-  - another-tag
+  - another_tag
 banner: https://example.com/cover-image.jpg # Field name from settings
 ---
 
@@ -32,6 +33,9 @@ banner: https://example.com/cover-image.jpg # Field name from settings
 ## Description
 This is the description or excerpt of the raindrop
 
+## Article Content
+This is where the full article content appears if Archive Scraping is enabled.
+
 ## Notes
 These are notes added to the raindrop in Raindrop.io
 
@@ -41,18 +45,21 @@ These are notes added to the raindrop in Raindrop.io
 - Another highlighted text from the raindrop.
 ```
 
+**Note:** When the template system is disabled, local file attachments (PDFs, EPUBs, etc.) are downloaded to your vault but are **not** automatically linked within the note. Use the [Template System](template-system.md) to include `{{localFile}}` or `{{localEmbed}}` for automatic linking.
+
 ### Key Frontmatter Fields (Fallback Structure)
 
 - `id`: Raindrop ID.
 - `title`: Raindrop title (double quotes escaped).
-- `description`: Raindrop excerpt (double quotes escaped; uses `|` for multi-line).
+- `description`: Raindrop excerpt (double quotes escaped).
 - `source`: URL of the bookmark.
 - `type`: Raw content type (e.g., `link`, `article`).
 - `created`: Creation timestamp (ISO 8601).
 - `lastupdate`: Last update timestamp (ISO 8601).
 - `collectionId`: ID of the collection.
 - `collectionTitle`: Title of the collection (double quotes escaped).
-- `collectionPath`: Full path of the collection (double quotes escaped).
+- `collectionPath`: Full path of the collection including the Group name (double quotes escaped).
+- `collectionGroup`: The name of the top-level Raindrop Group (e.g. "Work", "Personal").
 - `collectionParentId`: (Optional) ID of the parent collection.
 - `tags`: List of tags from Raindrop.io (spaces replaced with `_`, special chars removed).
 - The field name for `banner` (e.g., `banner:`, `cover:`) is taken from your plugin settings.
@@ -78,6 +85,7 @@ id: {{id}}
 collectionId: {{collectionId}}
 collectionTitle: "{{collectionTitle}}"
 collectionPath: "{{collectionPath}}"
+{{#if collectionGroup}}collectionGroup: "{{collectionGroup}}"{{/if}}
 {{#if collectionParentId}}collectionParentId: {{collectionParentId}}{{/if}}
 {{#if tags}}tags:
 {{#each tags}}  - {{this}}
@@ -130,7 +138,8 @@ When using the default template (or any custom template based on it), the follow
 - `lastupdate: {{lastupdate}}` (**Required for updates**)
 - `collectionId: {{collectionId}}`
 - `collectionTitle: "{{collectionTitle}}"`
-- `collectionPath: "{{collectionPath}}"`
+- `collectionPath: "{{collectionPath}}"` (Now includes Group name as root)
+- `collectionGroup: "{{collectionGroup}}"` (The name of the top-level Group)
 - `collectionParentId: {{collectionParentId}}` (Conditional, if parent exists)
 - `tags:` (Iterated using `{{#each tags}}`)
 - `{{bannerFieldName}}: {{cover}}` (Conditional, if cover exists; `bannerFieldName` is from settings)
