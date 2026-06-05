@@ -48,7 +48,7 @@ export function sanitizeMarkdownContent(content: unknown): string {
     const dangerousTags = [
         'meta', 'base', 'link', 'form', 'button', 'input', 'select', 'textarea', 'svg', 'math'
     ];
-    const tagsPattern = dangerousTags.join('|');
+    const dangerousTagsPattern = dangerousTags.join('|');
     const dangerousTagsRegex = new RegExp(`<(?:\\/\\s*)?(?:${dangerousTagsPattern})(?:\\s+[^>]*)?>`, 'gi');
     sanitized = sanitized.replace(dangerousTagsRegex, '');
 
