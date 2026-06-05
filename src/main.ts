@@ -63,7 +63,8 @@ import {
 
     // Template utilities
     ASTNode,
-    parseTemplate
+    parseTemplate,
+    createYamlFrontmatter
 } from './utils';
 
 // System collection IDs from raindrop.io API docs
@@ -541,7 +542,8 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     const folderNotePath = normalizePath(`${folderPath}/${folderName}.md`);
                     const abstractFile = app.vault.getAbstractFileByPath(folderPath);
                     if (abstractFile instanceof TFolder) {
-                        let content = `---\ntitle: "${folderName.replace(/"/g, '\\"')}"\ntype: collection\n---\n\n# ${folderName}\n\n## Collection Contents\n\n`;
+                        const frontmatter = createYamlFrontmatter({ title: folderName, type: 'collection' });
+                        let content = `${frontmatter}# ${folderName}\n\n## Collection Contents\n\n`;
                         const listItems = abstractFile.children
                             .filter((child: TAbstractFile) => child.name !== `${folderName}.md`)
                             .sort((a: TAbstractFile, b: TAbstractFile) => a.name.localeCompare(b.name))
