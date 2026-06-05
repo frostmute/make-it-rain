@@ -55,6 +55,7 @@ npm run version      # Bump version in manifest.json and versions.json
 ```
 
 ### Code Quality
+
 ```bash
 npm run lint         # Run ESLint on source files
 npm run lint:md      # Lint markdown files
@@ -71,6 +72,7 @@ npm run lint:md      # Lint markdown files
 ### Template System
 
 Custom Handlebars-like syntax implemented in `renderTemplate()` method with support for content-type-specific templates:
+
 - `{{variable}}`: Simple variable substitution
 - `{{#if condition}}...{{/if}}`: Conditional blocks with optional `{{else}}`
 - `{{#each array}}...{{/each}}`: Iteration over arrays
@@ -153,6 +155,7 @@ Configurable rate limiter (default 60 req/min) with automatic delays between API
 ### File Downloads
 
 For native Raindrop uploads and attachments:
+
 - Detects via `raindrop.link` containing `/v2/` and `/file`
 - Downloads via authenticated API endpoint with S3 redirect handling
 - Validates file type via MIME types and magic bytes
@@ -161,7 +164,9 @@ For native Raindrop uploads and attachments:
 - Configurable via settings toggle
 
 ### Automatic Folder Notes
+
 Plugin automatically generates index notes for collection folders:
+
 - Creates `FOLDER_NAME.md` files in each collection directory
 - Includes YAML frontmatter with collection metadata
 - Lists all notes in the collection with wiki-links

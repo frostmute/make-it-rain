@@ -164,6 +164,7 @@ describe('Import Workflow', () => {
 ### Core Components
 
 The plugin is structured around a functional utility pattern driven by a central orchestrator class:
+
 - **`RaindropToObsidian` (`main.ts`)**: The core orchestrator managing settings, plugin lifecycle, and the execution of bulk/quick import workflows.
 - **UI Modules (`modals.ts`, `settings.ts`)**: Provide the user interface for input and configuration.
 - **Utility Modules (`src/utils/*.ts`)**: Isolate pure data transformation and specific side-effects (e.g., `apiUtils` for network, `fileUtils` for Obsidian vault writes, `template-validator` for AST parsing).

@@ -116,6 +116,7 @@ The template system allows you to customize how your notes are formatted using H
 ### What variables can I use in templates?
 
 There are many variables available, including:
+
 - `{{title}}`, `{{link}}`, `{{excerpt}}`, `{{note}}`, `{{id}}`
 - `{{collectionTitle}}`, `{{collectionPath}}`
 - `{{formattedCreatedDate}}`, `{{domain}}`, `{{renderedType}}`
@@ -123,9 +124,11 @@ There are many variables available, including:
 - `{{highlights}}` (array for looping)
 
 For a complete list, click the **Browse available variables** button in the plugin settings or see the [Template System guide](template-system.md).
+
 ### Are there built-in helpers?
 
 Yes, the template system supports several built-in features:
+
 - **Text Helpers**: `{{uppercase}}`, `{{lowercase}}`, `{{titlecase}}`, and `{{truncate}}`.
 - **Conditional Logic**: `{{#if condition}}...{{/if}}` for optional fields.
 - **Loops**: `{{#each array}}...{{/each}}` for tags and highlights.

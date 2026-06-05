@@ -738,7 +738,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
         for (const name of templateNames) {
             const templateDiv = container.createDiv('make-it-rain-named-template-item');
             
-            const header = new Setting(templateDiv)
+            new Setting(templateDiv)
                 .setName(`Template: ${name}`)
                 .addText((text) => {
                     text.setValue(name)
