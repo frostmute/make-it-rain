@@ -753,6 +753,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                             delete namedTemplates[name];
                             namedTemplates[newName] = content;
                             await this.plugin.saveSettings();
+                            this.display();
                         });
                 })
                 .addButton((button) => {
