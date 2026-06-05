@@ -363,7 +363,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                         }
 
                         if (data?.items) {
-                            collectionData = collectionData.concat(data.items);
+                            collectionData.push(...data.items);
                             page++;
                             hasMore = data.items.length === perPage;
                         } else {
@@ -396,7 +396,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
 
                             if (!data.result) break;
                             if (data?.items) {
-                                tagData = tagData.concat(data.items);
+                                tagData.push(...data.items);
                                 page++;
                                 hasMore = data.items.length === perPage;
                             } else {
@@ -423,7 +423,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
 
                         if (!data.result) throw new Error(`API Error: ${JSON.stringify(data)}`);
                         if (data?.items) {
-                            allData = allData.concat(data.items);
+                            allData.push(...data.items);
                             page++;
                             hasMore = data.items.length === perPage;
                         } else {
@@ -446,7 +446,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
 
                     if (!data.result) throw new Error(`API Error: ${JSON.stringify(data)}`);
                     if (data?.items) {
-                        allData = allData.concat(data.items);
+                        allData.push(...data.items);
                         page++;
                         hasMore = data.items.length === perPage;
                     } else {
@@ -1060,7 +1060,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 }
 
                 if (data.items && data.items.length > 0) {
-                    allItems = allItems.concat(data.items);
+                    allItems.push(...data.items);
                     hasMore = data.items.length === perPage;
                     page++;
                 } else {
