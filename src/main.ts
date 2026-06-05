@@ -542,7 +542,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     const folderNotePath = normalizePath(`${folderPath}/${folderName}.md`);
                     const abstractFile = app.vault.getAbstractFileByPath(folderPath);
                     if (abstractFile instanceof TFolder) {
-                        const frontmatter = createYamlFrontmatter({ title: folderName, type: 'collection' });
+                        const frontmatter = createYamlFrontmatter({ title: folderName, type: 'collection' }, ['title']);
                         let content = `${frontmatter}# ${folderName}\n\n## Collection Contents\n\n`;
                         const listItems = abstractFile.children
                             .filter((child: TAbstractFile) => child.name !== `${folderName}.md`)
@@ -763,7 +763,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     frontmatterData[this.settings.bannerFieldName] = raindrop.cover;
                 }
 
-                let frontmatter = createYamlFrontmatter(frontmatterData);
+                let frontmatter = createYamlFrontmatter(frontmatterData, ['title', 'description', 'collectionTitle', 'collectionPath', 'collectionGroup']);
 
                 let noteBody = (raindrop.cover ? `![${sanitizeFileName(raindrop.title) || 'Cover'}](${raindrop.cover})\n\n` : "") + `# ${sanitizeMarkdownContent(raindrop.title)}\n\n`;
                 if (raindrop.excerpt) noteBody += `## Description\n${sanitizeMarkdownContent(raindrop.excerpt)}\n\n`;

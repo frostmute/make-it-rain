@@ -75,7 +75,8 @@ export function formatYamlValue(value: unknown, indentLevel: number = 0, seen?: 
       value.trim() === "" ||
       /^["']/.test(value) || // Starts with a quote char (would be parsed as a quoted scalar)
       /^[0-9]/.test(value) || // Starts with number
-      /^true$|^false$|^yes$|^no$|^on$|^off$/i.test(value) // Looks like a boolean
+      /^true$|^false$|^yes$|^no$|^on$|^off$/i.test(value) || // Looks like a boolean
+      /^null$|^~$/i.test(value) // Looks like a YAML null keyword
     ) {
       // If the string contains newlines, use the block scalar syntax
       if (value.includes("\n")) {
@@ -160,17 +161,49 @@ export function escapeYamlString(str: string): string {
 }
 
 /**
+ * Formats a value as a YAML string scalar, always quoting it (or using a block
+ * scalar for multi-line text).
+ *
+ * Use this for caller-controlled fields that must always be strings — e.g.
+ * user-provided `title`/`description` — so a value that happens to look like a
+ * date, number, boolean, or null keyword is not silently re-typed by the YAML
+ * parser (e.g. a title of `null` becoming an actual null, or `2024-01-15`
+ * becoming a date).
+ *
+ * @param value - Value to serialize as a YAML string
+ * @returns A quoted (or block) YAML scalar
+ */
+export function formatYamlString(value: unknown): string {
+  const str = typeof value === "string" ? value : String(value ?? "");
+
+  if (str.includes("\n")) {
+    const lines = str.split("\n");
+    return "|\n" + lines.map((line) => `  ${line}`).join("\n");
+  }
+
+  return `"${escapeYamlString(str)}"`;
+}
+
+/**
  * Creates a YAML frontmatter section for a Markdown file
  *
  * @param data - Object containing the frontmatter data
+ * @param stringFields - Keys whose values must always be serialized as YAML
+ *   strings (force-quoted), regardless of their content
  * @returns Formatted YAML frontmatter as a string
  */
-export function createYamlFrontmatter(data: Record<string, unknown>): string {
+export function createYamlFrontmatter(
+  data: Record<string, unknown>,
+  stringFields: string[] = [],
+): string {
   try {
     let frontmatter = "---\n";
+    const stringFieldSet = new Set(stringFields);
 
     for (const [key, value] of Object.entries(data)) {
-      const formattedValue = formatYamlValue(value);
+      const formattedValue = stringFieldSet.has(key)
+        ? formatYamlString(value)
+        : formatYamlValue(value);
       // If the formatted value starts with a newline, it's a complex value
       if (formattedValue.startsWith("\n")) {
         frontmatter += `${key}:${formattedValue}\n`;
