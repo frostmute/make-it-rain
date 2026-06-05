@@ -51,8 +51,14 @@ export function validateTemplate(template: string, settings: MakeItRainSettings)
                     
                     // Basic check for variable existence (warning only as it's dynamic)
                     
-                    const actualVar = node.name?.includes(' ') ? node.name.split(/\s+/)[1] : node.name;
-                    const possibleHelper = node.name?.includes(' ') ? node.name.split(/\s+/)[0].toLowerCase() : null;
+                    let actualVar = node.name;
+                    let possibleHelper: string | null = null;
+
+                    if (node.name && node.name.includes(' ')) {
+                        const parts = node.name.split(/\s+/);
+                        possibleHelper = parts[0].toLowerCase();
+                        actualVar = parts[1];
+                    }
 
                     if (possibleHelper && !HELPERS.has(possibleHelper)) {
                         result.warnings.push(`Unknown helper: {{${possibleHelper}}}`);
