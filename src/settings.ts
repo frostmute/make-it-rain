@@ -412,7 +412,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
             .addText((text: TextComponent) => {
                 const validationContainer = orgContent.createDiv('make-it-rain-validation-container');
                 const updateValidation = (val: string) => {
-                    const result = validateTemplate(val, this.plugin.settings);
+                    const result = validateTemplate(val);
                     this.renderValidationResult(validationContainer, result);
                 };
 
@@ -535,7 +535,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                 .addTextArea((text: TextAreaComponent) => {
                     const validationContainer = templateContent.createDiv('make-it-rain-validation-container');
                     const updateValidation = (val: string) => {
-                        const result = validateTemplate(val, this.plugin.settings);
+                        const result = validateTemplate(val);
                         this.renderValidationResult(validationContainer, result);
                     };
 
@@ -609,7 +609,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                     .addTextArea((text: TextAreaComponent) => {
                         const validationContainer = editorCard.createDiv('make-it-rain-validation-container');
                         const updateValidation = (val: string) => {
-                            const result = validateTemplate(val, this.plugin.settings);
+                            const result = validateTemplate(val);
                             this.renderValidationResult(validationContainer, result);
                         };
 
@@ -771,7 +771,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                 .addTextArea((text) => {
                     const validationContainer = templateDiv.createDiv('make-it-rain-validation-container');
                     const updateValidation = (val: string) => {
-                        const result = validateTemplate(val, this.plugin.settings);
+                        const result = validateTemplate(val);
                         this.renderValidationResult(validationContainer, result);
                     };
 

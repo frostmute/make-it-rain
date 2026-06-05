@@ -1,5 +1,4 @@
 import { parseTemplate, ASTNode } from './utils';
-import { MakeItRainSettings } from './types';
 
 export interface ValidationResult {
     isValid: boolean;
@@ -7,7 +6,7 @@ export interface ValidationResult {
     warnings: string[];
 }
 
-export function validateTemplate(template: string, settings: MakeItRainSettings): ValidationResult {
+export function validateTemplate(template: string): ValidationResult {
     const result: ValidationResult = {
         isValid: true,
         errors: [],
