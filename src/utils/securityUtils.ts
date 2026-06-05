@@ -14,7 +14,7 @@ const DANGEROUS_TAGS = [
     'meta', 'base', 'link', 'form', 'button', 'input', 'select', 'textarea', 'svg', 'math'
 ];
 const TAGS_PATTERN = DANGEROUS_TAGS.join('|');
-const DANGEROUS_TAGS_REGEX = new RegExp(`<(?:\\/\\s*)?(?:${TAGS_PATTERN})(?:\\s+[^>]*)?>`, 'gi');
+const DANGEROUS_TAGS_REGEX = new RegExp(`<(?:\\/\\s*)?(?:${TAGS_PATTERN})\\b[^>]*>`, 'gi');
 
 /**
  * Sanitizes markdown content to prevent XSS and arbitrary code execution
