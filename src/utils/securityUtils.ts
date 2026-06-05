@@ -7,7 +7,7 @@ const EXECUTABLE_BLOCKS = [
     'ts', 'typescript', 'button', 'meta-bind', 'tracker', 'charts',
     'obsidian-js', 'dv'
 ];
-const BLOCKS_PATTERN = EXECUTABLE_BLOCKS.join('|');
+const BLOCKS_PATTERN = [...EXECUTABLE_BLOCKS].sort((a, b) => b.length - a.length).join('|');
 const BLOCK_REGEX = new RegExp(`\`\`\`(${BLOCKS_PATTERN})`, 'gi');
 
 const DANGEROUS_TAGS = [
