@@ -469,7 +469,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     }
                 }
                 const collectionsData: CollectionResponse = { result: true, items: allCollections };
-                await this.processRaindrops(filteredData, options.vaultPath, options.appendTagsToNotes, options.useRaindropTitleForFileName, loadingNotice, options, collectionsData, collectionIdToNameMap, new Set<string>(), collectionToGroupMap);
+                await this.processRaindrops(filteredData, options.vaultPath, options.appendTagsToNotes, loadingNotice, options, collectionsData, collectionIdToNameMap, new Set<string>(), collectionToGroupMap);
             }
         } catch (error) {
             loadingNotice.hide();
@@ -483,7 +483,6 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         raindrops: RaindropItem[],
         vaultPath: string | undefined,
         appendTagsToNotes: string,
-        useRaindropTitleForFileName: boolean,
         loadingNotice: Notice,
         options: ModalFetchOptions,
         collectionsData?: CollectionResponse,
@@ -1011,7 +1010,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 overrideTemplates: false
             };
 
-            await this.processRaindrops([raindropItem], vaultPath, appendTags || '', singleItemOptions.useRaindropTitleForFileName, loadingNotice, singleItemOptions, collectionsData, collectionIdToNameMap, new Set<string>(), collectionToGroupMap);
+            await this.processRaindrops([raindropItem], vaultPath, appendTags || '', loadingNotice, singleItemOptions, collectionsData, collectionIdToNameMap, new Set<string>(), collectionToGroupMap);
         } catch (error) {
             loadingNotice.hide();
             new Notice(`Error during quick import of item ${itemId}: ${error instanceof Error ? error.message : (typeof error === 'object' && error !== null ? JSON.stringify(error) : String(error))}`, 10000);
