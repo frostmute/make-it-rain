@@ -748,9 +748,9 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
 
                 if (templateData.collectionId) {
                     frontmatterData.collectionId = templateData.collectionId;
-                    frontmatterData.collectionTitle = templateData.collectionTitle;
-                    frontmatterData.collectionPath = templateData.collectionPath;
-                    if (templateData.collectionGroup) frontmatterData.collectionGroup = templateData.collectionGroup;
+                    frontmatterData.collectionTitle = collectionIdToNameMap.get(raindrop.collection?.$id || 0) || 'Unknown';
+                    frontmatterData.collectionPath = pathSegments.join('/');
+                    if (groupTitle) frontmatterData.collectionGroup = groupTitle;
                     if (templateData.collectionParentId) frontmatterData.collectionParentId = templateData.collectionParentId;
                 }
 
