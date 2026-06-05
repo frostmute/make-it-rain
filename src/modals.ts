@@ -324,7 +324,7 @@ export class RaindropFetchModal extends Modal {
                 displayPath: getDisplayPath(col)
             })).sort((a, b) => a.displayPath.localeCompare(b.displayPath));
 
-            collectionsWithPaths.forEach(({ col, displayPath }) => {
+            collectionsWithPaths.forEach(({ displayPath }) => {
                 const item = listContainer.createDiv({ cls: 'make-it-rain-collection-item' });
                 item.createEl('span', { text: displayPath });
                 item.onClickEvent(() => {
