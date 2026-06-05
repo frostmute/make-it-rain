@@ -330,7 +330,8 @@ export class RaindropFetchModal extends Modal {
                 item.onClickEvent(() => {
                     const current = collectionsTextComponent.getValue();
                     const toAdd = displayPath;
-                    if (current.includes(toAdd)) return;
+                    const existingEntries = current.split(',').map(s => s.trim()).filter(Boolean);
+                    if (existingEntries.includes(toAdd)) return;
                     
                     const newValue = current ? `${current}, ${toAdd}` : toAdd;
                     collectionsTextComponent.setValue(newValue);
