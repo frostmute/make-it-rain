@@ -72,9 +72,9 @@ export function validateTemplate(template: string, settings: MakeItRainSettings)
         };
         
         checkNodes(ast);
-    } catch (e: any) {
+    } catch (e: unknown) {
         result.isValid = false;
-        result.errors.push(`Template parsing error: ${e.message}`);
+        result.errors.push(`Template parsing error: ${e instanceof Error ? e.message : String(e)}`);
     }
 
     // 2. YAML Frontmatter Check
