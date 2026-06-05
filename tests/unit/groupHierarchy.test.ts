@@ -80,7 +80,6 @@ describe('Group Hierarchy Support', () => {
             [raindrop],
             'Raindrops',
             '',
-            true,
             mockNotice,
             options,
             collectionsData,
@@ -160,7 +159,6 @@ describe('Group Hierarchy Support', () => {
             [raindrop],
             'Raindrops',
             '',
-            true,
             mockNotice,
             options,
             collectionsData,
@@ -171,7 +169,7 @@ describe('Group Hierarchy Support', () => {
 
         expect(createSpy).toHaveBeenCalledWith(
             expect.stringContaining('MY GROUP/Parent Collection/Test Bookmark.md'),
-            expect.stringContaining('collectionGroup: "MY GROUP"')
+            expect.stringContaining('collectionGroup: MY GROUP')
         );
     });
 });
