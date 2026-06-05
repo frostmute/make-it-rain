@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="docs/assets/make-it-rain-banner.png" alt="Make It Rain Banner" width="600" />
+
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/frostmute/make-it-rain)](https://github.com/frostmute/make-it-rain/releases/latest)
 [![License](https://img.shields.io/github/license/frostmute/make-it-rain)](LICENSE)
 [![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://frostmute.github.io/make-it-rain/)
