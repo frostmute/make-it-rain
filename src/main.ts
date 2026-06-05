@@ -64,8 +64,7 @@ import {
 
     // Template utilities
     ASTNode,
-    parseTemplate,
-    createYamlFrontmatter
+    parseTemplate
 } from './utils';
 
 // System collection IDs from raindrop.io API docs
