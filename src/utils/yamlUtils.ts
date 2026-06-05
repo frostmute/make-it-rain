@@ -170,11 +170,19 @@ export function escapeYamlString(str: string): string {
  * parser (e.g. a title of `null` becoming an actual null, or `2024-01-15`
  * becoming a date).
  *
+ * An explicit `null`/`undefined` value is serialized as the unquoted `null`
+ * keyword (rather than an empty quoted string) so a genuinely absent value stays
+ * distinct from an empty string.
+ *
  * @param value - Value to serialize as a YAML string
- * @returns A quoted (or block) YAML scalar
+ * @returns A quoted (or block) YAML scalar, or `null` for null/undefined
  */
 export function formatYamlString(value: unknown): string {
-  const str = typeof value === "string" ? value : String(value ?? "");
+  if (value === null || value === undefined) {
+    return "null";
+  }
+
+  const str = typeof value === "string" ? value : String(value);
 
   if (str.includes("\n")) {
     const lines = str.split("\n");

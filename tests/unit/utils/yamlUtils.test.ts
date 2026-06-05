@@ -349,6 +349,11 @@ describe('yamlUtils', () => {
         it('should coerce non-string values to quoted strings', () => {
             expect(formatYamlString(2024)).toBe('"2024"');
         });
+
+        it('should serialize null/undefined as the unquoted null keyword', () => {
+            expect(formatYamlString(null)).toBe('null');
+            expect(formatYamlString(undefined)).toBe('null');
+        });
     });
 
     describe('createYamlFrontmatter', () => {
