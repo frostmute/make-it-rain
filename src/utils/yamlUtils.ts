@@ -75,8 +75,7 @@ export function formatYamlValue(value: unknown, indentLevel: number = 0, seen?: 
       value.trim() === "" ||
       /^["']/.test(value) || // Starts with a quote char (would be parsed as a quoted scalar)
       /^[0-9]/.test(value) || // Starts with number
-      /^true$|^false$|^yes$|^no$|^on$|^off$/i.test(value) || // Looks like a boolean
-      /^null$|^~$/i.test(value) // Looks like a YAML null keyword
+      /^(?:true|false|yes|no|on|off|null|~|y|n)$/i.test(value) // Looks like a boolean or null
     ) {
       // If the string contains newlines, use the block scalar syntax
       if (value.includes("\n")) {

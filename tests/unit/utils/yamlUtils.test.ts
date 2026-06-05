@@ -143,6 +143,13 @@ describe('yamlUtils', () => {
                 expect(formatYamlValue('~')).toBe('"~"');
             });
 
+            it('should quote single-letter YAML boolean strings (y/n)', () => {
+                expect(formatYamlValue('y')).toBe('"y"');
+                expect(formatYamlValue('Y')).toBe('"Y"');
+                expect(formatYamlValue('n')).toBe('"n"');
+                expect(formatYamlValue('N')).toBe('"N"');
+            });
+
             it('should quote empty strings', () => {
                 const result = formatYamlValue('   ');
                 expect(result).toContain('"');
