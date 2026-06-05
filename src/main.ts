@@ -63,8 +63,9 @@ import {
 
     // Template utilities
     ASTNode,
-    parseTemplate
-, createYamlFrontmatter } from './utils';
+    parseTemplate,
+    createYamlFrontmatter
+} from './utils';
 
 // System collection IDs from raindrop.io API docs
 const SystemCollections = {
