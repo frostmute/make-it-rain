@@ -2,6 +2,20 @@
  * Security utilities for Make It Rain
  */
 
+const EXECUTABLE_BLOCKS = [
+    'dataviewjs', 'dataview', 'templater', 'js', 'javascript',
+    'ts', 'typescript', 'button', 'meta-bind', 'tracker', 'charts',
+    'obsidian-js', 'dv'
+];
+const BLOCKS_PATTERN = EXECUTABLE_BLOCKS.join('|');
+const BLOCK_REGEX = new RegExp(`\`\`\`(${BLOCKS_PATTERN})`, 'gi');
+
+const DANGEROUS_TAGS = [
+    'meta', 'base', 'link', 'form', 'button', 'input', 'select', 'textarea', 'svg', 'math'
+];
+const TAGS_PATTERN = DANGEROUS_TAGS.join('|');
+const DANGEROUS_TAGS_REGEX = new RegExp(`<(?:\\/\\s*)?(?:${TAGS_PATTERN})(?:\\s+[^>]*)?>`, 'gi');
+
 /**
  * Sanitizes markdown content to prevent XSS and arbitrary code execution
  * when rendered in Obsidian. It preserves intended Markdown formatting
@@ -20,14 +34,7 @@ export function sanitizeMarkdownContent(content: unknown): string {
 
     // 1. Prevent execution of active code blocks (e.g. dataview, templater, inline scripts)
     // We prefix the language name with a zero-width space (\u200B) to break the trigger
-    const executableBlocks = [
-        'dataviewjs', 'dataview', 'templater', 'js', 'javascript',
-        'ts', 'typescript', 'button', 'meta-bind', 'tracker', 'charts',
-        'obsidian-js', 'dv'
-    ];
-    const blocksPattern = executableBlocks.join('|');
-    const blockRegex = new RegExp(`\`\`\`(${blocksPattern})`, 'gi');
-    sanitized = sanitized.replace(blockRegex, '```\u200B$1');
+    sanitized = sanitized.replace(BLOCK_REGEX, '```\u200B$1');
 
     // 2. Neutralize inline execution engines (Templater, Dataview inline, etc.)
     // Templater: <% ... %>
@@ -45,12 +52,7 @@ export function sanitizeMarkdownContent(content: unknown): string {
     sanitized = sanitized.replace(/<applet\b[^>]*>[\s\S]*?<\/applet>/gi, '');
 
     // Strip out remaining dangerous HTML tags (self-closing or empty)
-    const dangerousTags = [
-        'meta', 'base', 'link', 'form', 'button', 'input', 'select', 'textarea', 'svg', 'math'
-    ];
-    const tagsPattern = dangerousTags.join('|');
-    const dangerousTagsRegex = new RegExp(`<(?:\\/\\s*)?(?:${tagsPattern})(?:\\s+[^>]*)?>`, 'gi');
-    sanitized = sanitized.replace(dangerousTagsRegex, '');
+    sanitized = sanitized.replace(DANGEROUS_TAGS_REGEX, '');
 
     // 4. Remove inline event handlers (onerror, onclick, etc.) from ANY remaining HTML tags
     sanitized = sanitized.replace(/\bon[a-z]+\s*=\s*(?:'[^']*'|"[^"]*"|[^\s>]+)/gi, '');
