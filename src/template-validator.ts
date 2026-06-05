@@ -7,6 +7,18 @@ export interface ValidationResult {
     warnings: string[];
 }
 
+const KNOWN_VARS = new Set([
+    'title', 'id', 'link', 'excerpt', 'note', 'cover', 'created', 'lastupdate',
+    'type', 'collectionId', 'collectionTitle', 'collectionPath', 'collectionParentId',
+    'collectionGroup', 'tags', 'highlights', 'bannerFieldName', 'url', 'domain',
+    'renderedType', 'scrapedContent', 'formattedCreatedDate', 'formattedUpdatedDate',
+    'formattedTags', 'localEmbed', 'this'
+]);
+
+const HELPERS = new Set([
+    'uppercase', 'lowercase', 'titlecase', 'truncate', 'capitalize', 'substr', 'replace', 'join', 'pluralize'
+]);
+
 export function validateTemplate(template: string, settings: MakeItRainSettings): ValidationResult {
     const result: ValidationResult = {
         isValid: true,
@@ -36,26 +48,17 @@ export function validateTemplate(template: string, settings: MakeItRainSettings)
                 }
                 
                 if (node.type === 'var') {
-                    const varName = node.name?.split(/\s+/)[0] || '';
-                    // Basic check for variable existence (warning only as it's dynamic)
-                    const knownVars = [
-                        'title', 'id', 'link', 'excerpt', 'note', 'cover', 'created', 'lastupdate',
-                        'type', 'collectionId', 'collectionTitle', 'collectionPath', 'collectionParentId',
-                        'collectionGroup', 'tags', 'highlights', 'bannerFieldName', 'url', 'domain',
-                        'renderedType', 'scrapedContent', 'formattedCreatedDate', 'formattedUpdatedDate',
-                        'formattedTags', 'localEmbed', 'this'
-                    ];
                     
-                    const helpers = ['uppercase', 'lowercase', 'titlecase', 'truncate', 'capitalize', 'substr', 'replace', 'join', 'pluralize'];
+                    // Basic check for variable existence (warning only as it's dynamic)
                     
                     const actualVar = node.name?.includes(' ') ? node.name.split(/\s+/)[1] : node.name;
                     const possibleHelper = node.name?.includes(' ') ? node.name.split(/\s+/)[0].toLowerCase() : null;
 
-                    if (possibleHelper && !helpers.includes(possibleHelper)) {
+                    if (possibleHelper && !HELPERS.has(possibleHelper)) {
                         result.warnings.push(`Unknown helper: {{${possibleHelper}}}`);
                     }
 
-                    if (actualVar && !knownVars.includes(actualVar) && !actualVar.includes('.') && !actualVar.startsWith('../')) {
+                    if (actualVar && !KNOWN_VARS.has(actualVar) && !actualVar.includes('.') && !actualVar.startsWith('../')) {
                         result.warnings.push(`Possibly unknown variable: {{${actualVar}}}`);
                     }
                 }
