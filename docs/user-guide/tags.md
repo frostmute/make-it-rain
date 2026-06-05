@@ -73,6 +73,7 @@ Filter imports by tags using:
 
 - **Tag Patterns**: `work*`, `*research`
 - **Tag Groups**: `(work|personal)`
+
 ### Tag Combinations: `work+research|personal`
 
 ## Tag Consolidation

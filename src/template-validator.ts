@@ -48,7 +48,6 @@ export function validateTemplate(template: string, settings: MakeItRainSettings)
                 }
                 
                 if (node.type === 'var') {
-                    
                     // Basic check for variable existence (warning only as it's dynamic)
                     
                     let actualVar = node.name;

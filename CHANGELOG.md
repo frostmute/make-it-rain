@@ -17,13 +17,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Nesting-Aware Template Engine (Issue #59)**: Replaced the regex-based template rendering logic with a robust, nesting-aware AST parser and evaluator to fix rendering of nested blocks (e.g., nested `{{#if}}` inside `{{#each}}` loops).
-- **ESLint & Tooling Configuration**: 
-  * Downgraded `eslint-plugin-obsidianmd` to `0.0.1` to match ESLint 8.57.1 compatibility.
-  * Added `parserOptions.project` and global `env` settings to `.eslintrc.json` to properly recognize global browser/Node variables and enable type-aware TS rules.
-  * Disabled the buggy `obsidian/settings-tab` ESLint rule which crashed on single-argument `.createEl('hr')` calls.
-  * Added `"sentence-case"` to the eslint plugins array.
-  * Wrapped switch case statements in `src/main.ts` with block braces to satisfy `no-case-declarations`.
-  * Replaced deprecated `substr` with `substring` in `src/utils/formatUtils.ts`.
+- **ESLint & Tooling Configuration**:
+  - Downgraded `eslint-plugin-obsidianmd` to `0.0.1` to match ESLint 8.57.1 compatibility.
+  - Added `parserOptions.project` and global `env` settings to `.eslintrc.json` to properly recognize global browser/Node variables and enable type-aware TS rules.
+  - Disabled the buggy `obsidian/settings-tab` ESLint rule which crashed on single-argument `.createEl('hr')` calls.
+  - Added `"sentence-case"` to the eslint plugins array.
+  - Wrapped switch case statements in `src/main.ts` with block braces to satisfy `no-case-declarations`.
+  - Replaced deprecated `substr` with `substring` in `src/utils/formatUtils.ts`.
 - Fixed a TypeScript error in `securityUtils.ts` related to undefined variable names during build.
 
 ## [1.9.0] - 2026-04-22
