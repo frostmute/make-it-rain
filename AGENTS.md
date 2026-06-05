@@ -1,16 +1,18 @@
 # Make It Rain - AI Coding Agent Guide
 
-*Current Version: 1.9.1*
+*Current Version: 1.10.0*
 
 ## Architecture Overview
 
 Make It Rain is an Obsidian plugin that imports Raindrop.io bookmarks into structured Markdown notes. The codebase follows a modular architecture centered around a main plugin class (`RaindropToObsidian`) that orchestrates:
 
 - **API Integration**: Fetches bookmarks from Raindrop.io with rate limiting and retry logic
-- **Template System**: Custom Handlebars-like syntax for note formatting with content-type-specific templates
-- **File Management**: Creates organized folder structures mirroring Raindrop collections with automatic folder notes
-- **Data Processing**: Transforms Raindrop items into YAML-frontmatter Markdown notes
+- **Template System**: Nesting-aware AST-based template engine with Handlebars-like syntax for note formatting with content-type-specific templates
+- **Group & Collection Hierarchy**: Integrates Raindrop.io sidebar Groups into the folder structure
+- **File Management**: Creates organized folder structures mirroring Raindrop Groups and Collections with automatic folder notes
+- **Data Processing**: Transforms Raindrop items into YAML-frontmatter Markdown notes with robust type-coercion-safe YAML serialization
 - **File Downloads**: Downloads native Raindrop file attachments (PDFs, EPUBs, images, videos, etc.)
+- **Archive Scraping**: Extracts structured Markdown from Raindrop's permanent archives using Obsidian's native `htmlToMarkdown()`
 
 ## Key Components
 
@@ -25,8 +27,11 @@ Make It Rain is an Obsidian plugin that imports Raindrop.io bookmarks into struc
 
 - `apiUtils.ts`: Rate limiting, authentication, API request handling
 - `fileUtils.ts`: File system operations, path sanitization, folder creation
-- `yamlUtils.ts`: YAML frontmatter generation with proper escaping
+- `yamlUtils.ts`: YAML frontmatter generation with proper escaping (null-keyword quoting, reserved-word force-quoting)
 - `formatUtils.ts`: Date formatting, tag processing, domain extraction
+- `scrapingUtils.ts`: Archive content extraction using Obsidian's `htmlToMarkdown()`, with 303 redirect handling for S3
+- `securityUtils.ts`: Content sanitization and executable code defanging
+- `templateUtils.ts`: Nesting-aware AST parser and evaluator for template rendering
 
 ## Critical Workflows
 
@@ -71,7 +76,7 @@ npm run lint:md      # Lint markdown files
 
 ### Template System
 
-Custom Handlebars-like syntax implemented in `renderTemplate()` method with support for content-type-specific templates:
+Nesting-aware AST-based template engine implemented in `templateUtils.ts` with support for content-type-specific templates:
 
 - `{{variable}}`: Simple variable substitution
 - `{{#if condition}}...{{/if}}`: Conditional blocks with optional `{{else}}`
@@ -144,9 +149,9 @@ Tags are normalized by:
 1. Converting spaces to underscores
 2. Removing invalid YAML characters: `#[?"*<>:|]`
 
-### Collection Hierarchy
+### Collection & Group Hierarchy
 
-Collections are fetched in parallel (root + nested) and cached for 5 minutes. Paths are built by traversing parent-child relationships to create nested folder structures.
+Raindrop.io sidebar Groups are fetched and cached alongside collections. Collections are fetched in parallel (root + nested) and cached for 5 minutes. Paths are built by traversing Group → parent → child relationships to create nested folder structures. The `{{collectionGroup}}` variable provides access to the Group name, and `{{collectionPath}}` includes the Group as the root segment.
 
 ### Rate Limiting
 

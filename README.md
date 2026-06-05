@@ -58,7 +58,7 @@ Your imported notes organize themselves based on your Raindrop structure.
 - **Automatic folder hierarchy** seamlessly mirroring your Raindrop Groups and Collections
 - **Automatic Folder Notes** (`FOLDER_NAME.md`) generated to serve as structured indexes
 - **Native File Downloads** to directly retrieve PDFs, EPUBs (Books), video, and audio file attachments, with full S3 secure redirect support
-- **Archive Scraping** to extract clean text content from Raindrop.io's permanent archives
+- **Archive Scraping** using Obsidian's native `htmlToMarkdown()` to extract structured Markdown from Raindrop.io's permanent archives
 - **Rich YAML frontmatter** with comprehensive metadata
 - **Customizable filenames** with template variables
 - **Auto-tagging** - append custom tags to all imports
@@ -309,7 +309,6 @@ Active development focuses on these features:
 - 📌 **Enhanced highlights** - Better highlight handling in notes
 - 💾 **Saved presets** - Store and reuse fetch configurations
 - 🎬 **Video tutorials** - Learn by watching
-- 📊 **Archive scraping** - Extended content extraction
 - ↩️ **Undo functionality** - Recover from mistakes
 
 See the full [GitHub Issues](https://github.com/frostmute/make-it-rain/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement) for more planned features.

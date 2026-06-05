@@ -44,8 +44,9 @@ The project is structured into a main entry point and several utility modules th
 * `fileUtils.ts`: Manages interactions with the Obsidian vault. It handles path sanitization, folder creation, and binary file writing.
 * `formatUtils.ts`: Provides helpers for data normalization, such as date formatting, tag sanitization (removing invalid characters), and domain extraction.
 * `yamlUtils.ts`: Dedicated to generating valid YAML frontmatter, ensuring proper escaping of special characters to maintain Obsidian's metadata integrity.
-* `scrapingUtils.ts`: Used for extracting content from Raindrop's permanent archives (HTML/Text) when full content is available.
+* `scrapingUtils.ts`: Extracts structured Markdown from Raindrop's permanent archives using Obsidian's native `htmlToMarkdown()`. Handles HTTP 303 redirects to S3 by stripping the Authorization header on the second hop.
 * `securityUtils.ts`: Ensures that imported content is sanitized to prevent XSS or malicious code execution within Obsidian.
+* `templateUtils.ts`: Nesting-aware AST parser and evaluator for the template engine, supporting nested `{{#if}}`/`{{#each}}` blocks.
 
 ## Architecture Invariants
 
