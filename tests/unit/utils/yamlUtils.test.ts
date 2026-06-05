@@ -134,6 +134,13 @@ describe('yamlUtils', () => {
                 expect(formatYamlValue('off')).toBe('"off"');
             });
 
+            it('should quote null-like strings', () => {
+                expect(formatYamlValue('null')).toBe('"null"');
+                expect(formatYamlValue('Null')).toBe('"Null"');
+                expect(formatYamlValue('NULL')).toBe('"NULL"');
+                expect(formatYamlValue('~')).toBe('"~"');
+            });
+
             it('should quote empty strings', () => {
                 const result = formatYamlValue('   ');
                 expect(result).toContain('"');
