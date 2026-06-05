@@ -8,7 +8,7 @@ export interface ValidationResult {
 }
 
 const KNOWN_VARS = new Set([
-    'title', 'id', 'link', 'excerpt', 'note', 'cover', 'created', 'lastupdate',
+    'title', 'id', '_id', 'link', 'excerpt', 'note', 'cover', 'created', 'lastupdate',
     'type', 'collectionId', 'collectionTitle', 'collectionPath', 'collectionParentId',
     'collectionGroup', 'tags', 'highlights', 'bannerFieldName', 'url', 'domain',
     'renderedType', 'scrapedContent', 'formattedCreatedDate', 'formattedUpdatedDate',
