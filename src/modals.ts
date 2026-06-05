@@ -98,7 +98,7 @@ export class RaindropFetchModal extends Modal {
                 }
 
                 checkbox.addEventListener('change', () => {
-                    let currentSet = new Set(this.collections.split(',').map(s => s.trim()).filter(Boolean));
+                    const currentSet = new Set(this.collections.split(',').map(s => s.trim()).filter(Boolean));
                     if (checkbox.checked) {
                         currentSet.add(col.title);
                     } else {

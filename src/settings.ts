@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting, TextComponent, ButtonComponent, Notice, request, ToggleComponent, TextAreaComponent, DropdownComponent } from 'obsidian';
+import { App, PluginSettingTab, Setting, TextComponent, ButtonComponent, Notice, request, ToggleComponent, TextAreaComponent } from 'obsidian';
 import type RaindropToObsidian from './main';
 import { RaindropTypes } from './types';
 import { MakeItRainSettings } from './types';
@@ -368,7 +368,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                     });
             });
 
-        const apiTokenHelpLink = apiTokenSetting.nameEl.createEl('a', {
+        apiTokenSetting.nameEl.createEl('a', {
             href: 'https://frostmute.github.io/make-it-rain/configuration#api-token',
             text: ' Get a token',
             cls: 'make-it-rain-help-link',
@@ -406,7 +406,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                 text.inputEl.addClass('make-it-rain-full-width');
             });
 
-        const fileNameTemplateSetting = new Setting(orgContent)
+        new Setting(orgContent)
             .setName('Filename template')
             .setDesc('Define the filename for notes when "use Raindrop title" is enabled. Placeholders: {{title}}, {{id}}, {{collectionTitle}}, {{date}}.')
             .addText((text: TextComponent) => {

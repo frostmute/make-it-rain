@@ -19,7 +19,7 @@ const HELPERS = new Set([
     'uppercase', 'lowercase', 'titlecase', 'truncate', 'capitalize', 'substr', 'replace', 'join', 'pluralize'
 ]);
 
-export function validateTemplate(template: string, settings: MakeItRainSettings): ValidationResult {
+export function validateTemplate(template: string, _settings: MakeItRainSettings): ValidationResult {
     const result: ValidationResult = {
         isValid: true,
         errors: [],

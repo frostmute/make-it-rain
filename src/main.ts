@@ -342,7 +342,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 const collectionPromises = resolvedCollectionIds.map(async (collectionId) => {
                     let hasMore = true;
                     let page = 0;
-                    let collectionData: RaindropItem[] = [];
+                    const collectionData: RaindropItem[] = [];
                     const collectionApiBaseUrl = `${baseApiUrl}/raindrops/${collectionId}`;
 
                     while (hasMore) {
@@ -383,7 +383,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     const tagPromises = tagsArray.map(async (tag) => {
                         let hasMore = true;
                         let page = 0;
-                        let tagData: RaindropItem[] = [];
+                        const tagData: RaindropItem[] = [];
 
                         while (hasMore) {
                             const params = new URLSearchParams({ perpage: perPage.toString(), page: page.toString(), search: `#${tag}` });
@@ -681,7 +681,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             };
 
             if (this.settings.downloadFiles && raindrop.link && (raindrop.link.includes('raindrop.io') && (raindrop.link.includes('/file') || raindrop.link.includes('/v2/')))) {
-                let fileExtension = raindrop.file?.name?.split('.').pop() || (raindrop.file?.type?.split('/').pop()) || 'file';
+                const fileExtension = raindrop.file?.name?.split('.').pop() || (raindrop.file?.type?.split('/').pop()) || 'file';
                 let binaryFileName = `${generatedFilename}.${fileExtension}`;
                 let binaryFilePath = normalizePath(`${targetPath}/${binaryFileName}`);
                 
@@ -763,7 +763,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     frontmatterData[this.settings.bannerFieldName] = raindrop.cover;
                 }
 
-                let frontmatter = createYamlFrontmatter(frontmatterData, ['title', 'description', 'collectionTitle', 'collectionPath', 'collectionGroup']);
+                const frontmatter = createYamlFrontmatter(frontmatterData, ['title', 'description', 'collectionTitle', 'collectionPath', 'collectionGroup']);
 
                 let noteBody = (raindrop.cover ? `![${sanitizeFileName(raindrop.title) || 'Cover'}](${raindrop.cover})\n\n` : "") + `# ${sanitizeMarkdownContent(raindrop.title)}\n\n`;
                 if (raindrop.excerpt) noteBody += `## Description\n${sanitizeMarkdownContent(raindrop.excerpt)}\n\n`;
@@ -1054,7 +1054,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         const perPage = 50;
 
         try {
-            let allItems: RaindropItem[] = [];
+            const allItems: RaindropItem[] = [];
             let page = 0;
             let hasMore = true;
 
