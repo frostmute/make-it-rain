@@ -73,6 +73,7 @@ export function formatYamlValue(value: unknown, indentLevel: number = 0, seen?: 
       value.includes(">") ||
       value.includes("`") ||
       value.trim() === "" ||
+      /^["']/.test(value) || // Starts with a quote char (would be parsed as a quoted scalar)
       /^[0-9]/.test(value) || // Starts with number
       /^true$|^false$|^yes$|^no$|^on$|^off$/i.test(value) // Looks like a boolean
     ) {

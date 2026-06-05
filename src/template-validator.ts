@@ -36,7 +36,6 @@ export function validateTemplate(template: string, settings: MakeItRainSettings)
                 }
                 
                 if (node.type === 'var') {
-                    const varName = node.name?.split(/\s+/)[0] || '';
                     // Basic check for variable existence (warning only as it's dynamic)
                     const knownVars = [
                         'title', 'id', 'link', 'excerpt', 'note', 'cover', 'created', 'lastupdate',
@@ -63,9 +62,9 @@ export function validateTemplate(template: string, settings: MakeItRainSettings)
         };
         
         checkNodes(ast);
-    } catch (e: any) {
+    } catch (e: unknown) {
         result.isValid = false;
-        result.errors.push(`Template parsing error: ${e.message}`);
+        result.errors.push(`Template parsing error: ${e instanceof Error ? e.message : String(e)}`);
     }
 
     // 2. YAML Frontmatter Check

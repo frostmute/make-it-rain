@@ -138,6 +138,22 @@ describe('yamlUtils', () => {
                 const result = formatYamlValue('   ');
                 expect(result).toContain('"');
             });
+
+            it('should quote and escape strings starting with a double quote', () => {
+                // Plain scalars cannot start with `"` (parser would read a quoted scalar)
+                const result = formatYamlValue('"Hello World"');
+                expect(result).toBe('"\\"Hello World\\""');
+            });
+
+            it('should quote and escape strings starting with a single quote', () => {
+                const result = formatYamlValue("'tis the season");
+                expect(result).toBe('"\'tis the season"');
+            });
+
+            it('should quote strings with an unmatched leading double quote', () => {
+                const result = formatYamlValue('"unterminated');
+                expect(result).toBe('"\\"unterminated"');
+            });
         });
 
         describe('multiline strings', () => {
