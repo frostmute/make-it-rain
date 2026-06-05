@@ -9,6 +9,7 @@ import {
     isPlainObject,
     formatYamlValue,
     escapeYamlString,
+    formatYamlString,
     createYamlFrontmatter
 } from '../../../src/utils/yamlUtils';
 
@@ -134,16 +135,40 @@ describe('yamlUtils', () => {
                 expect(formatYamlValue('off')).toBe('"off"');
             });
 
-            it('should quote null-like strings', () => {
+            it('should quote null-like and tilde strings so they stay strings', () => {
+                // Without quoting, a YAML parser would read these as an actual null
                 expect(formatYamlValue('null')).toBe('"null"');
                 expect(formatYamlValue('Null')).toBe('"Null"');
                 expect(formatYamlValue('NULL')).toBe('"NULL"');
                 expect(formatYamlValue('~')).toBe('"~"');
             });
 
+            it('should quote single-letter YAML boolean strings (y/n)', () => {
+                expect(formatYamlValue('y')).toBe('"y"');
+                expect(formatYamlValue('Y')).toBe('"Y"');
+                expect(formatYamlValue('n')).toBe('"n"');
+                expect(formatYamlValue('N')).toBe('"N"');
+            });
+
             it('should quote empty strings', () => {
                 const result = formatYamlValue('   ');
                 expect(result).toContain('"');
+            });
+
+            it('should quote and escape strings starting with a double quote', () => {
+                // Plain scalars cannot start with `"` (parser would read a quoted scalar)
+                const result = formatYamlValue('"Hello World"');
+                expect(result).toBe('"\\"Hello World\\""');
+            });
+
+            it('should quote and escape strings starting with a single quote', () => {
+                const result = formatYamlValue("'tis the season");
+                expect(result).toBe('"\'tis the season"');
+            });
+
+            it('should quote strings with an unmatched leading double quote', () => {
+                const result = formatYamlValue('"unterminated');
+                expect(result).toBe('"\\"unterminated"');
             });
         });
 
@@ -298,6 +323,38 @@ describe('yamlUtils', () => {
                 const result = formatYamlValue(BigInt(9007199254740991));
                 expect(result).toBe("\"Error formatting value\"");
             });
+        });
+    });
+
+    describe('formatYamlString', () => {
+        it('should always quote plain strings', () => {
+            expect(formatYamlString('Hello World')).toBe('"Hello World"');
+        });
+
+        it('should quote date-looking strings so they stay strings', () => {
+            // formatYamlValue would leave this unquoted (YAML parses it as a date)
+            expect(formatYamlString('2024-01-15')).toBe('"2024-01-15"');
+            expect(formatYamlString('2024-01-15T10:00:00Z')).toBe('"2024-01-15T10:00:00Z"');
+        });
+
+        it('should quote null/boolean/number-like strings', () => {
+            expect(formatYamlString('null')).toBe('"null"');
+            expect(formatYamlString('~')).toBe('"~"');
+            expect(formatYamlString('true')).toBe('"true"');
+            expect(formatYamlString('12345')).toBe('"12345"');
+        });
+
+        it('should escape embedded and leading quotes', () => {
+            expect(formatYamlString('"Important Article"')).toBe('"\\"Important Article\\""');
+        });
+
+        it('should use a block scalar for multi-line strings', () => {
+            const result = formatYamlString('line1\nline2');
+            expect(result).toBe('|\n  line1\n  line2');
+        });
+
+        it('should coerce non-string values to quoted strings', () => {
+            expect(formatYamlString(2024)).toBe('"2024"');
         });
     });
 
@@ -483,6 +540,49 @@ describe('yamlUtils', () => {
             const bigInt = BigInt(9007199254740991);
             const result = formatYamlValue(bigInt);
             expect(result).toBe('"Error formatting value"');
+        });
+
+        describe('stringFields (force-quoted fields)', () => {
+            it('should force-quote a date-looking title while leaving real date fields unquoted', () => {
+                const data = {
+                    title: '2024-01-15',
+                    created: '2024-01-15T10:00:00Z',
+                };
+                const result = createYamlFrontmatter(data, ['title']);
+                // title must stay a string; created keeps its date typing
+                expect(result).toContain('title: "2024-01-15"');
+                expect(result).toContain('created: 2024-01-15T10:00:00Z');
+            });
+
+            it('should force-quote a null-like title so it does not become YAML null', () => {
+                const result = createYamlFrontmatter({ title: 'null' }, ['title']);
+                expect(result).toContain('title: "null"');
+            });
+
+            it('should force-quote description/collection fields', () => {
+                const data = {
+                    title: 'Hello',
+                    description: 'null',
+                    collectionTitle: '2024',
+                    collectionPath: 'true',
+                    collectionGroup: '~',
+                };
+                const result = createYamlFrontmatter(data, [
+                    'title', 'description', 'collectionTitle', 'collectionPath', 'collectionGroup',
+                ]);
+                expect(result).toContain('title: "Hello"');
+                expect(result).toContain('description: "null"');
+                expect(result).toContain('collectionTitle: "2024"');
+                expect(result).toContain('collectionPath: "true"');
+                expect(result).toContain('collectionGroup: "~"');
+            });
+
+            it('should not affect fields that are not listed as stringFields', () => {
+                const data = { title: 'Hello', type: 'collection' };
+                const result = createYamlFrontmatter(data, ['title']);
+                expect(result).toContain('title: "Hello"');
+                expect(result).toContain('type: collection');
+            });
         });
     });
 });

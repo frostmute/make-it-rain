@@ -79,9 +79,9 @@ To keep the interface clean, secondary options are now grouped in a collapsible 
 
 When fetching, the plugin automatically handles:
 
-- **Archive Scraping**: If enabled in settings, the plugin will attempt to pull full content for articles.
-- **File Downloads**: Authenticated retrieval of PDF, EPUB, and media attachments.
-- **Folder Notes**: Generation of index files for collection folders.
+* **Archive Scraping**: If enabled in settings, the plugin will attempt to pull full content for articles.
+* **File Downloads**: Authenticated retrieval of PDF, EPUB, and media attachments.
+* **Folder Notes**: Generation of index files for collection folders.
 
 ## Fetching Process (Bulk/Filtered Import)
 
