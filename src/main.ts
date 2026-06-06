@@ -42,6 +42,7 @@ import {
     // YAML utilities
     formatYamlValue,
     escapeYamlString,
+    createYamlFrontmatter,
     
     // Format utilities
     formatDate,
@@ -341,7 +342,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 const collectionPromises = resolvedCollectionIds.map(async (collectionId) => {
                     let hasMore = true;
                     let page = 0;
-                    let collectionData: RaindropItem[] = [];
+                    const collectionData: RaindropItem[] = [];
                     const collectionApiBaseUrl = `${baseApiUrl}/raindrops/${collectionId}`;
 
                     while (hasMore) {
@@ -363,7 +364,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                         }
 
                         if (data?.items) {
-                            collectionData = collectionData.concat(data.items);
+                            collectionData.push(...data.items);
                             page++;
                             hasMore = data.items.length === perPage;
                         } else {
@@ -382,7 +383,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     const tagPromises = tagsArray.map(async (tag) => {
                         let hasMore = true;
                         let page = 0;
-                        let tagData: RaindropItem[] = [];
+                        const tagData: RaindropItem[] = [];
 
                         while (hasMore) {
                             const params = new URLSearchParams({ perpage: perPage.toString(), page: page.toString(), search: `#${tag}` });
@@ -396,7 +397,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
 
                             if (!data.result) break;
                             if (data?.items) {
-                                tagData = tagData.concat(data.items);
+                                tagData.push(...data.items);
                                 page++;
                                 hasMore = data.items.length === perPage;
                             } else {
@@ -423,7 +424,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
 
                         if (!data.result) throw new Error(`API Error: ${JSON.stringify(data)}`);
                         if (data?.items) {
-                            allData = allData.concat(data.items);
+                            allData.push(...data.items);
                             page++;
                             hasMore = data.items.length === perPage;
                         } else {
@@ -446,7 +447,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
 
                     if (!data.result) throw new Error(`API Error: ${JSON.stringify(data)}`);
                     if (data?.items) {
-                        allData = allData.concat(data.items);
+                        allData.push(...data.items);
                         page++;
                         hasMore = data.items.length === perPage;
                     } else {
@@ -469,7 +470,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     }
                 }
                 const collectionsData: CollectionResponse = { result: true, items: allCollections };
-                await this.processRaindrops(filteredData, options.vaultPath, options.appendTagsToNotes, options.useRaindropTitleForFileName, loadingNotice, options, collectionsData, collectionIdToNameMap, new Set<string>(), collectionToGroupMap);
+                await this.processRaindrops(filteredData, options.vaultPath, options.appendTagsToNotes, loadingNotice, options, collectionsData, collectionIdToNameMap, new Set<string>(), collectionToGroupMap);
             }
         } catch (error) {
             loadingNotice.hide();
@@ -483,7 +484,6 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         raindrops: RaindropItem[],
         vaultPath: string | undefined,
         appendTagsToNotes: string,
-        useRaindropTitleForFileName: boolean,
         loadingNotice: Notice,
         options: ModalFetchOptions,
         collectionsData?: CollectionResponse,
@@ -542,7 +542,8 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     const folderNotePath = normalizePath(`${folderPath}/${folderName}.md`);
                     const abstractFile = app.vault.getAbstractFileByPath(folderPath);
                     if (abstractFile instanceof TFolder) {
-                        let content = `---\ntitle: "${folderName.replace(/"/g, '\\"')}"\ntype: collection\n---\n\n# ${folderName}\n\n## Collection Contents\n\n`;
+                        const frontmatter = createYamlFrontmatter({ title: folderName, type: 'collection' }, ['title']);
+                        let content = `${frontmatter}# ${folderName}\n\n## Collection Contents\n\n`;
                         const listItems = abstractFile.children
                             .filter((child: TAbstractFile) => child.name !== `${folderName}.md`)
                             .sort((a: TAbstractFile, b: TAbstractFile) => a.name.localeCompare(b.name))
@@ -680,7 +681,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             };
 
             if (this.settings.downloadFiles && raindrop.link && (raindrop.link.includes('raindrop.io') && (raindrop.link.includes('/file') || raindrop.link.includes('/v2/')))) {
-                let fileExtension = raindrop.file?.name?.split('.').pop() || (raindrop.file?.type?.split('/').pop()) || 'file';
+                const fileExtension = raindrop.file?.name?.split('.').pop() || (raindrop.file?.type?.split('/').pop()) || 'file';
                 let binaryFileName = `${generatedFilename}.${fileExtension}`;
                 let binaryFilePath = normalizePath(`${targetPath}/${binaryFileName}`);
                 
@@ -735,15 +736,34 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             if (this.settings.isTemplateSystemEnabled) {
                 finalContent = this.renderTemplate(this.getTemplateForType(raindrop.type, options), enhancedDataForRender);
             } else {
-                let frontmatter = `---\nid: ${raindrop._id}\ntitle: "${raindrop.title.replace(/"/g, '\\"')}"\ndescription: "${(raindrop.excerpt || '').replace(/"/g, '\\"')}"\nsource: ${raindrop.link}\ntype: ${raindrop.type}\ncreated: ${raindrop.created}\nlastupdate: ${raindrop.lastUpdate}\n`;
+                const frontmatterData: Record<string, unknown> = {
+                    id: raindrop._id,
+                    title: raindrop.title,
+                    description: raindrop.excerpt || '',
+                    source: raindrop.link,
+                    type: raindrop.type,
+                    created: raindrop.created,
+                    lastupdate: raindrop.lastUpdate,
+                };
+
                 if (templateData.collectionId) {
-                    frontmatter += `collectionId: ${templateData.collectionId}\ncollectionTitle: "${templateData.collectionTitle}"\ncollectionPath: "${templateData.collectionPath}"\n`;
-                    if (templateData.collectionGroup) frontmatter += `collectionGroup: "${templateData.collectionGroup}"\n`;
-                    if (templateData.collectionParentId) frontmatter += `collectionParentId: ${templateData.collectionParentId}\n`;
+                    frontmatterData.collectionId = templateData.collectionId;
+                    frontmatterData.collectionTitle = collectionIdToNameMap.get(raindrop.collection?.$id || 0) || 'Unknown';
+                    frontmatterData.collectionPath = pathSegments.join('/');
+                    if (groupTitle) frontmatterData.collectionGroup = groupTitle;
+                    if (templateData.collectionParentId) frontmatterData.collectionParentId = templateData.collectionParentId;
                 }
-                frontmatter += `tags:\n${[...(raindrop.tags || []), ...settingsFMTags].map(t => `  - ${t.trim().replace(TAG_SPACE_REGEX, '_').replace(TAG_INVALID_CHARS_REGEX, '')}`).join('\n')}\n`;
-                if (raindrop.cover) frontmatter += `${this.settings.bannerFieldName}: ${raindrop.cover}\n`;
-                frontmatter += `---\n\n`;
+
+                const tags = [...(raindrop.tags || []), ...settingsFMTags].map(t => t.trim().replace(TAG_SPACE_REGEX, '_').replace(TAG_INVALID_CHARS_REGEX, ''));
+                if (tags.length > 0) {
+                    frontmatterData.tags = tags;
+                }
+
+                if (raindrop.cover) {
+                    frontmatterData[this.settings.bannerFieldName] = raindrop.cover;
+                }
+
+                const frontmatter = createYamlFrontmatter(frontmatterData, ['title', 'description', 'collectionTitle', 'collectionPath', 'collectionGroup']);
 
                 let noteBody = (raindrop.cover ? `![${sanitizeFileName(raindrop.title) || 'Cover'}](${raindrop.cover})\n\n` : "") + `# ${sanitizeMarkdownContent(raindrop.title)}\n\n`;
                 if (raindrop.excerpt) noteBody += `## Description\n${sanitizeMarkdownContent(raindrop.excerpt)}\n\n`;
@@ -1011,7 +1031,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 overrideTemplates: false
             };
 
-            await this.processRaindrops([raindropItem], vaultPath, appendTags || '', singleItemOptions.useRaindropTitleForFileName, loadingNotice, singleItemOptions, collectionsData, collectionIdToNameMap, new Set<string>(), collectionToGroupMap);
+            await this.processRaindrops([raindropItem], vaultPath, appendTags || '', loadingNotice, singleItemOptions, collectionsData, collectionIdToNameMap, new Set<string>(), collectionToGroupMap);
         } catch (error) {
             loadingNotice.hide();
             new Notice(`Error during quick import of item ${itemId}: ${error instanceof Error ? error.message : (typeof error === 'object' && error !== null ? JSON.stringify(error) : String(error))}`, 10000);
@@ -1034,7 +1054,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         const perPage = 50;
 
         try {
-            let allItems: RaindropItem[] = [];
+            const allItems: RaindropItem[] = [];
             let page = 0;
             let hasMore = true;
 
@@ -1060,7 +1080,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 }
 
                 if (data.items && data.items.length > 0) {
-                    allItems = allItems.concat(data.items);
+                    allItems.push(...data.items);
                     hasMore = data.items.length === perPage;
                     page++;
                 } else {

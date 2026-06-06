@@ -7,24 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-06-05
+
 ### Added
 
 - **Raindrop Group Hierarchy Support**: The plugin now integrates Raindrop.io sidebar "Groups" into the collection hierarchy.
 - **New Template Variable**: Added `{{collectionGroup}}` to access the name of the top-level sidebar Group a collection belongs to.
-- **Improved Path Construction**: The `{{collectionPath}}` variable now includes the sidebar Group name as the root of the path (e.g., `GROUP / Parent / Child`), enabling better vault organization that mirrors the Raindrop sidebar.
-- **Group Caching**: Implemented efficient caching for Raindrop Groups to ensure fast performance and minimal API impact.
+- **Improved Path Construction**: The `{{collectionPath}}` variable now includes the sidebar Group name as the root of the path (e.g., `GROUP / Parent / Child`).
+- **Group Caching**: Implemented efficient caching for Raindrop Groups.
+- **Archive Scraping Overhaul (Issue #58)**: Rewrote the archive scraping pipeline to use Obsidian's native `htmlToMarkdown()` for HTML-to-Markdown conversion, replacing the old DOMParser + CSS selector approach. Scraped content now produces structured Markdown with headings, paragraphs, and lists instead of a flat text blob.
 
 ### Fixed
 
-- **Nesting-Aware Template Engine (Issue #59)**: Replaced the regex-based template rendering logic with a robust, nesting-aware AST parser and evaluator to fix rendering of nested blocks (e.g., nested `{{#if}}` inside `{{#each}}` loops).
-- **ESLint & Tooling Configuration**: 
-  * Downgraded `eslint-plugin-obsidianmd` to `0.0.1` to match ESLint 8.57.1 compatibility.
-  * Added `parserOptions.project` and global `env` settings to `.eslintrc.json` to properly recognize global browser/Node variables and enable type-aware TS rules.
-  * Disabled the buggy `obsidian/settings-tab` ESLint rule which crashed on single-argument `.createEl('hr')` calls.
-  * Added `"sentence-case"` to the eslint plugins array.
-  * Wrapped switch case statements in `src/main.ts` with block braces to satisfy `no-case-declarations`.
-  * Replaced deprecated `substr` with `substring` in `src/utils/formatUtils.ts`.
-- Fixed a TypeScript error in `securityUtils.ts` related to undefined variable names during build.
+- **Raindrop Cache 303 Redirect (Issue #58)**: `fetchArchiveContent` now manually follows the `/cache` endpoint's HTTP 303 redirect to S3, stripping the Authorization header on the second hop. Fixes empty `{{scrapedContent}}` on platforms where Obsidian's `requestUrl` doesn't follow redirects automatically.
+- **Nesting-Aware Template Engine (Issue #59)**: Replaced the regex-based template rendering logic with a robust, nesting-aware AST parser and evaluator.
+- **YAML Null Keyword Quoting**: `formatYamlValue` now quotes YAML null-like strings (`null`, `Null`, `NULL`, `~`) and short boolean strings (`y`, `Y`, `n`, `N`) to prevent type coercion in frontmatter (PR #73).
+- **YAML Reserved-Word Force-Quoting**: Added `formatYamlString` utility to force-quote string fields (title, description, collectionTitle) that could be misinterpreted as dates, nulls, or booleans (PR #74).
+- **formatYamlString Null Serialization**: `formatYamlString` now serializes explicit `null`/`undefined` as unquoted `null` keyword (PR #75).
+- **Double-Escaping in Frontmatter**: Fixed double-escaping of collectionTitle/collectionPath when passed through `createYamlFrontmatter` (PR #69).
+- **Leading-Quote Data Loss**: Strings starting with `"` or `'` in frontmatter are now properly escaped (PR #69).
+- **Stale Closure in Template Rename**: Fixed stale closure bug in named template rename handler (PR #70).
+- **Frontmatter Injection in Folder Notes**: Folder note generation now uses `createYamlFrontmatter` (PR #65).
+- **ESLint & Tooling Configuration**: Downgraded `eslint-plugin-obsidianmd` to `0.0.1` for ESLint 8 compatibility; disabled buggy `obsidian/settings-tab` rule; fixed `no-case-declarations` and deprecated `substr` usage.
+
+### Changed
+
+- Removed unused `RaindropType` import from `apiUtils.ts` (PR #62).
+- Optimized array concatenation in `main.ts` (PR #63).
+- Eliminated redundant type guard in `main.ts` (PR #64).
+- Removed dead assignment in `processRaindrop` (PR #67).
+- Removed unused `col` variable in `main.ts` (PR #68).
+- Performance: split var node name once during template validation (PR #71).
 
 ## [1.9.0] - 2026-04-22
 

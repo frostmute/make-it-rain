@@ -95,16 +95,20 @@ The Make It Rain plugin includes a powerful template system that gives you compl
 ## Essential Template Features
 
 ### Displaying Variables
+
 Use double curly braces: `{{title}}`.
 
 ### Helper Functions
+
 The template system supports basic text transformation helpers:
+
 - `{{uppercase title}}`: TITLE OF THE BOOKMARK
 - `{{lowercase type}}`: article
 - `{{titlecase collectionTitle}}`: My Collection Name
 - `{{truncate excerpt 100}}`: Truncates text to 100 characters and adds `...` if needed.
 
 ### Conditional Blocks (`if`)
+
 ```handlebars
 {{#if excerpt}}
 ## Description
@@ -113,6 +117,7 @@ The template system supports basic text transformation helpers:
 ```
 
 ### Looping Through Arrays (`each`)
+
 ```handlebars
 ## Tags
 {{#each tags}}
@@ -127,6 +132,7 @@ The template system supports basic text transformation helpers:
 ```
 
 ## Default Template Structure
+
 The built-in default template is designed to be a comprehensive starting point, including frontmatter for Obsidian properties and a structured body.
 
 ```markdown
@@ -176,11 +182,13 @@ tags:
 ```
 
 ## Best Practices
+
 1. **YAML Quotes**: Always wrap string variables in double quotes in the frontmatter: `title: "{{title}}"`.
 2. **Handlebars Spacing**: Use single spaces within tags: `{{#if condition}}`, not `{{#ifcondition}}`.
 3. **Escaping**: The plugin automatically escapes special YAML characters in `title`, `excerpt`, and `note`.
 
 ## Troubleshooting
+
 - **Variables not rendering**: Check for typos in variable names. Use the **Template Variable Browser** in settings to verify names.
 - **Empty values**: Some variables (like `scrapedContent`) require specific settings to be enabled.
 - **Looping issues**: Ensure you use `{{this}}` for simple arrays like `tags`, and specific property names (like `text`) for object arrays like `highlights`.

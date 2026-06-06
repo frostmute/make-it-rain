@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="docs/assets/make-it-rain-banner.png" alt="Make It Rain Banner" width="600" />
+
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/frostmute/make-it-rain)](https://github.com/frostmute/make-it-rain/releases/latest)
 [![License](https://img.shields.io/github/license/frostmute/make-it-rain)](LICENSE)
 [![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://frostmute.github.io/make-it-rain/)
@@ -58,7 +60,7 @@ Your imported notes organize themselves based on your Raindrop structure.
 - **Automatic folder hierarchy** seamlessly mirroring your Raindrop Groups and Collections
 - **Automatic Folder Notes** (`FOLDER_NAME.md`) generated to serve as structured indexes
 - **Native File Downloads** to directly retrieve PDFs, EPUBs (Books), video, and audio file attachments, with full S3 secure redirect support
-- **Archive Scraping** to extract clean text content from Raindrop.io's permanent archives
+- **Archive Scraping** using Obsidian's native `htmlToMarkdown()` to extract structured Markdown from Raindrop.io's permanent archives
 - **Rich YAML frontmatter** with comprehensive metadata
 - **Customizable filenames** with template variables
 - **Auto-tagging** - append custom tags to all imports
@@ -85,12 +87,14 @@ Get started in 3 simple steps:
 ### Step 1️⃣: Install the Plugin
 
 **Option A: Official Community Plugins (Recommended)**
+
 1. Open Obsidian and go to **Settings** → **Community Plugins**.
 2. Make sure Safe Mode is turned off.
 3. Click **Browse** and search for **Make It Rain** or click [this link to open the plugin directly](obsidian://show-plugin?id=make-it-rain).
 4. Click **Install**, then **Enable**.
 
 **Option B: Manual Installation**
+
 1. Download `make-it-rain.zip` from the [latest release](https://github.com/frostmute/make-it-rain/releases/latest).
 2. Extract to get `main.js`, `manifest.json`, and `styles.css`.
 3. Copy these files to your vault's `.obsidian/plugins/make-it-rain/` folder and restart Obsidian.
@@ -307,7 +311,6 @@ Active development focuses on these features:
 - 📌 **Enhanced highlights** - Better highlight handling in notes
 - 💾 **Saved presets** - Store and reuse fetch configurations
 - 🎬 **Video tutorials** - Learn by watching
-- 📊 **Archive scraping** - Extended content extraction
 - ↩️ **Undo functionality** - Recover from mistakes
 
 See the full [GitHub Issues](https://github.com/frostmute/make-it-rain/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement) for more planned features.

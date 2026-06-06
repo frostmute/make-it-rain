@@ -13,14 +13,14 @@ Make It Rain enables you to seamlessly import your bookmarks from [Raindrop.io](
 
 - **On-Demand Fetching:** Import your Raindrops anytime via a Command Palette action or ribbon icon.
 - **Flexible Filtering:** Filter imports by Collection, Tags (AND/OR logic), and Content Type (Link, Article, Image, etc.).
-- **Collection Hierarchy:** Automatically creates folder structures in your vault based on your Raindrop collections.
+- **Group & Collection Hierarchy:** Automatically creates folder structures in your vault based on your Raindrop.io sidebar Groups and Collections.
 - **Smart Rate Limiting:** Handles API limits gracefully with automatic retries and detailed notifications.
 - **Comprehensive Note Generation:** Creates Markdown notes with rich YAML frontmatter and formatted content.
 - **Powerful Template System:** Customize how your notes are formatted with Handlebars-like templates.
 - **Content Type Templates:** Create different templates for different types of content (articles, images, videos, etc.).
 - **Flexible Import Options:** Choose to fetch only new items or update existing notes.
 - **Customizable Filenames & Tags:** Define your note filenames and automatically append custom Obsidian tags.
-- **Archive Scraping:** Heuristically extract clean text content from Raindrop's permanent archives.
+- **Archive Scraping:** Extract structured Markdown from Raindrop's permanent archives using Obsidian's native `htmlToMarkdown()`.
 - **Native File Downloads:** Automatically retrieve PDF, EPUB, and media attachments from Raindrop.io.
 - **Automatic Folder Notes:** Generate index notes for collection folders to improve navigation.
 

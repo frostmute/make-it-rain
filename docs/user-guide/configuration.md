@@ -62,9 +62,9 @@ This is the most important setting required for the plugin to function.
 ### Archive Scraping
 
 - **Setting**: Archive Scraping
-- **Description**: Heuristically extracts clean text content from Raindrop.io's permanent archives
+- **Description**: Extracts structured Markdown from Raindrop.io's permanent archives using Obsidian's native `htmlToMarkdown()`
 - **Default**: Disabled
-- **Note**: This feature attempts to pull the full text of an article even if the original website is offline, using Raindrop's permanent cache. It provides the `{{scrapedContent}}` variable for templates.
+- **Note**: This feature fetches full article content from Raindrop's permanent cache (even if the original site is offline) and converts it to structured Markdown with headings, paragraphs, and lists. It provides the `{{scrapedContent}}` variable for templates. The plugin automatically handles HTTP 303 redirects to S3 storage.
 
 ### Show ribbon icon
 
