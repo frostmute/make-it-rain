@@ -204,6 +204,10 @@ class MockSetting {
         return this;
     }
 
+    setDestructive() {
+        return this;
+    }
+
     setClass(cls: string) {
         return this;
     }
@@ -247,6 +251,7 @@ class MockSetting {
             onClick: jest.fn().mockReturnThis(),
             setCta: jest.fn().mockReturnThis(),
             setWarning: jest.fn().mockReturnThis(),
+            setDestructive: jest.fn().mockReturnThis(),
             setDisabled: jest.fn().mockReturnThis(),
             buttonEl: document.createElement('button')
         };
@@ -364,6 +369,7 @@ class MockButtonComponent {
     onClick = jest.fn().mockReturnThis();
     setCta = jest.fn().mockReturnThis();
     setWarning = jest.fn().mockReturnThis();
+    setDestructive = jest.fn().mockReturnThis();
     setDisabled = jest.fn().mockReturnThis();
 }
 
