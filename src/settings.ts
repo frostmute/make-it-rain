@@ -133,7 +133,7 @@ export const DEFAULT_SETTINGS: MakeItRainSettings = {
 [Watch Video]({{link}})
 {{/block}}
 {{/extends}}`,
-        document: `{{#extends "base"}}
+        doc: `{{#extends "base"}}
 {{#block 'header'}}
 # {{title}}
 {{/block}}
@@ -229,7 +229,7 @@ export const DEFAULT_SETTINGS: MakeItRainSettings = {
         article: true,
         image: true,
         video: true,
-        document: true,
+        doc: true,
         audio: true,
         book: true
     },
@@ -701,19 +701,26 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                 headers: fetchOptions.headers as Record<string, string>
             });
 
-            let data;
-            if (typeof response === 'string') {
-                data = JSON.parse(response);
-            } else {
-                data = response;
+            interface ApiResponse {
+                result?: boolean | unknown;
+                message?: string;
+                error?: string;
+                [key: string]: unknown;
             }
 
-            if (typeof data === 'object' && data !== null && 'result' in data && data.result) {
+            let data: unknown;
+            if (typeof response === 'string') {
+                data = JSON.parse(response) as ApiResponse;
+            } else {
+                data = response as ApiResponse;
+            }
+
+            if (typeof data === 'object' && data !== null && 'result' in data && (data as ApiResponse).result) {
                 new Notice('API token is valid!', 5000);
             } else {
                 // Handle specific API error messages if available
-                const errorMessage = (typeof data === 'object' && data !== null && 'message' in data) ? data.message 
-                                   : (typeof data === 'object' && data !== null && 'error' in data) ? data.error 
+                const errorMessage = (typeof data === 'object' && data !== null && 'message' in data) ? (data as ApiResponse).message as string
+                                   : (typeof data === 'object' && data !== null && 'error' in data) ? (data as ApiResponse).error as string
                                    : 'Invalid API token or connection issue.';
                 new Notice(`API token verification failed: ${errorMessage}`, 10000);
                 console.error('API token verification failed:', errorMessage);

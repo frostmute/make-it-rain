@@ -149,11 +149,13 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 ...data,
                 contentTypeTemplates: {
                     ...this.settings.contentTypeTemplates,
-                    ...(data.contentTypeTemplates 
+                    ...(data.contentTypeTemplates
                         ? Object.keys(data.contentTypeTemplates).reduce((acc, key) => {
-                            const value = data.contentTypeTemplates![key as RaindropType];
-                            acc[key] = value && value.trim() === '' 
-                                ? this.settings.contentTypeTemplates[key as RaindropType] 
+                            // Map API key to internal property name (document -> doc to avoid global conflicts)
+                            const internalKey = key === 'document' ? 'doc' : key;
+                            const value = data.contentTypeTemplates![key as keyof typeof data.contentTypeTemplates];
+                            acc[internalKey] = value && typeof value === 'string' && value.trim() === ''
+                                ? this.settings.contentTypeTemplates[internalKey as keyof typeof this.settings.contentTypeTemplates]
                                 : value || '';
                             return acc;
                         }, {} as Record<string, string>)
@@ -161,7 +163,15 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 },
                 contentTypeTemplateToggles: {
                     ...this.settings.contentTypeTemplateToggles,
-                    ...(data.contentTypeTemplateToggles || {})
+                    ...(data.contentTypeTemplateToggles
+                        ? Object.keys(data.contentTypeTemplateToggles).reduce((acc, key) => {
+                            // Map API key to internal property name (document -> doc to avoid global conflicts)
+                            const internalKey = key === 'document' ? 'doc' : key;
+                            const value = data.contentTypeTemplateToggles![key as keyof typeof data.contentTypeTemplateToggles];
+                            acc[internalKey] = value;
+                            return acc;
+                        }, {} as Record<string, boolean>)
+                        : {})
                 }
             };
         }
@@ -173,11 +183,14 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             return this.settings.defaultTemplate;
         }
 
-        const shouldUseTypeTemplate = options.overrideTemplates || 
-            (this.settings.contentTypeTemplateToggles[type] && 
-             this.settings.contentTypeTemplates[type]?.trim() !== '');
+        // Map API type to internal property name (document -> doc to avoid global conflicts)
+        const internalType = type === 'document' ? 'doc' : type as keyof typeof this.settings.contentTypeTemplateToggles;
 
-        return shouldUseTypeTemplate ? this.settings.contentTypeTemplates[type] : this.settings.defaultTemplate;
+        const shouldUseTypeTemplate = options.overrideTemplates ||
+            (this.settings.contentTypeTemplateToggles[internalType] &&
+             this.settings.contentTypeTemplates[internalType]?.trim() !== '');
+
+        return shouldUseTypeTemplate ? this.settings.contentTypeTemplates[internalType] : this.settings.defaultTemplate;
     }
 
     generateFileName(raindrop: RaindropItem, useRaindropTitleForFileName: boolean): string {
@@ -801,7 +814,9 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         const resolveTemplate = (name: string): string | null => {
             if (Object.prototype.hasOwnProperty.call(this.settings.namedTemplates, name)) return this.settings.namedTemplates[name];
             if (name === 'default') return this.settings.defaultTemplate;
-            if (Object.prototype.hasOwnProperty.call(this.settings.contentTypeTemplates, name)) return this.settings.contentTypeTemplates[name as keyof typeof this.settings.contentTypeTemplates];
+            // Map API type to internal property name (document -> doc to avoid global conflicts)
+            const internalName = name === 'document' ? 'doc' : name;
+            if (Object.prototype.hasOwnProperty.call(this.settings.contentTypeTemplates, internalName)) return this.settings.contentTypeTemplates[internalName as keyof typeof this.settings.contentTypeTemplates];
             return null;
         };
 
@@ -871,7 +886,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                         for (const item of array) {
                             const nextContext = typeof item === 'object' && item !== null
                                 ? Object.assign({}, context, item) as Record<string, unknown>
-                                : Object.assign({}, context, { 'this': item }) as Record<string, unknown>;
+                                : Object.assign({}, context, { 'this': item as unknown }) as Record<string, unknown>;
                             result += renderAST(node.thenBranch!, nextContext, blocks, includeDepth);
                         }
                     }

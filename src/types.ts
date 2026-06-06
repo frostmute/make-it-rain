@@ -28,7 +28,7 @@ export interface ContentTypeTemplates {
     article: string;
     image: string;
     video: string;
-    document: string;
+    doc: string;
     audio: string;
     book: string;
 }
@@ -38,7 +38,7 @@ export interface ContentTypeToggles {
     article: boolean;
     image: boolean;
     video: boolean;
-    document: boolean;
+    doc: boolean;
     audio: boolean;
     book: boolean;
 }

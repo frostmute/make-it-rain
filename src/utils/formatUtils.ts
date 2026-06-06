@@ -36,7 +36,7 @@ export function raindropType(type: string): string {
         article: 'article',
         image: 'image',
         video: 'video',
-        document: 'document',
+        doc: 'document',
         audio: 'audio',
         book: 'book'
     };

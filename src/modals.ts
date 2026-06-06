@@ -73,9 +73,9 @@ export class RaindropFetchModal extends Modal {
         const collectionsContainer = collectionListSetting.controlEl.createDiv({ cls: 'make-it-rain-collections-list-container' });
         collectionsContainer.createEl('div', { text: 'Loading collections...', cls: 'make-it-rain-loading-text' });
 
-        this.plugin.fetchAllUserCollections().then(collections => {
+        void this.plugin.fetchAllUserCollections().then(collections => {
             collectionsContainer.empty();
-            
+
             if (!collections || collections.length === 0) {
                 collectionsContainer.createEl('div', { text: 'No collections found or API token invalid.', cls: 'setting-item-description' });
                 return;
@@ -83,14 +83,14 @@ export class RaindropFetchModal extends Modal {
 
             // Create a small scrollable box
             const listEl = collectionsContainer.createDiv({ cls: 'make-it-rain-collections-list' });
-            
+
             // Sort alphabetically
             collections.sort((a, b) => a.title.localeCompare(b.title));
 
             collections.forEach(col => {
                 const label = listEl.createEl('label', { cls: 'make-it-rain-collection-label' });
                 const checkbox = label.createEl('input', { type: 'checkbox' });
-                
+
                 // If it's already in the text input, check it
                 const currentInputs = this.collections.split(',').map(s => s.trim().toLowerCase());
                 if (currentInputs.includes(col.title.toLowerCase()) || currentInputs.includes(col._id.toString())) {
@@ -106,7 +106,7 @@ export class RaindropFetchModal extends Modal {
                         currentSet.delete(col._id.toString());
                     }
                     this.collections = Array.from(currentSet).join(', ');
-                    
+
                     // We also need to update the text input visually to match
                     // This finds the text input sibling and updates its value
                     const textInputs = sourceGroup.querySelectorAll('input[type="text"]');
@@ -117,6 +117,10 @@ export class RaindropFetchModal extends Modal {
 
                 label.appendChild(activeWindow.document.createTextNode(' ' + col.title));
             });
+        }).catch(error => {
+            console.error('Error fetching collections:', error);
+            collectionsContainer.empty();
+            collectionsContainer.createEl('div', { text: 'Error loading collections. Please check your API token.', cls: 'setting-item-description' });
         });
 
         new Setting(sourceGroup)
@@ -237,7 +241,7 @@ export class RaindropFetchModal extends Modal {
                     useDefaultTemplate: this.useDefaultTemplate,
                     overrideTemplates: this.overrideTemplates
                 };
-                this.plugin.fetchRaindrops(options);
+                void this.plugin.fetchRaindrops(options);
             });
             
         new ButtonComponent(buttonsEl)
