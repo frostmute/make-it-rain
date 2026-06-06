@@ -702,7 +702,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
             });
 
             interface ApiResponse {
-                result?: boolean | unknown;
+                result?: unknown;
                 message?: string;
                 error?: string;
                 [key: string]: unknown;
