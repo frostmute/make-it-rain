@@ -138,24 +138,30 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
     }
 
     async loadSettings(): Promise<void> {
-        const savedData = await this.loadData();
+        const savedData: unknown = await this.loadData();
         this.settings = { ...DEFAULT_SETTINGS };
         
-        if (savedData) {
+        if (savedData && typeof savedData === 'object' && savedData !== null) {
+            const data = savedData as Partial<MakeItRainSettings>;
+            
             this.settings = {
                 ...this.settings,
-                ...savedData,
+                ...data,
                 contentTypeTemplates: {
                     ...this.settings.contentTypeTemplates,
-                    ...Object.keys(savedData.contentTypeTemplates || {}).reduce((acc, key) => {
-                        const value = (savedData.contentTypeTemplates as Record<string, string>)[key];
-                        acc[key] = value.trim() === '' ? this.settings.contentTypeTemplates[key as RaindropType] : value;
-                        return acc;
-                    }, {} as Record<string, string>)
+                    ...(data.contentTypeTemplates 
+                        ? Object.keys(data.contentTypeTemplates).reduce((acc, key) => {
+                            const value = data.contentTypeTemplates![key as RaindropType];
+                            acc[key] = value && value.trim() === '' 
+                                ? this.settings.contentTypeTemplates[key as RaindropType] 
+                                : value || '';
+                            return acc;
+                        }, {} as Record<string, string>)
+                        : {})
                 },
                 contentTypeTemplateToggles: {
                     ...this.settings.contentTypeTemplateToggles,
-                    ...(savedData.contentTypeTemplateToggles || {})
+                    ...(data.contentTypeTemplateToggles || {})
                 }
             };
         }
@@ -184,15 +190,19 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 formattedDate = createdDate.toISOString().split('T')[0];
             }
 
+            const rawTitle = raindrop.title || 'Untitled';
+            const rawId = raindrop._id !== undefined && raindrop._id !== null ? raindrop._id.toString() : 'unknown_id';
+            const rawCollectionTitle = raindrop.collection && typeof raindrop.collection === 'object' && 'title' in raindrop.collection ? String(raindrop.collection.title) : 'no collection';
+
             const replacements: Record<string, string> = {
-                title: sanitizeFileName(raindrop.title || 'Untitled'),
-                id: sanitizeFileName((raindrop._id || 'unknown_id').toString()),
-                collectiontitle: sanitizeFileName(raindrop.collection?.title || 'no collection'),
-                date: sanitizeFileName(formattedDate)
+                title: sanitizeFileName(String(rawTitle)),
+                id: sanitizeFileName(String(rawId)),
+                collectiontitle: sanitizeFileName(String(rawCollectionTitle)),
+                date: sanitizeFileName(String(formattedDate))
             };
 
             const fileName = fileNameTemplate.replace(FILENAME_PLACEHOLDER_REGEX, (match, placeholder) => {
-                const key = placeholder.toLowerCase();
+                const key = String(placeholder).toLowerCase();
                 return replacements[key] !== undefined ? replacements[key] : match;
             });
 
@@ -917,7 +927,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         };
 
         const initialAst = parseTemplate(template);
-        const rootContext = { ...data, id: data._id, domain: getDomain(data.link as string || ''), updated: data.lastupdate || '' };
+        const rootContext = { ...data, id: data._id, domain: getDomain(String(data.link || '')), updated: data.lastupdate || '' };
         const { ast: finalAst, blocks } = resolveInheritance(initialAst, new Map());
         return renderAST(finalAst, rootContext, blocks);
     }
