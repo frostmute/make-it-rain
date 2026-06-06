@@ -96,10 +96,10 @@ export function createRateLimiter(
                 const waitTime = refillRate - (now - lastRefill);
                 
                 // Set up a promise that resolves when tokens are refilled or manual reset occurs
-                let timeoutId: ReturnType<typeof setTimeout> | undefined;
+                let timeoutId: number | undefined;
                 const tokenPromise = new Promise<void>(resolve => {
                     tokenWaitingQueue.push(resolve);
-                    timeoutId = setTimeout(() => {
+                    timeoutId = window.setTimeout(() => {
                         // Remove from queue if timeout hits first
                         const index = tokenWaitingQueue.indexOf(resolve);
                         if (index > -1) tokenWaitingQueue.splice(index, 1);
@@ -108,7 +108,7 @@ export function createRateLimiter(
                 });
 
                 await tokenPromise;
-                if (timeoutId) clearTimeout(timeoutId);
+                if (timeoutId) window.clearTimeout(timeoutId);
                 refill();            }
 
             // Consume token
@@ -119,7 +119,7 @@ export function createRateLimiter(
             // Politeness delay to spread out requests
             if (delayBetweenRequests > 0) {
                 const delay = delayBetweenRequests / maxConcurrency;
-                await new Promise(resolve => setTimeout(resolve, delay));
+                await new Promise(resolve => window.setTimeout(resolve, delay));
             }
         } catch (error) {
             // Ensure we don't leak slots on error
@@ -227,7 +227,7 @@ export async function handleRequestError(
     if (errorStatus === 429 || (errorMessage && errorMessage.includes('rate limit'))) {
         console.warn('Rate limit hit, resetting counter and waiting...');
         rateLimiter.resetCounter();
-        await new Promise(resolve => setTimeout(resolve, delayBetweenRetries * 2)); // Longer wait for rate limits
+        await new Promise(resolve => window.setTimeout(resolve, delayBetweenRetries * 2)); // Longer wait for rate limits
         return true; // We handled the error, continue with retry
     }
     
@@ -236,7 +236,7 @@ export async function handleRequestError(
     
     if (!isLastAttempt) {
         // Wait and retry for non-rate limit errors
-        await new Promise(resolve => setTimeout(resolve, delayBetweenRetries));
+        await new Promise(resolve => window.setTimeout(resolve, delayBetweenRetries));
         return true; // Continue with retry
     }
     

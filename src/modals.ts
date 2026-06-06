@@ -115,7 +115,7 @@ export class RaindropFetchModal extends Modal {
                     }
                 });
 
-                label.appendChild(document.createTextNode(' ' + col.title));
+                label.appendChild(activeWindow.document.createTextNode(' ' + col.title));
             });
         });
 

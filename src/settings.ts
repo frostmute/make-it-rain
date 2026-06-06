@@ -329,7 +329,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
 
         // Plugin Header
         const headerEl = containerEl.createDiv({ cls: 'make-it-rain-settings-header' });
-        headerEl.createEl('h2', { text: 'Make It Rain Settings' });
+        new Setting(headerEl).setName('Make It Rain Settings').setHeading();
         headerEl.createEl('p', { 
             text: 'Configure how your Raindrop.io bookmarks are imported into Obsidian. Need help?',
             cls: 'setting-item-description'
@@ -508,7 +508,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                 });
 
             // Reusable Parts (Named Templates)
-            templateContent.createEl('h3', { text: 'Reusable Partials', cls: 'make-it-rain-h3' });
+            new Setting(templateContent).setName('Reusable Partials').setHeading();
             const namedDesc = templateContent.createEl('p', { cls: 'setting-item-description' });
             namedDesc.appendText('Create reusable snippets that can be included in other templates using {{#include "name"}} or extended using {{#extends "name"}}.');
 
@@ -528,7 +528,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                 });
 
             // Default Template
-            templateContent.createEl('h3', { text: 'Default Global Template', cls: 'make-it-rain-h3 make-it-rain-mt-large' });
+            new Setting(templateContent).setName('Default Global Template').setHeading();
             new Setting(templateContent)
                 .setDesc('This template is used if no content-type specific template is active below.')
                 .setClass('setting-item-stacked')
@@ -565,7 +565,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                 });
 
             // Content-Type Editor
-            templateContent.createEl('h3', { text: 'Content-Type Overrides', cls: 'make-it-rain-h3 make-it-rain-mt-large' });
+            new Setting(templateContent).setName('Content-Type Overrides').setHeading();
             const contentTypeDesc = templateContent.createEl('p', { cls: 'setting-item-description' });
             contentTypeDesc.appendText('Define specific layout overrides for different raindrop types (e.g. extending the base template to show video timestamps vs article content).');
 
