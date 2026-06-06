@@ -672,18 +672,14 @@ npm run type-check       # TypeScript type checking
 npm run lint:md          # Lint markdown documentation
 npm run scan-secrets     # Scan for secrets in the codebase
 ```
-
 # Documentation
-
 npm run docs:build       # Build documentation site
 npm run docs:serve       # Serve docs locally
-
 ```
 
 ### Project Structure
 
 ```
-
 src/
 ├── main.ts              # Plugin entry point
 ├── types.ts             # Type definitions
@@ -701,7 +697,6 @@ tests/
 docs/
 ├── user-guide/          # User documentation
 └── developer-guide/     # Developer documentation
-
 ```
 
 ### Useful Resources

@@ -49,29 +49,24 @@ npm run dev
 ```plaintext
 make-it-rain/
 ├── src/
-│   ├── types.ts              # Centralized TypeScript interfaces
-│   ├── main.ts               # Plugin lifecycle and entry point
-│   ├── settings.ts           # Settings UI (RaindropSettingTab)
-│   ├── modals.ts             # Interactive user prompts (Bulk/Quick import)
-│   ├── template-validator.ts # AST-based template parsing logic
-│   └── utils/                # Functional utility modules
-│       ├── apiUtils.ts       # Network and rate-limiting
-│       ├── fileUtils.ts      # Vault operations and path sanitization
-│       ├── formatUtils.ts    # Date, tag, and domain formatting
-│       ├── yamlUtils.ts      # Frontmatter generation
-│       ├── scrapingUtils.ts  # HTML extraction
-│       └── securityUtils.ts  # Content sanitization
-├── tests/                    # Test files (unit and integration)
-├── docs/                     # Documentation
-├── manifest.json             # Plugin manifest
-└── package.json              # Dependencies
+│   ├── components/     # UI components
+│   ├── services/       # Core services
+│   ├── types/         # TypeScript types
+│   ├── utils/         # Utility functions
+│   └── main.ts        # Plugin entry point
+├── tests/             # Test files
+├── docs/              # Documentation
+├── manifest.json      # Plugin manifest
+└── package.json       # Dependencies
 ```
 
 ### Key Directories
 
-- `src/`: Core plugin lifecycle, UI bridges, and Types.
-- `src/utils/`: Functional utilities handling data transformation and side effects.
-- `tests/`: Jest test suites containing unit and integration tests.
+- `src/components/`: UI components and views
+- `src/services/`: Core functionality
+- `src/types/`: TypeScript interfaces
+- `src/utils/`: Helper functions
+- `tests/`: Test suites
 
 ## Development Setup
 
@@ -104,12 +99,11 @@ make-it-rain/
 
 ```typescript
 // Example test
-import { validateTemplate } from '../../src/template-validator';
-
-describe('validateTemplate', () => {
-    it('should validate AST template structure', () => {
-        const result = validateTemplate('{{#if excerpt}}{{excerpt}}{{/if}}');
-        expect(result.isValid).toBe(true);
+describe('TemplateService', () => {
+    it('should validate template', () => {
+        const service = new TemplateService();
+        const result = service.validateTemplate('{{title}}');
+        expect(result.valid).toBe(true);
     });
 });
 ```
@@ -118,11 +112,11 @@ describe('validateTemplate', () => {
 
 ```typescript
 // Example test
-describe('Import Workflow', () => {
-    it('should process a collection and create notes', async () => {
-        // Setup mocks for app.vault and apiUtils
-        // Trigger bulk import flow
-        // Expect app.vault.create to have been called with correctly formatted markdown
+describe('ImportService', () => {
+    it('should import items', async () => {
+        const service = new ImportService();
+        const items = await service.importItems([], {});
+        expect(items).toBeDefined();
     });
 });
 ```
@@ -163,11 +157,11 @@ describe('Import Workflow', () => {
 
 ### Core Components
 
-The plugin is structured around a functional utility pattern driven by a central orchestrator class:
-
-- **`RaindropToObsidian` (`main.ts`)**: The core orchestrator managing settings, plugin lifecycle, and the execution of bulk/quick import workflows.
-- **UI Modules (`modals.ts`, `settings.ts`)**: Provide the user interface for input and configuration.
-- **Utility Modules (`src/utils/*.ts`)**: Isolate pure data transformation and specific side-effects (e.g., `apiUtils` for network, `fileUtils` for Obsidian vault writes, `template-validator` for AST parsing).
+- **RaindropService**: Handles low-level API communication, authentication, and retry logic.
+- **CollectionService**: Manages user collections, folder hierarchies, and subcollection resolution.
+- **ImportService**: Orchestrates the fetch-to-note lifecycle.
+- **TemplateService**: Renders notes using Handlebars-like syntax.
+- **SettingsService**: Persistent configuration management.
 
 ### Modular Data Flow
 
@@ -177,23 +171,31 @@ The plugin is structured around a functional utility pattern driven by a central
 4. **Processing**: Items are sanitized, tags are normalized, and templates are rendered.
 5. **Persistence**: Notes are created in the Obsidian vault with structured metadata.
 
+### Event System
+
+```typescript
+// Example event handling
+eventManager.on(PluginEventType.IMPORT_START, (event) => {
+    console.log('Import started:', event.data);
+});
+```
+
 ## Best Practices
 
 ### Code Organization
 
 1. Use TypeScript
-2. Keep UI logic separate from data processing
-3. Rely on functional utility modules (`src/utils/`) over large OOP state machines
-4. Maintain high test coverage for string/data transformations
+2. Follow SOLID principles
+3. Write clean code
+4. Add documentation
 
 ### Error Handling
 
 ```typescript
 try {
-    await processItems(items);
+    await service.importItems(items);
 } catch (error) {
-    new Notice('Import failed: ' + error.message);
-    console.error('Make It Rain Error:', error);
+    errorHandler.handle(error);
 }
 ```
 
@@ -217,9 +219,10 @@ try {
 
 ```typescript
 // Example API call
-import { fetchRaindrops } from './utils/apiUtils';
-
-const items = await fetchRaindrops(token, collectionId, 0);
+const items = await raindropService.getCollectionItems(id, {
+    page: 1,
+    perPage: 50
+});
 ```
 
 ### Obsidian API

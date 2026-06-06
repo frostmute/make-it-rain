@@ -27,16 +27,15 @@ Welcome to Make It Rain! This documentation will help you get the most out of th
 
 ### 🗂️ Smart Organization
 
-- **Automatic Folder Hierarchy**: Replicates your Raindrop Group and Collection structure seamlessly in Obsidian
-- **Native Binary Downloads**: Directly download and embed PDFs, EPUBs (Books), MP4s, and images straight from Raindrop
+- **Automatic Folder Hierarchy**: Replicates your Raindrop collection structure in Obsidian
 - **Rich Metadata**: Comprehensive YAML frontmatter with all important details
 - **Customizable Filenames**: Use template variables to create meaningful note names
 - **Tag Integration**: Automatically append custom Obsidian tags to imported notes
 
 ### 🎨 Powerful Customization
 
-- **AST Template System**: Full control over note format using a nesting-aware Handlebars-like syntax for conditional logic
-- **Content-Type Templates**: Different formats for articles, books, images, videos, and more
+- **Template System**: Full control over note format with Handlebars-like syntax
+- **Content-Type Templates**: Different formats for articles, images, videos, and more
 - **Banner Images**: Display cover images from your bookmarks
 - **Flexible Formatting**: Customize every aspect of your imported notes
 

@@ -9,7 +9,7 @@ This guide covers all the configuration options available in the Make It Rain pl
 3. Find "Make It Rain" in your list of installed plugins
 4. Click the **Settings** button
 
-<!-- TODO: Need a v1.7.1 screenshot for the Settings page (stacked inputs, help icons, reset buttons). Please upload it and update the reference here. -->
+<!-- TODO: Update screenshot of Settings page to reflect v1.7.1 UI (stacked inputs, help icons, reset buttons) -->
 
 ## API Configuration
 
@@ -25,16 +25,16 @@ This is the most important setting required for the plugin to function.
 
 ## General Settings
 
-### Default vault save location
+### Default Raindrop Location
 
-- **Setting**: Default vault save location
-- **Description**: The default folder where your raindrop bookmarks will be saved
+- **Setting**: Default Raindrop Location
+- **Description**: The default folder where your Raindrop bookmarks will be saved
 - **Format**: Path relative to your vault root (e.g., "Raindrops" or "References/Web")
-- **Note**: You can override this setting every time you fetch raindrops.
+- **Note**: You can override this setting every time you fetch raindrops, giving you the flexibility to save them in different locations and keep them synchronized (or not) seperately from other collections.
 
-### Filename template
+### Filename Template
 
-- **Setting**: Filename template
+- **Setting**: Filename Template
 - **Description**: Determines how filenames are generated for your notes
 - **Default**: `{{title}}`
 - **Variables**: The filename template supports a specific subset of variables:
@@ -46,18 +46,33 @@ This is the most important setting required for the plugin to function.
 - **Note**: Filenames are automatically sanitized to remove characters invalid in Obsidian/OS file systems. If a template results in an empty filename, a default "Unnamed_Raindrop_[ID]" will be used.
 - **Help**: A `(?)` help icon next to this setting in the plugin provides a direct link to this documentation section.
 
-### Download files locally
+### Show Ribbon Icon
 
-- **Setting**: Download files locally
+- **Setting**: Show Ribbon Icon
+- **Description**: Toggles visibility of the Make It Rain icon in the Obsidian ribbon (left sidebar)
+- **Default**: Enabled
+- **Note**: Even when disabled, you can still access the plugin via the Command Palette
+
+### Banner Field Name
+
+- **Setting**: Banner Field Name
+- **Description**: Customizes the frontmatter field name used for the banner image
+- **Default**: `banner`
+- **Usage**: Some Obsidian themes and plugins look for specific banner/image field names in frontmatter. If you use a different theme or plugin that expects a different field name, you can customize it here. By default this field is populated with the cover image URL from Raindrop.io.
+
+### Create Folder Notes
+
+- **Setting**: Create Folder Notes
+- **Description**: Automatically generates an index note for each collection folder
+- **Default**: Enabled
+- **Note**: These notes provide a structured overview of all bookmarks in a collection, improving navigation and vault organization.
+
+### Download Files
+
+- **Setting**: Download Files
 - **Description**: Automatically fetches native Raindrop upload attachments (PDFs, EPUBs, images, etc.)
 - **Default**: Enabled
 - **Note**: Requires a valid API token with file access permissions. Downloaded files are saved alongside the bookmark note.
-
-### Create folder notes
-
-- **Setting**: Create folder notes
-- **Description**: Automatically generate an index note matching the name of each collection folder, listing its children.
-- **Default**: Enabled
 
 ### Archive Scraping
 
@@ -66,35 +81,25 @@ This is the most important setting required for the plugin to function.
 - **Default**: Disabled
 - **Note**: This feature attempts to pull the full text of an article even if the original website is offline, using Raindrop's permanent cache. It provides the `{{scrapedContent}}` variable for templates.
 
-### Show ribbon icon
-
-- **Setting**: Show ribbon icon
-- **Description**: Toggles visibility of the Make It Rain icon in the Obsidian ribbon (left sidebar)
-- **Default**: Enabled
-
-### Banner field name
-
-- **Setting**: Banner field name
-- **Description**: Customizes the frontmatter field name used for the banner image
-- **Default**: `banner`
-
 ## Template System
 
-The template system allows you to customize how your raindrop bookmarks are formatted in Obsidian notes.
+The template system allows you to customize how your Raindrop bookmarks are formatted in Obsidian notes.
 
-### Enable template system
+### Enable Template System
 
-- **Setting**: Enable template system
-- **Description**: Toggles the template system on/off.
+- **Setting**: Enable Template System
+- **Description**: Toggles the template system on/off. When enabled, the template editor sections below become active. The settings UI stacks descriptions above template text areas for easier editing.
 - **Default**: Enabled
 
-### Default template
+### Default Template
 
-When the template system is enabled, you'll see a text editor for customizing the default template.
+When the template system is enabled, you'll see a text editor for customizing the default template. You can easily revert to the original default template using the **"Reset to Default"** button next to the template editor in the settings.
 
-### Content-type templates
+For detailed information on the template system, including syntax, available variables, and examples, see the [Template System documentation](template-system.md).
 
-You can create specific templates for different types of content.
+### Content Type Templates
+
+You can create specific templates for different types of content. Each specific content-type template can also be individually reset to its original default using its own **"Reset"** button next to its editor in the settings.
 
 - Link templates
 - Article templates
@@ -102,7 +107,6 @@ You can create specific templates for different types of content.
 - Video templates
 - Document templates
 - Audio templates
-- Book templates
 
 ## Configuration Tips
 

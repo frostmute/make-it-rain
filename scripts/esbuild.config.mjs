@@ -1,6 +1,6 @@
 import esbuild from "esbuild";
 import process from "process";
-import { builtinModules } from "module";
+import builtins from "builtin-modules";
 import { copyToVaults } from "./copy-to-vault.mjs";
 
 const banner =
@@ -32,7 +32,7 @@ const context = await esbuild.context({
 		"@lezer/common",
 		"@lezer/highlight",
 		"@lezer/lr",
-		...builtinModules],
+		...builtins],
 	format: "cjs",
 	target: "es2018",
 	logLevel: "info",

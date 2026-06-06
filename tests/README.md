@@ -87,9 +87,7 @@ tests/
 │       ├── fileUtils.test.ts    # File utilities tests
 │       └── yamlUtils.test.ts    # YAML utilities tests
 ├── integration/                 # Integration tests
-│   ├── edgeCases.test.ts        # Edge case handling
-│   ├── importWorkflow.test.ts   # End-to-end import testing
-│   └── README.md                # Integration test notes
+│   └── (future tests)
 └── mocks/                       # Mock data and utilities
     └── (future mocks)
 ```
@@ -409,6 +407,7 @@ The CI pipeline will fail if:
 
 ## Future Improvements
 
+- [ ] Add integration tests for full import flow
 - [ ] Add performance benchmarks
 - [ ] Add visual regression tests for modals
 - [ ] Increase coverage thresholds to 80%+

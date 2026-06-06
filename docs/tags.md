@@ -32,26 +32,33 @@ Each tag has the following properties:
 
 ### Basic Import
 
-Tags are automatically imported with your Raindrop items and added to the YAML frontmatter.
+Tags are automatically imported with your Raindrop items and added to the YAML frontmatter:
+
+```yaml
+---
+title: My Bookmark
+tags:
+  - work
+  - research
+  - to_read
+---
+```
 
 ### Tag Processing
 
-During import, tags undergo a rigorous sanitization process to ensure Obsidian compatibility:
+During import, tags are:
 
-1. **Native Sanitization**: Special characters (except underscores) are removed.
-2. **Space Handling**: Spaces are replaced with underscores.
-3. **Normalization**: Tags are trimmed and converted to lowercase.
-4. **Collision Prevention**: Duplicate tags after sanitization are filtered out.
-
-### Settings-based Global Tags
-
-A new feature allows you to define global tags in the plugin settings that are appended to **every** imported note. These tags follow the same sanitization rules as native Raindrop tags.
+1. Sanitized for Obsidian compatibility
+2. Converted to lowercase
+3. Spaces replaced with underscores
+4. Special characters removed
 
 ### Import Options
 
-- **Default Metadata Tags**: Define a list of tags in settings to be applied globally.
-- **Append Tags**: Add custom tags to specific import sessions.
-- **Tag Match Type**: Filter Raindrops by "All" (AND) or "Any" (OR) tags during fetching.
+- **Append Tags**: Add custom tags to all imports
+- **Prefix Tags**: Add prefix to Raindrop tags
+- **Skip Tags**: Don't import certain tags
+- **Tag Mapping**: Map Raindrop tags to Obsidian tags
 
 ## Tag Filtering
 
@@ -73,18 +80,44 @@ Filter imports by tags using:
 
 - **Tag Patterns**: `work*`, `*research`
 - **Tag Groups**: `(work|personal)`
-### Tag Combinations: `work+research|personal`
+- **Tag Combinations**: `work+research|personal`
 
-## Tag Consolidation
+## Tag Customization
 
-### Aggregate Highlights by Tag
+### Tag Transformation
 
-The **Aggregate Highlights by Tag** feature allows you to gather all highlights from notes that share a specific tag into a single document. This is particularly useful for synthesizing research across multiple sources.
+Customize how tags are processed:
 
-1. Open the Command Palette (`Ctrl/Cmd+P`).
-2. Run **"Aggregate highlights by tag"**.
-3. Enter the tag name (e.g., `research`).
-4. A new note `Highlights for research.md` will be created with all extracted highlights.
+```typescript
+interface TagOptions {
+    prefix: string;          // Add prefix to all tags
+    suffix: string;          // Add suffix to all tags
+    transform: (tag: string) => string;  // Custom transformation
+    filter: (tag: string) => boolean;    // Filter tags
+}
+```
+
+### Tag Mapping
+
+Map Raindrop tags to Obsidian tags:
+
+```typescript
+interface TagMapping {
+    'to read': 'status/to_read';
+    'in progress': 'status/in_progress';
+    'done': 'status/done';
+}
+```
+
+### Tag Templates
+
+Use tags in templates:
+
+```handlebars
+{{#if tags}}
+Tags: {{formatTags tags}}
+{{/if}}
+```
 
 ## Best Practices
 
@@ -175,3 +208,106 @@ The **Aggregate Highlights by Tag** feature allows you to gather all highlights 
    - Check syntax
    - Test patterns
    - Verify logic
+
+## Advanced Features
+
+### Tag Analytics
+
+- Tag usage statistics
+- Popular tags
+- Tag relationships
+
+### Tag Automation
+
+- Automatic tagging
+- Tag suggestions
+- Tag cleanup
+
+### Tag Integration
+
+- Other plugins
+- External tools
+- Custom scripts
+
+## API Reference
+
+### Tag Properties
+
+```typescript
+interface Tag {
+    name: string;
+    count: number;
+    type?: string;
+}
+```
+
+### Tag Options
+
+```typescript
+interface TagOptions {
+    prefix?: string;
+    suffix?: string;
+    transform?: (tag: string) => string;
+    filter?: (tag: string) => boolean;
+    mapping?: Record<string, string>;
+}
+```
+
+### Filter Options
+
+```typescript
+interface TagFilterOptions {
+    tags: string[];
+    logic: 'AND' | 'OR';
+    exclude: string[];
+    patterns: string[];
+}
+```
+
+## Examples
+
+### Basic Tag Import
+
+```yaml
+---
+title: My Bookmark
+tags:
+  - work
+  - research
+  - to_read
+---
+```
+
+### Tag Filtering
+
+```typescript
+// AND Logic
+const andFilter = 'work+research';
+
+// OR Logic
+const orFilter = 'work|research';
+
+// Complex Filter
+const complexFilter = '(work|personal)+research';
+```
+
+### Tag Mapping
+
+```typescript
+const tagMapping = {
+    'to read': 'status/to_read',
+    'in progress': 'status/in_progress',
+    'done': 'status/done'
+};
+```
+
+### Tag Templates
+
+```handlebars
+{{#if tags}}
+## Tags
+{{#each tags}}
+- [[{{this}}]]
+{{/each}}
+{{/if}}
+```

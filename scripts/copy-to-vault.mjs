@@ -32,10 +32,10 @@ export const copyToVaults = () => {
 
             // Copy each file to the target vault
             for (const file of sourceFiles) {
-                // Try root directory first, then build
-                let sourcePath = file;
+                // Try build directory first, then root
+                let sourcePath = `build/${file}`;
                 if (!existsSync(sourcePath)) {
-                    sourcePath = `build/${file}`;
+                    sourcePath = file;
                 }
                 
                 if (!existsSync(sourcePath)) {

@@ -40,209 +40,20 @@ export class RaindropFetchModal extends Modal {
         contentEl.empty();
         contentEl.addClass('make-it-rain-modal');
 
-        // Header
-        const headerEl = contentEl.createDiv({ cls: 'make-it-rain-modal-header' });
-        headerEl.createEl('h2', { text: 'Bulk Import Raindrops' });
-        headerEl.createEl('p', { 
-            text: 'Fetch and organize bookmarks directly from your Raindrop.io collections.',
-            cls: 'setting-item-description'
-        });
-        
-        contentEl.createEl('hr');
+        new Setting(contentEl).setName('Fetch raindrops').setHeading();
 
-        // --- 1. Source & Scope ---
-        const sourceGroup = contentEl.createDiv({ cls: 'make-it-rain-modal-group' });
-        sourceGroup.createEl('h3', { text: 'Source', cls: 'make-it-rain-h3' });
+        this.buildFetchCriteriaSection(contentEl);
 
-                // A standard text input for quick typing (retained for advanced users / pasting)
-        new Setting(sourceGroup)
-            .setName('Collections filter (Text)')
-            .setDesc('Collection names or IDs separated by commas. Leave blank for all.')
-            .addText(text => text
-                .setPlaceholder('All Collections')
-                .setValue(this.collections)
-                .onChange(value => {
-                    this.collections = value;
-                }));
+        const advancedDetails = contentEl.createEl('details', { cls: 'make-it-rain-advanced-options' });
+        advancedDetails.createEl('summary', { text: 'Advanced options' });
+        const advancedContent = advancedDetails.createDiv();
 
-        // An expandable multi-select list fetched dynamically from Raindrop
-        const collectionListSetting = new Setting(sourceGroup)
-            .setName('Select collections from account')
-            .setDesc('Pick specific collections to import (loads automatically).');
-            
-        const collectionsContainer = collectionListSetting.controlEl.createDiv({ cls: 'make-it-rain-collections-list-container' });
-        collectionsContainer.createEl('div', { text: 'Loading collections...', cls: 'make-it-rain-loading-text' });
-
-        this.plugin.fetchAllUserCollections().then(collections => {
-            collectionsContainer.empty();
-            
-            if (!collections || collections.length === 0) {
-                collectionsContainer.createEl('div', { text: 'No collections found or API token invalid.', cls: 'setting-item-description' });
-                return;
-            }
-
-            // Create a small scrollable box
-            const listEl = collectionsContainer.createDiv({ cls: 'make-it-rain-collections-list' });
-            
-            // Sort alphabetically
-            collections.sort((a, b) => a.title.localeCompare(b.title));
-
-            collections.forEach(col => {
-                const label = listEl.createEl('label', { cls: 'make-it-rain-collection-label' });
-                const checkbox = label.createEl('input', { type: 'checkbox' });
-                
-                // If it's already in the text input, check it
-                const currentInputs = this.collections.split(',').map(s => s.trim().toLowerCase());
-                if (currentInputs.includes(col.title.toLowerCase()) || currentInputs.includes(col._id.toString())) {
-                    checkbox.checked = true;
-                }
-
-                checkbox.addEventListener('change', () => {
-                    const currentSet = new Set(this.collections.split(',').map(s => s.trim()).filter(Boolean));
-                    if (checkbox.checked) {
-                        currentSet.add(col.title);
-                    } else {
-                        currentSet.delete(col.title);
-                        currentSet.delete(col._id.toString());
-                    }
-                    this.collections = Array.from(currentSet).join(', ');
-                    
-                    // We also need to update the text input visually to match
-                    // This finds the text input sibling and updates its value
-                    const textInputs = sourceGroup.querySelectorAll('input[type="text"]');
-                    if (textInputs && textInputs.length > 0) {
-                        (textInputs[0] as HTMLInputElement).value = this.collections;
-                    }
-                });
-
-                label.appendChild(activeWindow.document.createTextNode(' ' + col.title));
-            });
-        });
-
-        new Setting(sourceGroup)
-            .setName('Include subcollections')
-            .setDesc('Also fetch bookmarks from children of the specified collections.')
-            .addToggle(toggle => toggle
-                .setValue(this.includeSubcollections)
-                .onChange(value => this.includeSubcollections = value));
-
-        new Setting(sourceGroup)
-            .setName('Save destination')
-            .setDesc('Vault folder path to save imports. Overrides global settings if provided.')
-            .addText(text => text
-                .setPlaceholder(this.plugin.settings.defaultFolder || 'Vault root')
-                .setValue(this.vaultPath)
-                .onChange(value => this.vaultPath = value));
-
-        // --- 2. Filters ---
-        const filterGroup = contentEl.createDiv({ cls: 'make-it-rain-modal-group' });
-        filterGroup.createEl('h3', { text: 'Filters', cls: 'make-it-rain-h3' });
-
-        new Setting(filterGroup)
-            .setName('Filter by tags')
-            .setDesc('Only fetch raindrops with these tags (comma-separated).')
-            .addText(text => text
-                .setPlaceholder('e.g. css, typescript')
-                .setValue(this.apiFilterTags)
-                .onChange(value => {
-                    this.apiFilterTags = value;
-                    tagMatchSetting.settingEl.style.display = value.trim() ? '' : 'none';
-                }));
-
-        const tagMatchSetting = new Setting(filterGroup)
-            .setName('Tag match mode')
-            .setDesc('How should multiple tags be evaluated?')
-            .addDropdown(dropdown => {
-                dropdown.addOption(TagMatchTypes.ALL, 'Must have ALL tags (AND)')
-                        .addOption(TagMatchTypes.ANY, 'Must have ANY tag (OR)')
-                        .setValue(this.tagMatchType)
-                        .onChange(value => this.tagMatchType = value as 'all' | 'any');
-            });
-        tagMatchSetting.settingEl.style.display = this.apiFilterTags.trim() ? '' : 'none';
-
-        new Setting(filterGroup)
-            .setName('Filter by type')
-            .setDesc('Only import specific types of bookmarks.')
-            .addDropdown(dropdown => {
-                dropdown.addOption('all', 'All Types');
-                Object.values(RaindropTypes).forEach(type => {
-                    dropdown.addOption(type, type.charAt(0).toUpperCase() + type.slice(1));
-                });
-                dropdown.setValue(this.filterType)
-                        .onChange(value => this.filterType = value as RaindropType | 'all');
-            });
-
-        new Setting(filterGroup)
-            .setName('Fetch only new')
-            .setDesc('Skip bookmarks if their corresponding file already exists in the vault.')
-            .addToggle(toggle => toggle
-                .setValue(this.fetchOnlyNew)
-                .onChange(value => this.fetchOnlyNew = value));
-                
-        new Setting(filterGroup)
-            .setName('Update existing notes')
-            .setDesc('Update frontmatter on existing notes.')
-            .addToggle(toggle => toggle
-                .setValue(this.updateExisting)
-                .onChange(value => this.updateExisting = value));
-
-        // --- 3. Note Content ---
-        const contentGroup = contentEl.createDiv({ cls: 'make-it-rain-modal-group' });
-        contentGroup.createEl('h3', { text: 'Note Formatting', cls: 'make-it-rain-h3' });
-
-        new Setting(contentGroup)
-            .setName('Append vault tags')
-            .setDesc('Add these local tags to all imported notes (comma-separated).')
-            .addText(text => text
-                .setPlaceholder('e.g. #imported, #raindrop')
-                .setValue(this.appendTagsToNotes)
-                .onChange(value => this.appendTagsToNotes = value));
-
-        new Setting(contentGroup)
-            .setName('Use Raindrop title for filename')
-            .setDesc('Disable to use the unique Raindrop ID as the filename instead.')
-            .addToggle(toggle => toggle
-                .setValue(this.useRaindropTitleForFileName)
-                .onChange(value => this.useRaindropTitleForFileName = value));
-
-        if (this.plugin.settings.isTemplateSystemEnabled) {
-            new Setting(contentGroup)
-                .setName('Disable custom templates')
-                .setDesc('Temporary override: ignore your custom templates and import using the basic fallback structure for this run.')
-                .addToggle(toggle => toggle
-                    .setValue(this.overrideTemplates)
-                    .onChange(value => this.overrideTemplates = value));
-        }
+        this.buildNoteOptionsSection(advancedContent);
+        this.buildTemplateOptionsSection(advancedContent);
 
         contentEl.createEl('hr');
 
-        // Actions
-        const buttonsEl = contentEl.createDiv({ cls: 'modal-button-container' });
-        new ButtonComponent(buttonsEl)
-            .setButtonText('Start Import')
-            .setCta()
-            .onClick(() => {
-                this.close();
-                const options: ModalFetchOptions = {
-                    collections: this.collections,
-                    apiFilterTags: this.apiFilterTags,
-                    vaultPath: this.vaultPath,
-                    appendTagsToNotes: this.appendTagsToNotes,
-                    useRaindropTitleForFileName: this.useRaindropTitleForFileName,
-                    tagMatchType: this.tagMatchType,
-                    filterType: this.filterType,
-                    includeSubcollections: this.includeSubcollections,
-                    fetchOnlyNew: this.fetchOnlyNew,
-                    updateExisting: this.updateExisting,
-                    useDefaultTemplate: this.useDefaultTemplate,
-                    overrideTemplates: this.overrideTemplates
-                };
-                this.plugin.fetchRaindrops(options);
-            });
-            
-        new ButtonComponent(buttonsEl)
-            .setButtonText('Cancel')
-            .onClick(() => this.close());
+        this.buildActionButtons(contentEl);
     }
 
     private buildFetchCriteriaSection(contentEl: HTMLElement) {
@@ -324,14 +135,13 @@ export class RaindropFetchModal extends Modal {
                 displayPath: getDisplayPath(col)
             })).sort((a, b) => a.displayPath.localeCompare(b.displayPath));
 
-            collectionsWithPaths.forEach(({ displayPath }) => {
+            collectionsWithPaths.forEach(({ col, displayPath }) => {
                 const item = listContainer.createDiv({ cls: 'make-it-rain-collection-item' });
                 item.createEl('span', { text: displayPath });
                 item.onClickEvent(() => {
                     const current = collectionsTextComponent.getValue();
                     const toAdd = displayPath;
-                    const existingEntries = current.split(',').map(s => s.trim()).filter(Boolean);
-                    if (existingEntries.includes(toAdd)) return;
+                    if (current.includes(toAdd)) return;
                     
                     const newValue = current ? `${current}, ${toAdd}` : toAdd;
                     collectionsTextComponent.setValue(newValue);
@@ -580,42 +390,50 @@ export class QuickImportModal extends Modal {
         contentEl.empty();
         contentEl.addClass('make-it-rain-modal');
 
-        const headerEl = contentEl.createDiv({ cls: 'make-it-rain-modal-header' });
-        headerEl.createEl('h2', { text: 'Quick Import' });
-        headerEl.createEl('p', { 
-            text: 'Import a single Raindrop bookmark by pasting its URL or unique ID.',
-            cls: 'setting-item-description'
-        });
+        new Setting(contentEl).setName('Quick import raindrop').setHeading();
 
-        contentEl.createEl('hr');
+        new Setting(contentEl)
+            .setName('URL or ID')
+            .setDesc(
+                'How to find: In the raindrop.io app, click "Edit" on the specific item (or look for a similar action that opens the item in a detailed/edit view). ' +
+                'The URL in your browser\'s address bar should look like ".../item/[ID]/edit" or similar. ' +
+                'You can paste this full URL here, or just the numeric id (e.g., 12345678).'
+            )
+            .setClass('setting-item-stacked')
+            .addText((text: TextComponent) => {
+                text.setPlaceholder('e.g., https://.../item/12345678/edit or 12345678')
+                    .setValue(this.itemUrlOrId)
+                    .onChange((value: string) => {
+                        this.itemUrlOrId = value.trim();
+                    });
+                text.inputEl.addClass('make-it-rain-full-width');
+            });
 
-        const inputGroup = contentEl.createDiv({ cls: 'make-it-rain-modal-group' });
+        new Setting(contentEl)
+            .setName('Vault save location (optional)')
+            .setDesc('Override default save folder. Leave blank for plugin default.')
+            .addText((text: TextComponent) => {
+                text.setPlaceholder(this.plugin.settings.defaultFolder || 'Vault root')
+                    .setValue(this.vaultPath)
+                    .onChange((value: string) => {
+                        this.vaultPath = value.trim();
+                    });
+                text.inputEl.addClass('make-it-rain-full-width');
+            });
 
-        new Setting(inputGroup)
-            .setName('Item URL or ID')
-            .setDesc('e.g., https://app.raindrop.io/my/0/453181829')
-            .addText(text => text
-                .setPlaceholder('Paste URL or ID here...')
-                .setValue(this.itemUrlOrId)
-                .onChange(value => this.itemUrlOrId = value.trim()));
+        // Added Append Tags to Notes for Quick Import Modal
+        new Setting(contentEl)
+            .setName('Append tags to notes (optional)')
+            .setDesc('Comma-separated tags to add to the frontmatter of the created note.')
+            .addText((text: TextComponent) => {
+                text.setPlaceholder('#mytag, #anothertag')
+                    .setValue(this.appendTagsToNotes)
+                    .onChange((value: string) => {
+                        this.appendTagsToNotes = value.trim();
+                    });
+                text.inputEl.addClass('make-it-rain-full-width');
+            });
 
-        new Setting(inputGroup)
-            .setName('Save destination')
-            .setDesc('Vault folder path to save this item. Leaves blank for global default.')
-            .addText(text => text
-                .setPlaceholder(this.plugin.settings.defaultFolder || 'Vault root')
-                .setValue(this.vaultPath)
-                .onChange(value => this.vaultPath = value.trim()));
-
-        new Setting(inputGroup)
-            .setName('Append vault tags')
-            .setDesc('Add these local tags to this imported note (comma-separated).')
-            .addText(text => text
-                .setPlaceholder('e.g. #quick-import')
-                .setValue(this.appendTagsToNotes)
-                .onChange(value => this.appendTagsToNotes = value.trim()));
-
-        contentEl.createEl('hr');
 
         const buttonsEl = contentEl.createDiv({ cls: 'modal-button-container' });
         new ButtonComponent(buttonsEl)
@@ -627,6 +445,7 @@ export class QuickImportModal extends Modal {
                     return;
                 }
 
+                // Extract ID from URL if necessary
                 let itemId: number | null = null;
                 const idMatch = this.itemUrlOrId.match(/\/item\/(\d+)/) || this.itemUrlOrId.match(/^(\d+)$/);
                 
@@ -645,7 +464,9 @@ export class QuickImportModal extends Modal {
 
         new ButtonComponent(buttonsEl)
             .setButtonText('Cancel')
-            .onClick(() => this.close());
+            .onClick(() => {
+                this.close();
+            });
     }
 
     onClose() {

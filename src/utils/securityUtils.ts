@@ -48,8 +48,8 @@ export function sanitizeMarkdownContent(content: unknown): string {
     const dangerousTags = [
         'meta', 'base', 'link', 'form', 'button', 'input', 'select', 'textarea', 'svg', 'math'
     ];
-    const dangerousTagsPattern = dangerousTags.join('|');
-    const dangerousTagsRegex = new RegExp(`<(?:\\/\\s*)?(?:${dangerousTagsPattern})(?:\\s+[^>]*)?>`, 'gi');
+    const tagsPattern = dangerousTags.join('|');
+    const dangerousTagsRegex = new RegExp(`<(?:\\/\\s*)?(?:${tagsPattern})(?:\\s+[^>]*)?>`, 'gi');
     sanitized = sanitized.replace(dangerousTagsRegex, '');
 
     // 4. Remove inline event handlers (onerror, onclick, etc.) from ANY remaining HTML tags

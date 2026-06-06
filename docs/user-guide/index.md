@@ -1,7 +1,6 @@
 # 📖 User Guide - Make It Rain
 
-Welcome to the Make It Rain User Guide! This comprehensive documentation will help you get the most out of
-the plugin, from your first import to advanced customization.
+Welcome to the Make It Rain User Guide! This comprehensive documentation will help you get the most out of the plugin, from your first import to advanced customization.
 
 ---
 
@@ -119,11 +118,11 @@ Once you've completed these three steps, you'll be ready to import all your book
 
 ### Path 1: Just Getting Started ⭐
 
-#### Estimated time: 10-15 minutes
+**Estimated time: 10-15 minutes**
 
 Want to import your first bookmarks quickly? Follow this path:
 
-```text
+```
 1. Installation (installation.md)
    ↓
 2. Configuration (configuration.md)
@@ -135,11 +134,11 @@ Want to import your first bookmarks quickly? Follow this path:
 
 ### Path 2: Complete Setup 🚀
 
-#### Estimated time: 30-45 minutes
+**Estimated time: 30-45 minutes**
 
 Get everything set up and understand all features:
 
-```text
+```
 1. Installation (installation.md)
    ↓
 2. Configuration (configuration.md)
@@ -155,11 +154,11 @@ Get everything set up and understand all features:
 
 ### Path 3: Power User 💪
 
-#### Estimated time: 1-2 hours
+**Estimated time: 1-2 hours**
 
 Customize everything and unlock advanced features:
 
-```text
+```
 1. Complete Setup (Path 2)
    ↓
 2. Note Structure (note-structure.md)
@@ -180,7 +179,7 @@ Customize everything and unlock advanced features:
 ### Quick Reference Table
 
 | I want to... | Difficulty | Where to go |
-| --- | --- | --- |
+|---|---|---|
 | **Install the plugin** | Beginner | [Installation Guide](installation.md) |
 | **Set my API token** | Beginner | [Configuration Guide](configuration.md#api-token) |
 | **Import one bookmark quickly** | Beginner | [Quick Import](usage.md#quick-import) |
@@ -198,9 +197,9 @@ Customize everything and unlock advanced features:
 
 #### Workflow 1: Daily Bookmark Sync
 
-#### Time: 2-3 minutes per day
+**Time: 2-3 minutes per day**
 
-```text
+```
 1. Add bookmarks to Raindrop.io throughout the day
 2. Open Obsidian
 3. Open Command Palette (Ctrl/Cmd+P)
@@ -214,9 +213,9 @@ See: [Usage Guide - Fetch Raindrops](usage.md#fetch-raindrops)
 
 #### Workflow 2: Organized Research Collection
 
-#### Time: 15-20 minutes
+**Time: 15-20 minutes**
 
-```text
+```
 1. Go to Configuration (Settings > Make It Rain)
 2. Set default folder to "Research/Articles"
 3. Run "Fetch Raindrops"
@@ -230,9 +229,9 @@ See: [Collections Guide](collections.md) | [Configuration Guide](configuration.m
 
 #### Workflow 3: Custom Templates Setup
 
-#### Time: 30-45 minutes (one-time)
+**Time: 30-45 minutes (one-time)**
 
-```text
+```
 1. Read Template System overview (template-system.md)
 2. Browse Template Gallery for examples (template-gallery.md)
 3. Pick a template that matches your style
@@ -248,9 +247,9 @@ See: [Template System](template-system.md) | [Template Gallery](template-gallery
 
 #### Workflow 4: Multi-Collection Organization
 
-#### Time: 20-30 minutes
+**Time: 20-30 minutes**
 
-```text
+```
 1. Understand your Raindrop collection structure
 2. Set default folder to vault root
 3. Run "Fetch Raindrops" multiple times:
@@ -304,7 +303,7 @@ See: [Collections Guide](collections.md) | [Usage Guide](usage.md)
 ### Import Methods
 
 | Method | Best For | Speed | Flexibility |
-| --- | --- | --- | --- |
+|---|---|---|---|
 | **Quick Import** | Single bookmarks | ⚡⚡⚡ | Medium |
 | **Fetch Raindrops** | Bulk imports | ⚡ | High |
 | **Collection Filter** | Topic-based imports | ⚡⚡ | High |
@@ -313,7 +312,7 @@ See: [Collections Guide](collections.md) | [Usage Guide](usage.md)
 ### Organization Methods
 
 | Method | Use Case | Learning Curve |
-| --- | --- | --- |
+|---|---|---|
 | **Default Folder** | Store everything in one place | Easy |
 | **Collections** | Organize by Raindrop collections | Medium |
 | **Custom Filenames** | Add metadata to filename | Medium |
@@ -322,7 +321,7 @@ See: [Collections Guide](collections.md) | [Usage Guide](usage.md)
 ### Customization Options
 
 | Feature | Difficulty | Impact |
-| --- | --- | --- |
+|---|---|---|
 | **API Token** | Beginner | Required |
 | **Default Folder** | Beginner | Convenience |
 | **Filename Template** | Beginner | Organization |
@@ -346,7 +345,7 @@ Filter your imports by:
 
 Your Raindrop collection structure is automatically replicated:
 
-```text
+```
 Raindrop.io:              Obsidian:
 ├── Research       →      ├── Research/
 │   ├── Articles   →      │   └── Articles/
@@ -392,7 +391,7 @@ Complete control over note format:
 
 ## 📖 Document Structure
 
-```text
+```
 User Guide (you are here)
 ├── Installation (getting the plugin)
 ├── Configuration (setting it up)
@@ -447,8 +446,12 @@ Requires understanding of templates, syntax, and plugin mechanics.
 
 ---
 
+<div align="center">
+
 **Have a question?** Check the [FAQ](faq.md)
 
 **Found an issue?** See [Troubleshooting](troubleshooting.md)
 
 **Want to contribute?** Visit the [Developer Guide](../developer-guide/README.md)
+
+</div>

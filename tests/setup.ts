@@ -9,59 +9,6 @@
 // Mock Obsidian API
 global.window = global.window || {};
 
-// Extend HTMLElement prototype for JSDOM
-const proto = HTMLElement.prototype as any;
-if (!proto.empty) {
-    proto.empty = function() {
-        this.innerHTML = '';
-        return this;
-    };
-}
-if (!proto.addClass) {
-    proto.addClass = function(...classes: string[]) {
-        this.classList.add(...classes);
-        return this;
-    };
-}
-if (!proto.removeClass) {
-    proto.removeClass = function(...classes: string[]) {
-        this.classList.remove(...classes);
-        return this;
-    };
-}
-if (!proto.appendText) {
-    proto.appendText = function(text: string) {
-        this.appendChild(document.createTextNode(text));
-        return this;
-    };
-}
-if (!proto.createEl) {
-    proto.createEl = function(tag: string, o?: any) {
-        const el = document.createElement(tag);
-        if (o) {
-            if (o.text) el.textContent = o.text;
-            if (o.cls) el.className = o.cls;
-            if (o.attr) {
-                for (const [k, v] of Object.entries(o.attr)) {
-                    el.setAttribute(k, String(v));
-                }
-            }
-        }
-        this.appendChild(el);
-        return el;
-    };
-}
-if (!proto.createDiv) {
-    proto.createDiv = function(o?: any) {
-        return this.createEl('div', o || {});
-    };
-}
-if (!proto.createSpan) {
-    proto.createSpan = function(o?: any) {
-        return this.createEl('span', o || {});
-    };
-}
-
 // Mock Notice class
 class MockNotice {
     message: string;
@@ -172,35 +119,17 @@ class MockPluginSettingTab {
 // Mock Setting class
 class MockSetting {
     settingEl: HTMLElement;
-    nameEl: HTMLElement;
-    descEl: HTMLElement;
-    controlEl: HTMLElement;
-    infoEl: HTMLElement;
 
     constructor(containerEl: HTMLElement) {
         this.settingEl = document.createElement('div');
-        this.nameEl = document.createElement('div');
-        this.descEl = document.createElement('div');
-        this.controlEl = document.createElement('div');
-        this.infoEl = document.createElement('div');
-        this.settingEl.appendChild(this.nameEl);
-        this.settingEl.appendChild(this.descEl);
-        this.settingEl.appendChild(this.controlEl);
-        this.settingEl.appendChild(this.infoEl);
         containerEl.appendChild(this.settingEl);
     }
 
     setName(name: string) {
-        this.nameEl.textContent = name;
         return this;
     }
 
     setDesc(desc: string) {
-        this.descEl.textContent = desc;
-        return this;
-    }
-
-    setHeading() {
         return this;
     }
 
@@ -245,10 +174,7 @@ class MockSetting {
             setIcon: jest.fn().mockReturnThis(),
             setTooltip: jest.fn().mockReturnThis(),
             onClick: jest.fn().mockReturnThis(),
-            setCta: jest.fn().mockReturnThis(),
-            setWarning: jest.fn().mockReturnThis(),
-            setDisabled: jest.fn().mockReturnThis(),
-            buttonEl: document.createElement('button')
+            setCta: jest.fn().mockReturnThis()
         };
         callback(component);
         return this;
@@ -352,60 +278,6 @@ const mockRequestUrl = jest.fn().mockResolvedValue({
     json: {}
 });
 
-class MockButtonComponent {
-    buttonEl: HTMLButtonElement;
-    constructor(containerEl: HTMLElement) {
-        this.buttonEl = document.createElement('button');
-        containerEl.appendChild(this.buttonEl);
-    }
-    setButtonText = jest.fn().mockReturnThis();
-    setIcon = jest.fn().mockReturnThis();
-    setTooltip = jest.fn().mockReturnThis();
-    onClick = jest.fn().mockReturnThis();
-    setCta = jest.fn().mockReturnThis();
-    setWarning = jest.fn().mockReturnThis();
-    setDisabled = jest.fn().mockReturnThis();
-}
-
-class MockTextComponent {
-    inputEl: HTMLInputElement;
-    constructor(containerEl: HTMLElement) {
-        this.inputEl = document.createElement('input');
-        containerEl.appendChild(this.inputEl);
-    }
-    setValue = jest.fn().mockReturnThis();
-    setPlaceholder = jest.fn().mockReturnThis();
-    onChange = jest.fn().mockReturnThis();
-}
-
-class MockToggleComponent {
-    constructor(containerEl: HTMLElement) {}
-    setValue = jest.fn().mockReturnThis();
-    onChange = jest.fn().mockReturnThis();
-}
-
-class MockDropdownComponent {
-    selectEl: HTMLSelectElement;
-    constructor(containerEl: HTMLElement) {
-        this.selectEl = document.createElement('select');
-        containerEl.appendChild(this.selectEl);
-    }
-    addOption = jest.fn().mockReturnThis();
-    setValue = jest.fn().mockReturnThis();
-    onChange = jest.fn().mockReturnThis();
-}
-
-class MockTextAreaComponent {
-    inputEl: HTMLTextAreaElement;
-    constructor(containerEl: HTMLElement) {
-        this.inputEl = document.createElement('textarea');
-        containerEl.appendChild(this.inputEl);
-    }
-    setValue = jest.fn().mockReturnThis();
-    setPlaceholder = jest.fn().mockReturnThis();
-    onChange = jest.fn().mockReturnThis();
-}
-
 // Export mocks to global scope
 (global as any).obsidian = {
     Notice: MockNotice,
@@ -417,12 +289,7 @@ class MockTextAreaComponent {
     request: mockRequest,
     requestUrl: mockRequestUrl,
     normalizePath: mockNormalizePath,
-    App: mockApp,
-    ButtonComponent: MockButtonComponent,
-    TextComponent: MockTextComponent,
-    ToggleComponent: MockToggleComponent,
-    DropdownComponent: MockDropdownComponent,
-    TextAreaComponent: MockTextAreaComponent
+    App: mockApp
 };
 
 // Make mocks available for imports
@@ -436,16 +303,7 @@ jest.mock('obsidian', () => ({
     request: mockRequest,
     requestUrl: mockRequestUrl,
     normalizePath: mockNormalizePath,
-    App: jest.fn(() => mockApp),
-    ButtonComponent: MockButtonComponent,
-    TextComponent: MockTextComponent,
-    ToggleComponent: MockToggleComponent,
-    DropdownComponent: MockDropdownComponent,
-    TextAreaComponent: MockTextAreaComponent,
-    // Minimal stand-in for Obsidian's built-in HTML→Markdown converter.
-    // The real implementation lives inside Obsidian; this is sufficient for
-    // tests that don't override it in their own jest.mock call.
-    htmlToMarkdown: jest.fn((html: string) => html.replace(/<[^>]+>/g, '').trim())
+    App: jest.fn(() => mockApp)
 }), { virtual: true });
 
 // Export for use in tests

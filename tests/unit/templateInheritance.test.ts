@@ -6,11 +6,9 @@ import { App } from 'obsidian';
 describe('Template Inheritance Reproduction', () => {
     let plugin: RaindropToObsidian;
 
-        beforeEach(() => {
+    beforeEach(() => {
         plugin = new RaindropToObsidian({} as App, {} as any);
         plugin.settings.isTemplateSystemEnabled = true;
-        plugin.settings.namedTemplates['base'] = "BASE: {{#block 'details'}}DEFAULT END{{/block}}";
-        plugin.settings.defaultTemplate = "{{#extends 'base'}}{{/extends}}";
     });
 
     it('should support template inheritance with #extends and #block', () => {

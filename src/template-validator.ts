@@ -7,19 +7,7 @@ export interface ValidationResult {
     warnings: string[];
 }
 
-const KNOWN_VARS = new Set([
-    'title', 'id', '_id', 'link', 'excerpt', 'note', 'cover', 'created', 'lastupdate',
-    'type', 'collectionId', 'collectionTitle', 'collectionPath', 'collectionParentId',
-    'collectionGroup', 'tags', 'highlights', 'bannerFieldName', 'url', 'domain',
-    'renderedType', 'scrapedContent', 'formattedCreatedDate', 'formattedUpdatedDate',
-    'formattedTags', 'localEmbed', 'this'
-]);
-
-const HELPERS = new Set([
-    'uppercase', 'lowercase', 'titlecase', 'truncate', 'capitalize', 'substr', 'replace', 'join', 'pluralize'
-]);
-
-export function validateTemplate(template: string, _settings: MakeItRainSettings): ValidationResult {
+export function validateTemplate(template: string, settings: MakeItRainSettings): ValidationResult {
     const result: ValidationResult = {
         isValid: true,
         errors: [],
@@ -48,22 +36,26 @@ export function validateTemplate(template: string, _settings: MakeItRainSettings
                 }
                 
                 if (node.type === 'var') {
+                    const varName = node.name?.split(/\s+/)[0] || '';
                     // Basic check for variable existence (warning only as it's dynamic)
+                    const knownVars = [
+                        'title', 'id', 'link', 'excerpt', 'note', 'cover', 'created', 'lastupdate',
+                        'type', 'collectionId', 'collectionTitle', 'collectionPath', 'collectionParentId',
+                        'collectionGroup', 'tags', 'highlights', 'bannerFieldName', 'url', 'domain',
+                        'renderedType', 'scrapedContent', 'formattedCreatedDate', 'formattedUpdatedDate',
+                        'formattedTags', 'localEmbed', 'this'
+                    ];
                     
-                    let actualVar = node.name;
-                    let possibleHelper: string | null = null;
+                    const helpers = ['uppercase', 'lowercase', 'titlecase', 'truncate', 'capitalize', 'substr', 'replace', 'join', 'pluralize'];
 
-                    if (node.name && node.name.includes(' ')) {
-                        const parts = node.name.split(/\s+/);
-                        possibleHelper = parts[0].toLowerCase();
-                        actualVar = parts[1];
-                    }
+                    const actualVar = node.name?.includes(' ') ? node.name.split(/\s+/)[1] : node.name;
+                    const possibleHelper = node.name?.includes(' ') ? node.name.split(/\s+/)[0].toLowerCase() : null;
 
-                    if (possibleHelper && !HELPERS.has(possibleHelper)) {
+                    if (possibleHelper && !helpers.includes(possibleHelper)) {
                         result.warnings.push(`Unknown helper: {{${possibleHelper}}}`);
                     }
 
-                    if (actualVar && !KNOWN_VARS.has(actualVar) && !actualVar.includes('.') && !actualVar.startsWith('../')) {
+                    if (actualVar && !knownVars.includes(actualVar) && !actualVar.includes('.') && !actualVar.startsWith('../')) {
                         result.warnings.push(`Possibly unknown variable: {{${actualVar}}}`);
                     }
                 }
@@ -71,9 +63,9 @@ export function validateTemplate(template: string, _settings: MakeItRainSettings
         };
         
         checkNodes(ast);
-    } catch (e: unknown) {
+    } catch (e: any) {
         result.isValid = false;
-        result.errors.push(`Template parsing error: ${e instanceof Error ? e.message : String(e)}`);
+        result.errors.push(`Template parsing error: ${e.message}`);
     }
 
     // 2. YAML Frontmatter Check

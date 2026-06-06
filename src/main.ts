@@ -7,7 +7,7 @@
  * to promote code reuse and maintainability.
  */
 
-import { App, Notice, Plugin, PluginManifest, TFile, TFolder, TAbstractFile, normalizePath } from 'obsidian';
+import { App, Notice, Plugin, PluginManifest, TFile, TFolder, TAbstractFile, normalizePath, requestUrl } from 'obsidian';
 import { 
     MakeItRainSettings, 
     RaindropType, 
@@ -33,7 +33,8 @@ import {
     sanitizeFileName,
     sanitizeMarkdownContent,
     createFolderStructure,
-    htmlToMarkdown,
+
+    // API utilities
     RateLimiter,
     createRateLimiter,
     fetchWithRetry,
@@ -42,7 +43,6 @@ import {
     // YAML utilities
     formatYamlValue,
     escapeYamlString,
-    createYamlFrontmatter,
     
     // Format utilities
     formatDate,
@@ -57,10 +57,6 @@ import {
     // Scraping utilities
     fetchArchiveContent,
     extractContentFromHtml,
-
-    // Download utilities
-    downloadBinaryFile,
-    validateBinaryMagicBytes,
 
     // Template utilities
     ASTNode,
@@ -342,7 +338,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 const collectionPromises = resolvedCollectionIds.map(async (collectionId) => {
                     let hasMore = true;
                     let page = 0;
-                    const collectionData: RaindropItem[] = [];
+                    let collectionData: RaindropItem[] = [];
                     const collectionApiBaseUrl = `${baseApiUrl}/raindrops/${collectionId}`;
 
                     while (hasMore) {
@@ -383,7 +379,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     const tagPromises = tagsArray.map(async (tag) => {
                         let hasMore = true;
                         let page = 0;
-                        const tagData: RaindropItem[] = [];
+                        let tagData: RaindropItem[] = [];
 
                         while (hasMore) {
                             const params = new URLSearchParams({ perpage: perPage.toString(), page: page.toString(), search: `#${tag}` });
@@ -470,7 +466,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     }
                 }
                 const collectionsData: CollectionResponse = { result: true, items: allCollections };
-                await this.processRaindrops(filteredData, options.vaultPath, options.appendTagsToNotes, loadingNotice, options, collectionsData, collectionIdToNameMap, new Set<string>(), collectionToGroupMap);
+                await this.processRaindrops(filteredData, options.vaultPath, options.appendTagsToNotes, options.useRaindropTitleForFileName, loadingNotice, options, collectionsData, collectionIdToNameMap, new Set<string>(), collectionToGroupMap);
             }
         } catch (error) {
             loadingNotice.hide();
@@ -484,6 +480,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         raindrops: RaindropItem[],
         vaultPath: string | undefined,
         appendTagsToNotes: string,
+        useRaindropTitleForFileName: boolean,
         loadingNotice: Notice,
         options: ModalFetchOptions,
         collectionsData?: CollectionResponse,
@@ -535,30 +532,24 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
 
         if (this.settings.createFolderNotes) {
             loadingNotice.setMessage('Generating collection folder notes...');
-            for (const folderPath of Array.from(verifiedFolderPaths)) {
+            await Promise.all(Array.from(verifiedFolderPaths).map(async (folderPath) => {
                 try {
                     const folderName = folderPath.split('/').pop();
-                    if (!folderName) continue;
+                    if (!folderName) return;
                     const folderNotePath = normalizePath(`${folderPath}/${folderName}.md`);
                     const abstractFile = app.vault.getAbstractFileByPath(folderPath);
                     if (abstractFile instanceof TFolder) {
-                        const frontmatter = createYamlFrontmatter({ title: folderName, type: 'collection' }, ['title']);
-                        let content = `${frontmatter}# ${folderName}\n\n## Collection Contents\n\n`;
+                        let content = `---\ntitle: "${folderName.replace(/"/g, '\\"')}"\ntype: collection\n---\n\n# ${folderName}\n\n## Collection Contents\n\n`;
                         const listItems = abstractFile.children
                             .filter((child: TAbstractFile) => child.name !== `${folderName}.md`)
                             .sort((a: TAbstractFile, b: TAbstractFile) => a.name.localeCompare(b.name))
                             .map((child: TAbstractFile) => `- [[${child.name.replace('.md', '')}]]\n`);
                         content += listItems.join('');
-                        if (await app.vault.adapter.exists(folderNotePath)) {
-                            await app.vault.adapter.write(folderNotePath, content);
-                        } else {
-                            await app.vault.create(folderNotePath, content);
-                        }
+                        if (await app.vault.adapter.exists(folderNotePath)) await app.vault.adapter.write(folderNotePath, content);
+                        else await app.vault.create(folderNotePath, content);
                     }
-                } catch (e) {
-                    console.error(`Error generating folder note for ${folderPath}:`, e);
-                }
-            }
+                } catch (e) { console.error(`Error generating folder note for ${folderPath}:`, e); }
+            }));
         }
 
         loadingNotice.hide();
@@ -639,8 +630,8 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             const templateData: TemplateData = {
                 _id: raindrop._id,
                 title: escapeYamlString(raindrop.title),
-                excerpt: escapeYamlString(htmlToMarkdown(raindrop.excerpt || '')),
-                note: escapeYamlString(htmlToMarkdown(raindrop.note || '')),
+                excerpt: escapeYamlString(raindrop.excerpt || ''),
+                note: escapeYamlString(raindrop.note || ''),
                 link: raindrop.link,
                 cover: raindrop.cover || '',
                 created: raindrop.created,
@@ -652,8 +643,8 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 collectionGroup: groupTitle || '',
                 tags: [...(raindrop.tags || []), ...settingsFMTags].map(tag => escapeYamlString(tag)),
                 highlights: (raindrop.highlights || []).map(h => ({
-                    text: escapeYamlString(htmlToMarkdown(h.text || '')),
-                    note: escapeYamlString(htmlToMarkdown(h.note || '')),
+                    text: escapeYamlString(h.text),
+                    note: escapeYamlString(h.note || ''),
                     created: h.created || ''
                 })),
                 bannerFieldName: this.settings.bannerFieldName,
@@ -681,54 +672,25 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             };
 
             if (this.settings.downloadFiles && raindrop.link && (raindrop.link.includes('raindrop.io') && (raindrop.link.includes('/file') || raindrop.link.includes('/v2/')))) {
-                const fileExtension = raindrop.file?.name?.split('.').pop() || (raindrop.file?.type?.split('/').pop()) || 'file';
-                let binaryFileName = `${generatedFilename}.${fileExtension}`;
-                let binaryFilePath = normalizePath(`${targetPath}/${binaryFileName}`);
-                
                 try {
                     loadingNotice.setMessage(`Downloading file for '${raindrop.title || 'Untitled'}'... (${processed}/${total})`);
+                    const fileExtension = raindrop.file?.name?.split('.').pop() || (raindrop.file?.type?.split('/').pop()) || 'file';
+                    const binaryFileName = `${generatedFilename}.${fileExtension}`;
+                    const binaryFilePath = normalizePath(`${targetPath}/${binaryFileName}`);
                     
-                    const fileResponse = await downloadBinaryFile(raindrop.link, this.settings.apiToken);
+                    const fileResponse = await requestUrl({
+                        url: raindrop.link,
+                        method: 'GET',
+                        headers: { 'Authorization': `Bearer ${this.settings.apiToken}` }
+                    });
                     
-                    if (fileResponse.status === 200 && fileResponse.arrayBuffer) {
-                        const verification = validateBinaryMagicBytes(fileResponse.arrayBuffer, fileExtension);
-                        if (verification.isValid) {
-                            const detectedExt = verification.detectedExtension || fileExtension;
-                            binaryFileName = `${generatedFilename}.${detectedExt}`;
-                            binaryFilePath = normalizePath(`${targetPath}/${binaryFileName}`);
-                            
-                            await app.vault.adapter.writeBinary(binaryFilePath, fileResponse.arrayBuffer);
-                            enhancedDataForRender.localFile = `[[${binaryFileName}]]`;
-                            enhancedDataForRender.localEmbed = `![[${binaryFileName}]]`;
-                        } else {
-                            const errorMsg = `Binary verification failed: ${verification.error}`;
-                            console.error(`Error downloading file for raindrop ${raindrop._id}:`, errorMsg);
-                            
-                            // Write debug file
-                            const debugFilePath = normalizePath(`${targetPath}/${generatedFilename}.download-error.log`);
-                            const debugContent = `URL: ${raindrop.link}\nStatus: ${fileResponse.status}\nRedirect URL: ${fileResponse.redirectUrl || 'None'}\nError: ${errorMsg}\nBuffer Size: ${fileResponse.arrayBuffer.byteLength} bytes\n`;
-                            await app.vault.adapter.write(debugFilePath, debugContent);
-                        }
-                    } else {
-                        const errorMsg = fileResponse.error || `Server returned status ${fileResponse.status}`;
-                        console.error(`Error downloading file for raindrop ${raindrop._id}:`, errorMsg);
-                        
-                        // Write debug file
-                        const debugFilePath = normalizePath(`${targetPath}/${generatedFilename}.download-error.log`);
-                        const debugContent = `URL: ${raindrop.link}\nStatus: ${fileResponse.status}\nRedirect URL: ${fileResponse.redirectUrl || 'None'}\nError: ${errorMsg}\n`;
-                        await app.vault.adapter.write(debugFilePath, debugContent);
+                    if (fileResponse.status === 200) {
+                        await app.vault.adapter.writeBinary(binaryFilePath, fileResponse.arrayBuffer);
+                        enhancedDataForRender.localFile = `[[${binaryFileName}]]`;
+                        enhancedDataForRender.localEmbed = `![[${binaryFileName}]]`;
                     }
                 } catch (error) {
-                    const errorMsg = error instanceof Error ? error.message : String(error);
                     console.error(`Error downloading file for raindrop ${raindrop._id}:`, error);
-                    
-                    try {
-                        const debugFilePath = normalizePath(`${targetPath}/${generatedFilename}.download-error.log`);
-                        const debugContent = `URL: ${raindrop.link}\nError: ${errorMsg}\n`;
-                        await app.vault.adapter.write(debugFilePath, debugContent);
-                    } catch (writeErr) {
-                        console.error('Failed to write download error log:', writeErr);
-                    }
                 }
             }
 
@@ -736,34 +698,15 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             if (this.settings.isTemplateSystemEnabled) {
                 finalContent = this.renderTemplate(this.getTemplateForType(raindrop.type, options), enhancedDataForRender);
             } else {
-                const frontmatterData: Record<string, unknown> = {
-                    id: raindrop._id,
-                    title: raindrop.title,
-                    description: raindrop.excerpt || '',
-                    source: raindrop.link,
-                    type: raindrop.type,
-                    created: raindrop.created,
-                    lastupdate: raindrop.lastUpdate,
-                };
-
+                let frontmatter = `---\nid: ${raindrop._id}\ntitle: "${raindrop.title.replace(/"/g, '\\"')}"\ndescription: "${(raindrop.excerpt || '').replace(/"/g, '\\"')}"\nsource: ${raindrop.link}\ntype: ${raindrop.type}\ncreated: ${raindrop.created}\nlastupdate: ${raindrop.lastUpdate}\n`;
                 if (templateData.collectionId) {
-                    frontmatterData.collectionId = templateData.collectionId;
-                    frontmatterData.collectionTitle = collectionIdToNameMap.get(raindrop.collection?.$id || 0) || 'Unknown';
-                    frontmatterData.collectionPath = pathSegments.join('/');
-                    if (groupTitle) frontmatterData.collectionGroup = groupTitle;
-                    if (templateData.collectionParentId) frontmatterData.collectionParentId = templateData.collectionParentId;
+                    frontmatter += `collectionId: ${templateData.collectionId}\ncollectionTitle: "${templateData.collectionTitle}"\ncollectionPath: "${templateData.collectionPath}"\n`;
+                    if (templateData.collectionGroup) frontmatter += `collectionGroup: "${templateData.collectionGroup}"\n`;
+                    if (templateData.collectionParentId) frontmatter += `collectionParentId: ${templateData.collectionParentId}\n`;
                 }
-
-                const tags = [...(raindrop.tags || []), ...settingsFMTags].map(t => t.trim().replace(TAG_SPACE_REGEX, '_').replace(TAG_INVALID_CHARS_REGEX, ''));
-                if (tags.length > 0) {
-                    frontmatterData.tags = tags;
-                }
-
-                if (raindrop.cover) {
-                    frontmatterData[this.settings.bannerFieldName] = raindrop.cover;
-                }
-
-                const frontmatter = createYamlFrontmatter(frontmatterData, ['title', 'description', 'collectionTitle', 'collectionPath', 'collectionGroup']);
+                frontmatter += `tags:\n${[...(raindrop.tags || []), ...settingsFMTags].map(t => `  - ${t.trim().replace(TAG_SPACE_REGEX, '_').replace(TAG_INVALID_CHARS_REGEX, '')}`).join('\n')}\n`;
+                if (raindrop.cover) frontmatter += `${this.settings.bannerFieldName}: ${raindrop.cover}\n`;
+                frontmatter += `---\n\n`;
 
                 let noteBody = (raindrop.cover ? `![${sanitizeFileName(raindrop.title) || 'Cover'}](${raindrop.cover})\n\n` : "") + `# ${sanitizeMarkdownContent(raindrop.title)}\n\n`;
                 if (raindrop.excerpt) noteBody += `## Description\n${sanitizeMarkdownContent(raindrop.excerpt)}\n\n`;
@@ -1031,7 +974,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 overrideTemplates: false
             };
 
-            await this.processRaindrops([raindropItem], vaultPath, appendTags || '', loadingNotice, singleItemOptions, collectionsData, collectionIdToNameMap, new Set<string>(), collectionToGroupMap);
+            await this.processRaindrops([raindropItem], vaultPath, appendTags || '', singleItemOptions.useRaindropTitleForFileName, loadingNotice, singleItemOptions, collectionsData, collectionIdToNameMap, new Set<string>(), collectionToGroupMap);
         } catch (error) {
             loadingNotice.hide();
             new Notice(`Error during quick import of item ${itemId}: ${error instanceof Error ? error.message : (typeof error === 'object' && error !== null ? JSON.stringify(error) : String(error))}`, 10000);
@@ -1054,7 +997,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         const perPage = 50;
 
         try {
-            const allItems: RaindropItem[] = [];
+            let allItems: RaindropItem[] = [];
             let page = 0;
             let hasMore = true;
 

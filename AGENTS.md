@@ -1,18 +1,16 @@
 # Make It Rain - AI Coding Agent Guide
 
-*Current Version: 1.10.0*
+*Current Version: 1.9.1*
 
 ## Architecture Overview
 
 Make It Rain is an Obsidian plugin that imports Raindrop.io bookmarks into structured Markdown notes. The codebase follows a modular architecture centered around a main plugin class (`RaindropToObsidian`) that orchestrates:
 
 - **API Integration**: Fetches bookmarks from Raindrop.io with rate limiting and retry logic
-- **Template System**: Nesting-aware AST-based template engine with Handlebars-like syntax for note formatting with content-type-specific templates
-- **Group & Collection Hierarchy**: Integrates Raindrop.io sidebar Groups into the folder structure
-- **File Management**: Creates organized folder structures mirroring Raindrop Groups and Collections with automatic folder notes
-- **Data Processing**: Transforms Raindrop items into YAML-frontmatter Markdown notes with robust type-coercion-safe YAML serialization
+- **Template System**: Custom Handlebars-like syntax for note formatting with content-type-specific templates
+- **File Management**: Creates organized folder structures mirroring Raindrop collections with automatic folder notes
+- **Data Processing**: Transforms Raindrop items into YAML-frontmatter Markdown notes
 - **File Downloads**: Downloads native Raindrop file attachments (PDFs, EPUBs, images, videos, etc.)
-- **Archive Scraping**: Extracts structured Markdown from Raindrop's permanent archives using Obsidian's native `htmlToMarkdown()`
 
 ## Key Components
 
@@ -27,11 +25,8 @@ Make It Rain is an Obsidian plugin that imports Raindrop.io bookmarks into struc
 
 - `apiUtils.ts`: Rate limiting, authentication, API request handling
 - `fileUtils.ts`: File system operations, path sanitization, folder creation
-- `yamlUtils.ts`: YAML frontmatter generation with proper escaping (null-keyword quoting, reserved-word force-quoting)
+- `yamlUtils.ts`: YAML frontmatter generation with proper escaping
 - `formatUtils.ts`: Date formatting, tag processing, domain extraction
-- `scrapingUtils.ts`: Archive content extraction using Obsidian's `htmlToMarkdown()`, with 303 redirect handling for S3
-- `securityUtils.ts`: Content sanitization and executable code defanging
-- `templateUtils.ts`: Nesting-aware AST parser and evaluator for template rendering
 
 ## Critical Workflows
 
@@ -60,7 +55,6 @@ npm run version      # Bump version in manifest.json and versions.json
 ```
 
 ### Code Quality
-
 ```bash
 npm run lint         # Run ESLint on source files
 npm run lint:md      # Lint markdown files
@@ -76,8 +70,7 @@ npm run lint:md      # Lint markdown files
 
 ### Template System
 
-Nesting-aware AST-based template engine implemented in `templateUtils.ts` with support for content-type-specific templates:
-
+Custom Handlebars-like syntax implemented in `renderTemplate()` method with support for content-type-specific templates:
 - `{{variable}}`: Simple variable substitution
 - `{{#if condition}}...{{/if}}`: Conditional blocks with optional `{{else}}`
 - `{{#each array}}...{{/each}}`: Iteration over arrays
@@ -149,9 +142,9 @@ Tags are normalized by:
 1. Converting spaces to underscores
 2. Removing invalid YAML characters: `#[?"*<>:|]`
 
-### Collection & Group Hierarchy
+### Collection Hierarchy
 
-Raindrop.io sidebar Groups are fetched and cached alongside collections. Collections are fetched in parallel (root + nested) and cached for 5 minutes. Paths are built by traversing Group → parent → child relationships to create nested folder structures. The `{{collectionGroup}}` variable provides access to the Group name, and `{{collectionPath}}` includes the Group as the root segment.
+Collections are fetched in parallel (root + nested) and cached for 5 minutes. Paths are built by traversing parent-child relationships to create nested folder structures.
 
 ### Rate Limiting
 
@@ -160,7 +153,6 @@ Configurable rate limiter (default 60 req/min) with automatic delays between API
 ### File Downloads
 
 For native Raindrop uploads and attachments:
-
 - Detects via `raindrop.link` containing `/v2/` and `/file`
 - Downloads via authenticated API endpoint with S3 redirect handling
 - Validates file type via MIME types and magic bytes
@@ -169,9 +161,7 @@ For native Raindrop uploads and attachments:
 - Configurable via settings toggle
 
 ### Automatic Folder Notes
-
 Plugin automatically generates index notes for collection folders:
-
 - Creates `FOLDER_NAME.md` files in each collection directory
 - Includes YAML frontmatter with collection metadata
 - Lists all notes in the collection with wiki-links

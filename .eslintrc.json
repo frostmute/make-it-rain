@@ -9,13 +9,14 @@
     "node": true,
     "es6": true
   },
-  "plugins": ["@typescript-eslint", "sentence-case"],
+  "plugins": ["@typescript-eslint", "obsidian", "sentence-case"],
   "extends": [
     "eslint:recommended",
-    "plugin:@typescript-eslint/recommended"
+    "plugin:@typescript-eslint/recommended",
+    "plugin:obsidian/recommended"
   ],
   "rules": {
     "no-constant-condition": "off",
-    "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }]
+    "obsidian/settings-tab": "off"
   }
 }

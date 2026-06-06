@@ -11,12 +11,6 @@ yarn-error.log*
 # IDE
 .vscode/*
 .idea/
-.vscode-test/
-.specstory
-/.specstory
-config.toml
-.protect.json
-statistics.json
 
 # OS
 .DS_Store
@@ -46,9 +40,9 @@ knowledge_graph*.html
 .env.*
 
 # Tooling
+GEMINI.md
+gemini.md
 /src/index.ts
 /docs/meta/
 coverage/
 AGENTS.md
-issue-58-comment.md
-make-it-rain-beta-fix-58b.zip

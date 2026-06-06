@@ -1,6 +1,6 @@
 {
   "name": "make-it-rain",
-  "version": "1.10.0",
+  "version": "1.9.1",
   "description": "Pull your Raindrop.io bookmarks with flexible filtering, customization, and location options.",
   "main": "main.js",
   "scripts": {
@@ -29,9 +29,12 @@
     "@types/node": "^20.11.24",
     "@typescript-eslint/eslint-plugin": "^7.1.0",
     "@typescript-eslint/parser": "^7.1.0",
+    "builtin-modules": "^3.3.0",
     "esbuild": "^0.25.4",
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-obsidian": "^2.31.0",
+    "eslint-plugin-obsidianmd": "0.0.1",
     "eslint-plugin-prettier": "^5.5.5",
     "eslint-plugin-sentence-case": "^0.0.6",
     "jest": "^29.7.0",
