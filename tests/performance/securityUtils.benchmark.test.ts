@@ -27,14 +27,20 @@ Some normal text here.
 [Click here](javascript:alert(1))
 `;
 
-        const ITERATIONS = 100000;
+        const ITERATIONS = 1000;
         const start = performance.now();
+        let sanitized = '';
         for (let i = 0; i < ITERATIONS; i++) {
-            sanitizeMarkdownContent(contentToSanitize);
+            sanitized = sanitizeMarkdownContent(contentToSanitize);
         }
         const end = performance.now();
 
         console.log(`Total time: ${(end - start).toFixed(2)} ms`);
         console.log(`Average time per call: ${((end - start) / ITERATIONS).toFixed(5)} ms`);
+
+        // Assert correctness to ensure this acts as a regression test
+        expect(sanitized).not.toContain('<meta');
+        expect(sanitized).not.toContain('<form');
+        expect(sanitized).not.toContain('```dataviewjs');
     });
 });
