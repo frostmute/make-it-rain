@@ -281,7 +281,7 @@ export class RaindropFetchModal extends Modal {
         const searchInput = new TextComponent(selectionContainer)
             .setPlaceholder('Search collections to add...')
             .onChange(async (value: string) => {
-                await renderCollections(value.toLowerCase());
+                renderCollections(value.toLowerCase());
             });
         searchInput.inputEl.addClass('make-it-rain-full-width');
         

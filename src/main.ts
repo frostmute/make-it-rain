@@ -870,8 +870,8 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                     if (Array.isArray(array)) {
                         for (const item of array) {
                             const nextContext = typeof item === 'object' && item !== null
-                                ? { ...context, ...item } as Record<string, unknown>
-                                : { ...context, 'this': item } as Record<string, unknown>;
+                                ? Object.assign({}, context, item) as Record<string, unknown>
+                                : Object.assign({}, context, { 'this': item }) as Record<string, unknown>;
                             result += renderAST(node.thenBranch!, nextContext, blocks, includeDepth);
                         }
                     }

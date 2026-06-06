@@ -708,11 +708,13 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                 data = response;
             }
 
-            if (data.result) {
+            if (typeof data === 'object' && data !== null && 'result' in data && data.result) {
                 new Notice('API token is valid!', 5000);
             } else {
                 // Handle specific API error messages if available
-                const errorMessage = data.message || data.error || 'Invalid API token or connection issue.';
+                const errorMessage = (typeof data === 'object' && data !== null && 'message' in data) ? data.message 
+                                   : (typeof data === 'object' && data !== null && 'error' in data) ? data.error 
+                                   : 'Invalid API token or connection issue.';
                 new Notice(`API token verification failed: ${errorMessage}`, 10000);
                 console.error('API token verification failed:', errorMessage);
             }
