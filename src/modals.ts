@@ -98,7 +98,7 @@ export class RaindropFetchModal extends Modal {
                 }
 
                 checkbox.addEventListener('change', () => {
-                    let currentSet = new Set(this.collections.split(',').map(s => s.trim()).filter(Boolean));
+                    const currentSet = new Set(this.collections.split(',').map(s => s.trim()).filter(Boolean));
                     if (checkbox.checked) {
                         currentSet.add(col.title);
                     } else {
@@ -115,7 +115,7 @@ export class RaindropFetchModal extends Modal {
                     }
                 });
 
-                label.appendChild(document.createTextNode(' ' + col.title));
+                label.appendChild(activeWindow.document.createTextNode(' ' + col.title));
             });
         });
 
@@ -324,7 +324,7 @@ export class RaindropFetchModal extends Modal {
                 displayPath: getDisplayPath(col)
             })).sort((a, b) => a.displayPath.localeCompare(b.displayPath));
 
-            collectionsWithPaths.forEach(({ col, displayPath }) => {
+            collectionsWithPaths.forEach(({ displayPath }) => {
                 const item = listContainer.createDiv({ cls: 'make-it-rain-collection-item' });
                 item.createEl('span', { text: displayPath });
                 item.onClickEvent(() => {

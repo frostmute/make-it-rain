@@ -9,14 +9,12 @@
     "node": true,
     "es6": true
   },
-  "plugins": ["@typescript-eslint", "obsidian", "sentence-case"],
+  "plugins": ["@typescript-eslint", "sentence-case"],
   "extends": [
     "eslint:recommended",
-    "plugin:@typescript-eslint/recommended",
-    "plugin:obsidian/recommended"
+    "plugin:@typescript-eslint/recommended"
   ],
   "rules": {
-    "no-constant-condition": "off",
-    "obsidian/settings-tab": "off"
+    "no-constant-condition": "off"
   }
 }

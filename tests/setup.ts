@@ -200,6 +200,10 @@ class MockSetting {
         return this;
     }
 
+    setHeading() {
+        return this;
+    }
+
     setClass(cls: string) {
         return this;
     }
