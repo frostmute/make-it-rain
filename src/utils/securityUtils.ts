@@ -73,6 +73,12 @@ export function sanitizeMarkdownContent(content: unknown): string {
     return sanitized;
 }
 
+const NAMED_ENTITIES = [
+    { key: '&colon;', val: ':', regex: /&colon;/ig },
+    { key: '&tab;', val: '\t', regex: /&tab;/ig },
+    { key: '&newline;', val: '\n', regex: /&newline;/ig }
+];
+
 /**
  * Helper to do basic HTML entity decoding for security checks.
  */
@@ -83,15 +89,12 @@ function decodeHTMLEntity(entity: string): string {
     const decMatch = entity.match(/&#([0-9]+);/);
     if (decMatch) return entity.replace(/&#[0-9]+;/, String.fromCharCode(parseInt(decMatch[1], 10)));
 
-    const namedMap: Record<string, string> = {
-        '&colon;': ':',
-        '&tab;': '\t',
-        '&newline;': '\n'
-    };
-    for (const [key, val] of Object.entries(namedMap)) {
-        if (entity.toLowerCase().includes(key)) {
-            return entity.replace(new RegExp(key, 'ig'), val);
+    const lowerEntity = entity.toLowerCase();
+    for (const { key, val, regex } of NAMED_ENTITIES) {
+        if (lowerEntity.includes(key)) {
+            return entity.replace(regex, val);
         }
     }
+
     return entity;
 }
