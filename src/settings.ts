@@ -562,10 +562,9 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                         this.plugin.settings.defaultTemplate = DEFAULT_SETTINGS.defaultTemplate;
                         await this.plugin.saveSettings();
                         
-                        // We must re-render the whole tab here because updating the input fields 
-                        // within the TextAreaComponent from outside its closure isn't natively supported 
-                        // without maintaining references. Since this is a rare action, re-rendering is fine.
-                        this.display();
+                        // Clear and re-render just the named templates container
+                        namedTemplatesContainer.empty();
+                        this.renderNamedTemplates(namedTemplatesContainer);
                         new Notice("Default template has been reset.");
                     });
             });

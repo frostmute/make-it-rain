@@ -288,60 +288,68 @@ export class RaindropFetchModal extends Modal {
         const scrollContainer = selectionContainer.createDiv({ cls: 'make-it-rain-collections-container' });
         const listContainer = scrollContainer.createDiv({ cls: 'make-it-rain-collection-list' });
 
-        const renderCollections = async (filter: string = '') => {
+        const renderCollections = (searchText: string = '') => {
             listContainer.empty();
-            const collections = await this.plugin.fetchAllUserCollections();
+            listContainer.createEl('div', { text: 'Loading collections...', cls: 'make-it-rain-loading-text' });
             
-            if (collections.length === 0) {
-                listContainer.createEl('div', { text: 'No collections found.', cls: 'make-it-rain-empty-state' });
-                return;
-            }
-
-            const filtered = collections.filter(c => c.title.toLowerCase().includes(filter));
-            
-            if (filtered.length === 0) {
-                listContainer.createEl('div', { text: 'No matching collections.', cls: 'make-it-rain-empty-state' });
-                return;
-            }
-
-            // Grouping and sorting can be added here if needed
-            const collectionMap = new Map<number, RaindropCollection>();
-            collections.forEach(c => collectionMap.set(c._id, c));
-
-            const getDisplayPath = (collection: RaindropCollection): string => {
-                const parts: string[] = [collection.title];
-                let current: RaindropCollection | undefined = collection;
-                while (current?.parent?.$id) {
-                    current = collectionMap.get(current.parent.$id);
-                    if (current) parts.unshift(current.title);
-                    else break;
+            this.plugin.fetchAllUserCollections().then(collections => {
+                listContainer.empty();
+                
+                if (collections.length === 0) {
+                    listContainer.createEl('div', { text: 'No collections found.', cls: 'make-it-rain-empty-state' });
+                    return;
                 }
-                return parts.join(' > ');
-            };
 
-            const collectionsWithPaths = filtered.map(col => ({
-                col,
-                displayPath: getDisplayPath(col)
-            })).sort((a, b) => a.displayPath.localeCompare(b.displayPath));
+                const filtered = collections.filter(c => c.title.toLowerCase().includes(searchText));
+                
+                if (filtered.length === 0) {
+                    listContainer.createEl('div', { text: 'No matching collections.', cls: 'make-it-rain-empty-state' });
+                    return;
+                }
 
-            collectionsWithPaths.forEach(({ displayPath }) => {
-                const item = listContainer.createDiv({ cls: 'make-it-rain-collection-item' });
-                item.createEl('span', { text: displayPath });
-                item.onClickEvent(() => {
-                    const current = collectionsTextComponent.getValue();
-                    const toAdd = displayPath;
-                    const existingEntries = current.split(',').map(s => s.trim()).filter(Boolean);
-                    if (existingEntries.includes(toAdd)) return;
-                    
-                    const newValue = current ? `${current}, ${toAdd}` : toAdd;
-                    collectionsTextComponent.setValue(newValue);
-                    this.collections = newValue;
-                    new Notice(`Added collection: ${toAdd}`);
+                // Grouping and sorting can be added here if needed
+                const collectionMap = new Map<number, RaindropCollection>();
+                collections.forEach(c => collectionMap.set(c._id, c));
+
+                const getDisplayPath = (collection: RaindropCollection): string => {
+                    const parts: string[] = [collection.title];
+                    let current: RaindropCollection | undefined = collection;
+                    while (current?.parent?.$id) {
+                        current = collectionMap.get(current.parent.$id);
+                        if (current) parts.unshift(current.title);
+                        else break;
+                    }
+                    return parts.join(' > ');
+                };
+
+                const collectionsWithPaths = filtered.map(col => ({
+                    col,
+                    displayPath: getDisplayPath(col)
+                })).sort((a, b) => a.displayPath.localeCompare(b.displayPath));
+
+                collectionsWithPaths.forEach(({ displayPath }) => {
+                    const item = listContainer.createDiv({ cls: 'make-it-rain-collection-item' });
+                    item.createEl('span', { text: displayPath });
+                    item.onClickEvent(() => {
+                        const current = collectionsTextComponent.getValue();
+                        const toAdd = displayPath;
+                        const existingEntries = current.split(',').map(s => s.trim()).filter(Boolean);
+                        if (existingEntries.includes(toAdd)) return;
+                        
+                        const newValue = current ? `${current}, ${toAdd}` : toAdd;
+                        collectionsTextComponent.setValue(newValue);
+                        this.collections = newValue;
+                        new Notice(`Added collection: ${toAdd}`);
+                    });
                 });
+            }).catch(error => {
+                listContainer.empty();
+                listContainer.createEl('div', { text: 'Failed to load collections. Check your API token.', cls: 'make-it-rain-error-text' });
+                console.error('Error fetching collections in modal:', error);
             });
         };
 
-        void renderCollections();
+        renderCollections();
 
         new Setting(contentEl)
             .setName('Include subcollections')
