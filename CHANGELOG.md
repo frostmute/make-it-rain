@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-06-09
+
+### Fixed
+
+- **Community Review Resolutions**: Addressed all final warnings and suggestions from the Obsidian plugin community review (Issues #78-#80).
+  - Replaced type `any` assertions with strong structural type checking.
+  - Enforced stricter type safety for loaded settings and object assignments.
+  - Addressed floating promises in modals.
+  - Fixed synchronous UI rendering behaviors.
+- **Performance Optimizations**: 
+  - Optimized regex instantiation in `securityUtils.ts`.
+  - Improved `decodeHTMLEntity` execution speed.
+
 ## [1.10.0] - 2026-06-05
 
 ### Added
