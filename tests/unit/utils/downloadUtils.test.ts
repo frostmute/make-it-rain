@@ -146,7 +146,7 @@ describe('downloadUtils', () => {
             // Verify second call does NOT contain Authorization
             const secondCallArgs = (requestUrl as jest.Mock).mock.calls[1][0];
             expect(secondCallArgs.url).toBe('https://s3.amazonaws.com/bucket/file.png');
-            expect(secondCallArgs.headers).toBeUndefined();
+            expect(secondCallArgs.headers).toEqual({});
         });
     });
 });
