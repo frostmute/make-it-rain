@@ -160,9 +160,16 @@ export async function downloadBinaryFile(
                 return { status: response.status, error: 'Redirect received but no Location header found' };
             }
             
+            const headers: Record<string, string> = {};
+            // DO NOT send Raindrop auth headers to S3 pre-signed URLs or they will fail signature validation
+            if (!location.includes('amazonaws.com') && !location.includes('X-Amz-Signature=')) {
+                headers['Authorization'] = `Bearer ${apiToken}`;
+            }
+
             const redirectResponse = await requestUrl({
                 url: location,
                 method: 'GET',
+                headers,
                 throw: false
             });
 
