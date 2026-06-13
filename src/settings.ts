@@ -348,7 +348,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                 bannerFieldName: this.plugin.settings.bannerFieldName,
                 url: sampleData.link,
                 domain: new URL(sampleData.link).hostname,
-                renderedType: sampleData.type.charAt(0).toUpperCase() + sampleData.type.slice(1),
+                renderedType: (() => { const types: Record<string, string> = { link: 'web link', article: 'article', image: 'image', video: 'video', doc: 'document', audio: 'audio', book: 'book' }; return types[sampleData.type] || sampleData.type; })(),
                 formattedCreatedDate: new Date(sampleData.created).toLocaleDateString(),
                 formattedUpdatedDate: new Date(sampleData.lastupdate).toLocaleDateString(),
                 formattedTags: sampleData.tags.map(t => `#${t}`).join(' ')
