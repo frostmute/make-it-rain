@@ -379,10 +379,10 @@
     border-radius: var(--radius-m);
     padding: 12px;
     background-color: var(--background-primary);
-    overflow-y: auto;
     max-height: 600px;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
 .make-it-rain-preview-header {
