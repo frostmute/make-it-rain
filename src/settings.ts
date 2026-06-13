@@ -324,23 +324,33 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
     }
 
     private renderTemplatePreview(container: HTMLElement, template: string) {
-        container.empty();
-        
-        const header = container.createDiv({ cls: 'make-it-rain-preview-header' });
-        header.createEl('span', { text: 'Live Preview', cls: 'make-it-rain-preview-title' });
-        
-        const sampleSelector = new DropdownComponent(header);
-        Object.values(RaindropTypes).forEach(t => {
-            sampleSelector.addOption(t, t.charAt(0).toUpperCase() + t.slice(1));
-        });
-        sampleSelector.setValue(this.selectedSampleType)
-            .onChange((value) => {
-                this.selectedSampleType = value as RaindropType;
-                this.renderTemplatePreview(container, template);
-            });
+        // Store the latest template on the container so the dropdown's onChange
+        // handler (created once) always re-renders with the current value.
+        container.dataset.template = template;
 
-        const previewContent = container.createDiv({ cls: 'make-it-rain-preview-content' });
-        
+        let header = container.querySelector('.make-it-rain-preview-header') as HTMLElement | null;
+        let previewContent = container.querySelector('.make-it-rain-preview-content') as HTMLElement | null;
+
+        if (!header) {
+            header = container.createDiv({ cls: 'make-it-rain-preview-header' });
+            header.createEl('span', { text: 'Live Preview', cls: 'make-it-rain-preview-title' });
+
+            const sampleSelector = new DropdownComponent(header);
+            Object.values(RaindropTypes).forEach(t => {
+                sampleSelector.addOption(t, t.charAt(0).toUpperCase() + t.slice(1));
+            });
+            sampleSelector.setValue(this.selectedSampleType)
+                .onChange((value) => {
+                    this.selectedSampleType = value as RaindropType;
+                    this.renderTemplatePreview(container, container.dataset.template || '');
+                });
+
+            previewContent = container.createDiv({ cls: 'make-it-rain-preview-content' });
+        }
+
+        const content = previewContent as HTMLElement;
+        content.empty();
+
         try {
             const sampleData = SAMPLE_RAINDROPS[this.selectedSampleType];
             const dataForRender = {
@@ -357,9 +367,9 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
             const rendered = this.plugin.renderTemplate(template, dataForRender);
             
             // Render as Markdown
-            void MarkdownRenderer.render(this.app, rendered, previewContent, '', this.plugin);
+            void MarkdownRenderer.render(this.app, rendered, content, '', this.plugin);
         } catch (e) {
-            previewContent.createEl('div', { 
+            content.createEl('div', { 
                 text: `Preview error: ${e instanceof Error ? e.message : String(e)}`,
                 cls: 'make-it-rain-preview-error'
             });
