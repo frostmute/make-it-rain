@@ -644,7 +644,8 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
             previewAreaDiv.empty();
             
             const typeStr = this.selectedTemplateType;
-            const typeKey = typeStr as keyof typeof this.plugin.settings.contentTypeTemplates;
+            // Map API type to internal property name (document -> doc to avoid global conflicts)
+            const typeKey = (typeStr === 'document' ? 'doc' : typeStr) as keyof typeof this.plugin.settings.contentTypeTemplates;
             const isEnabled = this.plugin.settings.contentTypeTemplateToggles[typeKey];
             
             new Setting(editorAreaDiv)
