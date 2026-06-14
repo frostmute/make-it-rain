@@ -4,6 +4,7 @@ baseurl: /make-it-rain
 url: https://frostmute.github.io
 remote_theme: pmarsceill/just-the-docs
 color_scheme: dark
+nav_expand: true
 plugins:
   - jekyll-remote-theme
 exclude:

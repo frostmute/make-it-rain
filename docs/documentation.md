@@ -1,7 +1,8 @@
 ---
-layout: page
+layout: home
 title: Make It Rain - Documentation
-nav_order: 2
+permalink: /
+nav_order: 1
 ---
 
 # Make It Rain - Documentation
