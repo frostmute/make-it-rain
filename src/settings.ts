@@ -1,7 +1,7 @@
 import { App, PluginSettingTab, Setting, TextComponent, ButtonComponent, Notice, request, ToggleComponent, TextAreaComponent, MarkdownRenderer, DropdownComponent } from 'obsidian';
 import type RaindropToObsidian from './main';
 import { RaindropTypes, RaindropType } from './types';
-import { MakeItRainSettings } from './types';
+import { MakeItRainSettings, TemplateData } from './types';
 import { VariableBrowserModal } from './modals';
 import { validateTemplate, ValidationResult } from './template-validator';
 import { SAMPLE_RAINDROPS } from './utils/sampleData';
@@ -325,14 +325,16 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
         this.plugin = plugin;
     }
 
-    private renderTemplatePreview(container: HTMLElement, template: string) {
+    private renderTemplatePreview(container: HTMLElement, template: string, lockedSampleType?: RaindropType) {
         // Store the latest template on the container so the dropdown's onChange
         // handler (created once) always re-renders with the current value.
         container.dataset.template = template;
 
         // Each preview keeps its own sample type so switching the dropdown in
-        // one panel doesn't leak into others.
-        let selectedSampleType = this.previewSampleTypes.get(container);
+        // one panel doesn't leak into others. When a sample type is locked (e.g.
+        // for content-type overrides) the dropdown is omitted and that type is
+        // always used.
+        let selectedSampleType = lockedSampleType ?? this.previewSampleTypes.get(container);
         if (!selectedSampleType) {
             selectedSampleType = RaindropTypes.LINK;
             this.previewSampleTypes.set(container, selectedSampleType);
@@ -345,15 +347,17 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
             header = container.createDiv({ cls: 'make-it-rain-preview-header' });
             header.createEl('span', { text: 'Live Preview', cls: 'make-it-rain-preview-title' });
 
-            const sampleSelector = new DropdownComponent(header);
-            Object.values(RaindropTypes).forEach(t => {
-                sampleSelector.addOption(t, t.charAt(0).toUpperCase() + t.slice(1));
-            });
-            sampleSelector.setValue(selectedSampleType)
-                .onChange((value) => {
-                    this.previewSampleTypes.set(container, value as RaindropType);
-                    this.renderTemplatePreview(container, container.dataset.template || '');
+            if (!lockedSampleType) {
+                const sampleSelector = new DropdownComponent(header);
+                Object.values(RaindropTypes).forEach(t => {
+                    sampleSelector.addOption(t, t.charAt(0).toUpperCase() + t.slice(1));
                 });
+                sampleSelector.setValue(selectedSampleType)
+                    .onChange((value) => {
+                        this.previewSampleTypes.set(container, value as RaindropType);
+                        this.renderTemplatePreview(container, container.dataset.template || '');
+                    });
+            }
 
             previewContent = container.createDiv({ cls: 'make-it-rain-preview-content' });
         }
@@ -372,7 +376,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                 formattedCreatedDate: new Date(sampleData.created).toLocaleDateString(),
                 formattedUpdatedDate: new Date(sampleData.lastupdate).toLocaleDateString(),
                 formattedTags: sampleData.tags.map(t => `#${t}`).join(' ')
-            } as any;
+            } as unknown as TemplateData;
 
             const rendered = this.plugin.renderTemplate(template, dataForRender);
             
@@ -680,7 +684,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                         const updateValidation = (val: string) => {
                             const result = validateTemplate(val, this.plugin.settings);
                             this.renderValidationResult(validationContainer, result);
-                            this.renderTemplatePreview(previewAreaDiv, val);
+                            this.renderTemplatePreview(previewAreaDiv, val, this.selectedTemplateType as RaindropType);
                         };
 
                         text.setPlaceholder('Enter template for ' + typeStr + ' items...')
