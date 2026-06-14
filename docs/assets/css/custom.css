@@ -1,0 +1,167 @@
+/* Terminal-dark theme for just-the-docs */
+/* Override defaults with near-black + green terminal aesthetic */
+
+/* Import-not needed - just-the-docs auto-includes custom.css */
+
+/* Root variables */
+:root {
+  --body-background-color: #0a0a0a;
+  --sidebar-color: #0f0f0f;
+  --search-background-color: #0a0a0a;
+  
+  /* Text */
+  --body-heading-color: #00ff00;
+  --body-text-color: #c0ffc0;
+  --link-color: #00ff00;
+  --link-active-color: #00ff00;
+  --link-hover-color: #33ff33;
+  
+  /* Sidebar */
+  --sidebar-active-color: #00ff00;
+  --sidebar-hover-color: #33ff33;
+  --nav-active-background-color: rgba(0, 255, 0, 0.08);
+  --nav-hover-background-color: rgba(0, 255, 0, 0.04);
+  
+  /* Code blocks */
+  --code-background-color: #000000;
+  --code-text-color: #00ff00;
+  --feedback-color: #00ff00;
+  
+  /* Borders */
+  --border-color: rgba(0, 255, 0, 0.15);
+  --table-border-color: rgba(0, 255, 0, 0.15);
+  
+  /* Buttons */
+  --btn-primary-color: #00ff00;
+  --btn-primary-background-color: #0a0a0a;
+  --btn-primary-border-color: #00ff00;
+}
+
+/* Body */
+body {
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace !important;
+}
+
+/* Site title */
+.site-title {
+  font-family: 'SF Mono', 'Fira Code', monospace !important;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* Glow effect on links */
+a {
+  text-shadow: 0 0 0 transparent;
+  transition: text-shadow 0.2s ease, color 0.2s ease;
+}
+
+a:hover {
+  text-shadow: 0 0 8px rgba(0, 255, 0, 0.4);
+}
+
+/* Terminal prompt before headings */
+h1::before, h2::before, h3::before {
+  color: #00ff00;
+  opacity: 0.5;
+}
+
+/* Make code blocks look like terminal */
+div.highlight, figure.highlight {
+  background-color: #000000 !important;
+  border: 1px solid rgba(0, 255, 0, 0.2) !important;
+  border-radius: 4px;
+}
+
+div.highlight pre, figure.highlight pre {
+  color: #00ff00 !important;
+}
+
+div.highlight .c, 
+div.highlight .c1, 
+div.highlight .cm,
+figure.highlight .c, 
+figure.highlight .c1, 
+figure.highlight .cm {
+  color: #4a7a4a !important;  /* comments in dark green */
+}
+
+/* Sidebar nav active indicator */
+.nav-list-item .nav-list-link.active {
+  border-left: 3px solid #00ff00;
+  padding-left: 13px;
+}
+
+/* Search box terminal style */
+#search-input {
+  background-color: #000000;
+  color: #00ff00;
+  border: 1px solid rgba(0, 255, 0, 0.3);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+#search-input::placeholder {
+  color: rgba(0, 255, 0, 0.4);
+}
+
+#search-input:focus {
+  border-color: #00ff00;
+  box-shadow: 0 0 0 2px rgba(0, 255, 0, 0.15);
+}
+
+/* Copy button terminal style */
+.copy-code-button {
+  background-color: #0a0a0a;
+  color: #00ff00;
+  border: 1px solid rgba(0, 255, 0, 0.2);
+}
+
+.copy-code-button:hover {
+  background-color: #001a00;
+  border-color: #00ff00;
+}
+
+/* Table terminal style */
+table tr:nth-child(even) {
+  background-color: rgba(0, 255, 0, 0.02);
+}
+
+table th {
+  background-color: #0f0f0f;
+  color: #00ff00;
+  border-bottom: 2px solid rgba(0, 255, 0, 0.3);
+}
+
+/* Scrollbar terminal style */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 0, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 0, 0.5);
+}
+
+/* Selection color */
+::selection {
+  background-color: rgba(0, 255, 0, 0.2);
+  color: #ffffff;
+}
+
+/* Sidebar background override */
+.navigation, .side-bar {
+  background-color: #0f0f0f !important;
+}
+
+/* Main content background */
+.main-content, .page {
+  background-color: #0a0a0a !important;
+}
