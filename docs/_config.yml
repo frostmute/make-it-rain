@@ -4,7 +4,7 @@ baseurl: /make-it-rain
 url: https://frostmute.github.io
 plugins:
   - jekyll-remote-theme
-theme: jekyll-theme-hacker
+remote_theme: itstorque/jekyll-shell-theme
 exclude:
   - meta/
   - ".DS_Store"
