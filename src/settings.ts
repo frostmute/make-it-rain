@@ -1,9 +1,10 @@
-import { App, PluginSettingTab, Setting, TextComponent, ButtonComponent, Notice, request, ToggleComponent, TextAreaComponent } from 'obsidian';
+import { App, PluginSettingTab, Setting, TextComponent, ButtonComponent, Notice, request, ToggleComponent, TextAreaComponent, MarkdownRenderer, DropdownComponent } from 'obsidian';
 import type RaindropToObsidian from './main';
-import { RaindropTypes } from './types';
+import { RaindropTypes, RaindropType } from './types';
 import { MakeItRainSettings } from './types';
 import { VariableBrowserModal } from './modals';
 import { validateTemplate, ValidationResult } from './template-validator';
+import { SAMPLE_RAINDROPS } from './utils/sampleData';
 
 export const DEFAULT_SETTINGS: MakeItRainSettings = {
     apiToken: '',
@@ -315,10 +316,74 @@ tags:
 export class RaindropToObsidianSettingTab extends PluginSettingTab {
     plugin: RaindropToObsidian;
     selectedTemplateType: string = 'link';
+    // Per-preview sample type selection, keyed by preview container so that
+    // each preview panel maintains its own independent dropdown state.
+    private previewSampleTypes: WeakMap<HTMLElement, RaindropType> = new WeakMap();
 
     constructor(app: App, plugin: RaindropToObsidian) {
         super(app, plugin);
         this.plugin = plugin;
+    }
+
+    private renderTemplatePreview(container: HTMLElement, template: string) {
+        // Store the latest template on the container so the dropdown's onChange
+        // handler (created once) always re-renders with the current value.
+        container.dataset.template = template;
+
+        // Each preview keeps its own sample type so switching the dropdown in
+        // one panel doesn't leak into others.
+        let selectedSampleType = this.previewSampleTypes.get(container);
+        if (!selectedSampleType) {
+            selectedSampleType = RaindropTypes.LINK;
+            this.previewSampleTypes.set(container, selectedSampleType);
+        }
+
+        let header = container.querySelector('.make-it-rain-preview-header') as HTMLElement | null;
+        let previewContent = container.querySelector('.make-it-rain-preview-content') as HTMLElement | null;
+
+        if (!header) {
+            header = container.createDiv({ cls: 'make-it-rain-preview-header' });
+            header.createEl('span', { text: 'Live Preview', cls: 'make-it-rain-preview-title' });
+
+            const sampleSelector = new DropdownComponent(header);
+            Object.values(RaindropTypes).forEach(t => {
+                sampleSelector.addOption(t, t.charAt(0).toUpperCase() + t.slice(1));
+            });
+            sampleSelector.setValue(selectedSampleType)
+                .onChange((value) => {
+                    this.previewSampleTypes.set(container, value as RaindropType);
+                    this.renderTemplatePreview(container, container.dataset.template || '');
+                });
+
+            previewContent = container.createDiv({ cls: 'make-it-rain-preview-content' });
+        }
+
+        const content = previewContent as HTMLElement;
+        content.empty();
+
+        try {
+            const sampleData = SAMPLE_RAINDROPS[selectedSampleType];
+            const dataForRender = {
+                ...sampleData,
+                bannerFieldName: this.plugin.settings.bannerFieldName,
+                url: sampleData.link,
+                domain: new URL(sampleData.link).hostname,
+                renderedType: (() => { const types: Record<string, string> = { link: 'web link', article: 'article', image: 'image', video: 'video', doc: 'document', audio: 'audio', book: 'book' }; return types[sampleData.type] || sampleData.type; })(),
+                formattedCreatedDate: new Date(sampleData.created).toLocaleDateString(),
+                formattedUpdatedDate: new Date(sampleData.lastupdate).toLocaleDateString(),
+                formattedTags: sampleData.tags.map(t => `#${t}`).join(' ')
+            } as any;
+
+            const rendered = this.plugin.renderTemplate(template, dataForRender);
+            
+            // Render as Markdown
+            void MarkdownRenderer.render(this.app, rendered, content, '', this.plugin);
+        } catch (e) {
+            content.createEl('div', { 
+                text: `Preview error: ${e instanceof Error ? e.message : String(e)}`,
+                cls: 'make-it-rain-preview-error'
+            });
+        }
     }
 
     display(): void {
@@ -531,14 +596,20 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
 
         // Default Template
         new Setting(templateWrapper).setName('Default Global Template').setHeading();
-        new Setting(templateWrapper)
+        
+        const defaultTmplSideBySide = templateWrapper.createDiv({ cls: 'make-it-rain-side-by-side' });
+        const defaultEditorArea = defaultTmplSideBySide.createDiv({ cls: 'make-it-rain-editor-area' });
+        const defaultPreviewArea = defaultTmplSideBySide.createDiv({ cls: 'make-it-rain-preview-area' });
+
+        new Setting(defaultEditorArea)
             .setDesc('This template is used if no content-type specific template is active below.')
             .setClass('setting-item-stacked')
             .addTextArea((text: TextAreaComponent) => {
-                const validationContainer = templateWrapper.createDiv('make-it-rain-validation-container');
+                const validationContainer = defaultEditorArea.createDiv('make-it-rain-validation-container');
                 const updateValidation = (val: string) => {
                     const result = validateTemplate(val, this.plugin.settings);
                     this.renderValidationResult(validationContainer, result);
+                    this.renderTemplatePreview(defaultPreviewArea, val);
                 };
 
                 text.setPlaceholder('Enter your default handlebars template here.')
@@ -561,10 +632,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                     .onClick(async () => {
                         this.plugin.settings.defaultTemplate = DEFAULT_SETTINGS.defaultTemplate;
                         await this.plugin.saveSettings();
-                        
-                        // Clear and re-render just the named templates container
-                        namedTemplatesContainer.empty();
-                        this.renderNamedTemplates(namedTemplatesContainer);
+                        this.display(); // Re-render everything to update preview
                         new Notice("Default template has been reset.");
                     });
             });
@@ -577,13 +645,17 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
         const editorCard = templateWrapper.createDiv({ cls: 'make-it-rain-settings-card' });
         
         const typeSelectorDiv = editorCard.createDiv({ cls: 'make-it-rain-type-selector' });
-        const editorAreaDiv = editorCard.createDiv({ cls: 'make-it-rain-editor-area' });
+        const sideBySideDiv = editorCard.createDiv({ cls: 'make-it-rain-side-by-side' });
+        const editorAreaDiv = sideBySideDiv.createDiv({ cls: 'make-it-rain-editor-area' });
+        const previewAreaDiv = sideBySideDiv.createDiv({ cls: 'make-it-rain-preview-area' });
         
         const renderEditor = () => {
             editorAreaDiv.empty();
+            previewAreaDiv.empty();
             
             const typeStr = this.selectedTemplateType;
-            const typeKey = typeStr as keyof typeof this.plugin.settings.contentTypeTemplates;
+            // Map API type to internal property name (document -> doc to avoid global conflicts)
+            const typeKey = (typeStr === 'document' ? 'doc' : typeStr) as keyof typeof this.plugin.settings.contentTypeTemplates;
             const isEnabled = this.plugin.settings.contentTypeTemplateToggles[typeKey];
             
             new Setting(editorAreaDiv)
@@ -608,6 +680,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                         const updateValidation = (val: string) => {
                             const result = validateTemplate(val, this.plugin.settings);
                             this.renderValidationResult(validationContainer, result);
+                            this.renderTemplatePreview(previewAreaDiv, val);
                         };
 
                         text.setPlaceholder('Enter template for ' + typeStr + ' items...')
@@ -638,6 +711,11 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                                 }
                             });
                     });
+            } else {
+                previewAreaDiv.createEl('div', { 
+                    text: 'Enable the override to see a live preview of this content-type template.',
+                    cls: 'setting-item-description'
+                });
             }
         };
 
@@ -796,13 +874,18 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                         });
                 });
 
-            new Setting(templateDiv)
+            const sideBySide = templateDiv.createDiv({ cls: 'make-it-rain-side-by-side' });
+            const editorArea = sideBySide.createDiv({ cls: 'make-it-rain-editor-area' });
+            const previewArea = sideBySide.createDiv({ cls: 'make-it-rain-preview-area' });
+
+            new Setting(editorArea)
                 .setClass('setting-item-stacked')
                 .addTextArea((text) => {
-                    const validationContainer = templateDiv.createDiv('make-it-rain-validation-container');
+                    const validationContainer = editorArea.createDiv('make-it-rain-validation-container');
                     const updateValidation = (val: string) => {
                         const result = validateTemplate(val, this.plugin.settings);
                         this.renderValidationResult(validationContainer, result);
+                        this.renderTemplatePreview(previewArea, val);
                     };
 
                     text.setValue(namedTemplates[name])
