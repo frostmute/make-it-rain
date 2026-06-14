@@ -1,3 +1,8 @@
+---
+layout: page
+title: Make It Rain - Documentation
+---
+
 # Make It Rain - Documentation
 
 > **Pull your Raindrop.io bookmarks with flexible filtering, customization, and location options.**
