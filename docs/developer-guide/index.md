@@ -1,3 +1,10 @@
+---
+layout: page
+title: Developer Guide
+has_children: true
+nav_order: 3
+---
+
 # Developer Guide
 
 This guide provides information for developers who want to contribute to the Make It Rain plugin.

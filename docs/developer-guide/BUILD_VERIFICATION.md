@@ -1,3 +1,10 @@
+---
+layout: page
+title: "Build Verification"
+parent: "Developer Guide"
+nav_order: 5
+---
+
 # Build Verification Guide
 
 Quick reference for verifying your builds are successful.

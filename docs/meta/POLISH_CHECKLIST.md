@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # 🌧️ Make It Rain - Project Polish Checklist
 
 ## ✅ Complete Project Polish - All Items Done

@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Release v1.7.2
 
 ## 🐛 Bug Fixes

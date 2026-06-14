@@ -1,3 +1,10 @@
+---
+layout: page
+title: "Frequently Asked Questions"
+parent: "User Guide"
+nav_order: 10
+---
+
 # Frequently Asked Questions
 
 This document answers common questions about the Make It Rain plugin.

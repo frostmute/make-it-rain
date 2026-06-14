@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Testing Quick Start 🚀
 
 Get up and running with tests in 2 minutes!

@@ -1,3 +1,10 @@
+---
+layout: page
+title: "Template System for Make It Rain"
+parent: "User Guide"
+nav_order: 7
+---
+
 # Template System for Make It Rain
 
 The Make It Rain plugin includes a powerful template system that gives you complete control over how your Raindrop.io bookmarks are formatted in Obsidian notes. This guide will walk you through using and customizing templates to suit your specific needs.

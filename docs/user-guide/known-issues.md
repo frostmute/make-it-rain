@@ -1,3 +1,10 @@
+---
+layout: page
+title: "Known Issues and Workarounds"
+parent: "User Guide"
+nav_order: 11
+---
+
 # Known Issues and Workarounds
 
 This document lists known issues with the Make It Rain plugin and their workarounds.

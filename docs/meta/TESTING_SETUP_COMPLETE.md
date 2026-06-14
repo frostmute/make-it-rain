@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Testing Setup Complete! 🎉
 
 This document summarizes the comprehensive testing infrastructure that has been added to the Make It Rain plugin.

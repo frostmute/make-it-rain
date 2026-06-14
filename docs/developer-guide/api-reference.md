@@ -1,3 +1,10 @@
+---
+layout: page
+title: "API Reference"
+parent: "Developer Guide"
+nav_order: 3
+---
+
 # API Reference
 
 This document provides detailed technical documentation for the Make It Rain plugin's API and internal interfaces.

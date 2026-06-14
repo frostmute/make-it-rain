@@ -1,3 +1,10 @@
+---
+layout: page
+title: User Guide
+has_children: true
+nav_order: 2
+---
+
 # 📖 User Guide - Make It Rain
 
 Welcome to the Make It Rain User Guide! This comprehensive documentation will help you get the most out of

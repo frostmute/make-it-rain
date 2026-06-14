@@ -1,3 +1,10 @@
+---
+layout: page
+title: "Testing Guide"
+parent: "Developer Guide"
+nav_order: 4
+---
+
 # Testing Guide
 
 This guide provides comprehensive information about testing the Make It Rain plugin.

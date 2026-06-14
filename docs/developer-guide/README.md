@@ -1,3 +1,10 @@
+---
+layout: page
+title: "Getting Started"
+parent: "Developer Guide"
+nav_order: 1
+---
+
 # 👨‍💻 Developer Guide
 
 Welcome to the Make It Rain **Developer Guide**! This comprehensive documentation will help you set up a development environment, understand the codebase, and contribute to the project.

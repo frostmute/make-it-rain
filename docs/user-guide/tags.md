@@ -1,3 +1,10 @@
+---
+layout: page
+title: "Tag Management"
+parent: "User Guide"
+nav_order: 5
+---
+
 # Tag Management
 
 This guide explains how Make It Rain handles tags from Raindrop.io and integrates them with your Obsidian vault.

@@ -1,3 +1,10 @@
+---
+layout: page
+title: "Architecture"
+parent: "Developer Guide"
+nav_order: 2
+---
+
 # Developer Guide
 
 This guide provides information for developers who want to contribute to the Make It Rain plugin.

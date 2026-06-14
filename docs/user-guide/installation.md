@@ -1,3 +1,10 @@
+---
+layout: page
+title: "Installation Guide"
+parent: "User Guide"
+nav_order: 1
+---
+
 # Installation Guide
 
 ## Requirements

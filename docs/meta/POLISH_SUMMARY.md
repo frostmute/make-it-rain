@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # 🌧️ Make It Rain Documentation Polish - Summary
 
 ## ✅ Completed Tasks

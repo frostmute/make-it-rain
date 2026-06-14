@@ -1,3 +1,10 @@
+---
+layout: page
+title: "Configuration Guide"
+parent: "User Guide"
+nav_order: 2
+---
+
 # Configuration Guide
 
 This guide covers all the configuration options available in the Make It Rain plugin.

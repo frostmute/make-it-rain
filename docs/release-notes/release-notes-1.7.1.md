@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 ## Release v1.7.1
 
 This release brings several user experience enhancements and bug fixes to Make It Rain!

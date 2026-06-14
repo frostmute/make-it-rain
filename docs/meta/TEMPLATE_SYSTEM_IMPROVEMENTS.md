@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # 🌧️ Template System Improvements - Comprehensive Analysis & Proposals
 
 ## Executive Summary

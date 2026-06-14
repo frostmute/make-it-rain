@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Release Notes for Make It Rain v1.5.1
 
 - 2025-05-17

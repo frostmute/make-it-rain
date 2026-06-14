@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Repository Cleanup Plan 🧹
 
 This document outlines a comprehensive cleanup strategy to organize the Make It Rain repository.

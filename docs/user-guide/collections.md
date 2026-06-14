@@ -1,3 +1,10 @@
+---
+layout: page
+title: "Collection Management"
+parent: "User Guide"
+nav_order: 4
+---
+
 # Collection Management
 
 This guide explains how Make It Rain handles Raindrop.io collections and their integration with your Obsidian vault.

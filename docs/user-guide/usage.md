@@ -1,3 +1,10 @@
+---
+layout: page
+title: "Usage Guide"
+parent: "User Guide"
+nav_order: 3
+---
+
 # Usage Guide
 
 This guide explains how to use the Make It Rain plugin to fetch your raindrop.io bookmarks into Obsidian.

@@ -1,6 +1,7 @@
 ---
 layout: home
 title: Make It Rain Documentation
+nav_order: 1
 ---
 
 Make It Rain enables you to seamlessly import your bookmarks from [Raindrop.io](https://raindrop.io) into your [Obsidian.md](https://obsidian.md) vault. Integrate your web clippings, articles, and references into your knowledge base with flexibility and ease.

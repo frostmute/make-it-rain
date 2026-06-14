@@ -1,3 +1,10 @@
+---
+layout: page
+title: "Troubleshooting"
+parent: "Developer Guide"
+nav_order: 6
+---
+
 # Troubleshooting Guide
 
 Common issues and solutions for the Make It Rain plugin development.

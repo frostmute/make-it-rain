@@ -1,3 +1,10 @@
+---
+layout: page
+title: "Template Gallery"
+parent: "User Guide"
+nav_order: 8
+---
+
 # Template Gallery
 
 This document provides a collection of pre-built templates for various use cases with the Make It Rain plugin. Adapt them to your needs or use them as inspiration for your own creations!

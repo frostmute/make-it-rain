@@ -1,6 +1,7 @@
 ---
 layout: page
 title: Make It Rain - Documentation
+nav_order: 2
 ---
 
 # Make It Rain - Documentation

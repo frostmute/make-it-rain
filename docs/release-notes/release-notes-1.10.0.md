@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Release v1.10.0
 
 ## ✨ New Features

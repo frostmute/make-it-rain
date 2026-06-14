@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Meta Documentation
 
 This directory contains temporary and meta documentation files created during the development and setup of the Make It Rain plugin. These files are not part of the main user or developer documentation.

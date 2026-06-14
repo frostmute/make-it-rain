@@ -1,3 +1,10 @@
+---
+layout: page
+title: "Note Structure in Make It Rain"
+parent: "User Guide"
+nav_order: 6
+---
+
 # Note Structure in Make It Rain
 
 This guide explains the structure of notes created by the Make It Rain plugin, both with the default (fallback) mechanism and when using the template system.

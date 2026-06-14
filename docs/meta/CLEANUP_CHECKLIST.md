@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # Repository Cleanup Checklist ✅
 
 Quick reference checklist for cleaning up the repository.

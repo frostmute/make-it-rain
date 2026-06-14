@@ -1,3 +1,7 @@
+---
+nav_exclude: true
+---
+
 # 🌧️ README Enhancements - Complete Polish
 
 ## Overview
