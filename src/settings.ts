@@ -316,7 +316,9 @@ tags:
 export class RaindropToObsidianSettingTab extends PluginSettingTab {
     plugin: RaindropToObsidian;
     selectedTemplateType: string = 'link';
-    selectedSampleType: RaindropType = RaindropTypes.LINK;
+    // Per-preview sample type selection, keyed by preview container so that
+    // each preview panel maintains its own independent dropdown state.
+    private previewSampleTypes: WeakMap<HTMLElement, RaindropType> = new WeakMap();
 
     constructor(app: App, plugin: RaindropToObsidian) {
         super(app, plugin);
@@ -327,6 +329,14 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
         // Store the latest template on the container so the dropdown's onChange
         // handler (created once) always re-renders with the current value.
         container.dataset.template = template;
+
+        // Each preview keeps its own sample type so switching the dropdown in
+        // one panel doesn't leak into others.
+        let selectedSampleType = this.previewSampleTypes.get(container);
+        if (!selectedSampleType) {
+            selectedSampleType = RaindropTypes.LINK;
+            this.previewSampleTypes.set(container, selectedSampleType);
+        }
 
         let header = container.querySelector('.make-it-rain-preview-header') as HTMLElement | null;
         let previewContent = container.querySelector('.make-it-rain-preview-content') as HTMLElement | null;
@@ -339,9 +349,9 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
             Object.values(RaindropTypes).forEach(t => {
                 sampleSelector.addOption(t, t.charAt(0).toUpperCase() + t.slice(1));
             });
-            sampleSelector.setValue(this.selectedSampleType)
+            sampleSelector.setValue(selectedSampleType)
                 .onChange((value) => {
-                    this.selectedSampleType = value as RaindropType;
+                    this.previewSampleTypes.set(container, value as RaindropType);
                     this.renderTemplatePreview(container, container.dataset.template || '');
                 });
 
@@ -352,7 +362,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
         content.empty();
 
         try {
-            const sampleData = SAMPLE_RAINDROPS[this.selectedSampleType];
+            const sampleData = SAMPLE_RAINDROPS[selectedSampleType];
             const dataForRender = {
                 ...sampleData,
                 bannerFieldName: this.plugin.settings.bannerFieldName,
