@@ -1,8 +1,7 @@
 ---
-layout: home
+layout: default
 title: Make It Rain - Documentation
 permalink: /
-nav_order: 1
 ---
 
 # Make It Rain - Documentation

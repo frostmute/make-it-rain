@@ -2,11 +2,13 @@ title: Make It Rain Documentation
 description: Documentation for the 'Make It Rain' Obsidian plugin
 baseurl: /make-it-rain
 url: https://frostmute.github.io
-remote_theme: pmarsceill/just-the-docs
-color_scheme: dark
-nav_expand: true
+remote_theme: b2a3e8/jekyll-theme-console
+header_pages:
+  - user-guide/index.md
+  - developer-guide/index.md
 plugins:
   - jekyll-remote-theme
 exclude:
   - meta/
+  - testsite/
   - ".DS_Store"
