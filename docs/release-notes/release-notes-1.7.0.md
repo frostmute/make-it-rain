@@ -24,7 +24,7 @@
 
 ### Fixed
 
-- **Type Filtering in Modal**: Addressed an issue where fetching raindrops from the modal ignored the selected type filter (logic added to filter `allData` by `options.filterType` in `main.ts` *after* fetching and *before* passing to `processRaindrops`).
+- **Type Filtering in Modal**: Addressed an issue where fetching raindrops from the modal ignored the selected type filter (logic added to filter `allData` by `options.filterType` in [`main.ts`](../../src/main.ts) *after* fetching and *before* passing to `processRaindrops`).
 - **Collection Hierarchy Replication**: Ensured the collection/sub-collection hierarchy from Raindrop.io is correctly replicated as a folder structure in Obsidian during import (achieved by using `getFullPathSegments` and `createFolderStructure` in `processRaindrop`).
 - **Frontmatter Rendering (YAML vs. JSON)**: Resolved an issue where the `collection` frontmatter field could render as a JSON object in Obsidian's reading view by flattening the collection data for the template.
 - **Template Helper Rendering**: Fixed issues where template helper functions like `{{formatDate created}}` were not rendering in the "Details" section by pre-calculating these values and adding them to `enhancedDataForRender`.
@@ -32,6 +32,6 @@
 
 ### Documentation
 
-- Updated `docs/template-system.md`: Added `id: {{id}}` to the default template example and ensured consistency with flattened collection variables, `lastupdate`, and pre-calculated variables.
-- Updated `docs/template-gallery.md`: Added `id: {{id}}` to relevant template examples and ensured overall consistency with current template variables and structure.
-- Verified `docs/templates.md` (variable lists) and `docs/note-structure.md` (fallback structure) are consistent with the latest changes.
+- Updated [`docs/user-guide/template-system.md`](../user-guide/template-system.md): Added `id: {{id}}` to the default template example and ensured consistency with flattened collection variables, `lastupdate`, and pre-calculated variables.
+- Updated [`docs/user-guide/template-gallery.md`](../user-guide/template-gallery.md): Added `id: {{id}}` to relevant template examples and ensured overall consistency with current template variables and structure.
+- Verified [`docs/user-guide/note-structure.md`](../user-guide/note-structure.md) (fallback structure) is consistent with the latest changes.

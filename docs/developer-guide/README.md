@@ -104,12 +104,12 @@ Make It Rain is an **Obsidian plugin** built with TypeScript that integrates wit
 
 | Module | Purpose | Key Files |
 |--------|---------|-----------|
-| **UI Layer** | User interface components | `main.ts`, `settingsTab.ts`, `modals/` |
-| **API Client** | Raindrop.io integration | `api/` |
-| **Processing** | Core business logic | `processors/`, `utils/` |
-| **Templates** | Template rendering | `templates/`, `template-system/` |
-| **File I/O** | Vault file operations | `utils/fileUtils.ts` |
-| **Types** | TypeScript definitions | `types.ts` |
+| **UI Layer** | User interface components | [`main.ts`](../../src/main.ts), [`settings.ts`](../../src/settings.ts), [`modals.ts`](../../src/modals.ts) |
+| **API Client** | Raindrop.io integration | [`utils/apiUtils.ts`](../../src/utils/apiUtils.ts) |
+| **Processing** | Core business logic | [`main.ts`](../../src/main.ts), [`utils/`](../../src/utils/) |
+| **Templates** | Template parsing and rendering | [`template-validator.ts`](../../src/template-validator.ts), [`utils/templateUtils.ts`](../../src/utils/templateUtils.ts) |
+| **File I/O** | Vault file operations | [`utils/fileUtils.ts`](../../src/utils/fileUtils.ts) |
+| **Types** | TypeScript definitions | [`types.ts`](../../src/types.ts) |
 
 ### Data Flow
 
@@ -152,16 +152,20 @@ Make It Rain is an **Obsidian plugin** built with TypeScript that integrates wit
 ```json
 {
   "dependencies": {
-    "obsidian": "latest",
-    "handlebars": "^4.7.7"
+    "handlebars": "^4.7.8"
   },
   "devDependencies": {
-    "typescript": "^5.0.0",
-    "@types/jest": "^29.0.0",
-    "jest": "^29.0.0",
-    "esbuild": "^0.17.0",
-    "@typescript-eslint/eslint-plugin": "^5.x",
-    "@typescript-eslint/parser": "^5.x"
+    "typescript": "5.3.3",
+    "obsidian": "github:obsidianmd/obsidian-api",
+    "@types/jest": "^29.5.14",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "ts-jest": "^29.4.9",
+    "esbuild": "^0.25.4",
+    "eslint": "^8.57.1",
+    "@typescript-eslint/eslint-plugin": "^7.1.0",
+    "@typescript-eslint/parser": "^7.1.0",
+    "markdownlint-cli": "^0.45.0"
   }
 }
 ```
@@ -182,34 +186,31 @@ make-it-rain/
 ├── src/
 │   ├── main.ts                 # Plugin entry point
 │   ├── types.ts                # TypeScript type definitions
-│   ├── settingsTab.ts          # Settings UI component
-│   ├── api/
-│   │   ├── raindropClient.ts   # Raindrop.io API wrapper
-│   │   └── types.ts            # API response types
-│   ├── modals/
-│   │   ├── FetchModal.ts       # Bulk fetch UI
-│   │   └── QuickImportModal.ts # Quick import UI
-│   ├── processors/
-│   │   ├── raindropProcessor.ts # Core processing logic
-│   │   └── templateProcessor.ts # Template rendering
-│   ├── template-system/
-│   │   ├── templates.ts        # Default templates
-│   │   └── helpers.ts          # Template helper functions
+│   ├── settings.ts             # Settings UI component
+│   ├── modals.ts               # Bulk fetch and quick import modals
+│   ├── template-validator.ts   # Template validation
 │   └── utils/
+│       ├── apiUtils.ts         # Raindrop.io API client and rate limiting
+│       ├── templateUtils.ts    # Template parsing and rendering
 │       ├── fileUtils.ts        # File I/O operations
-│       ├── apiUtils.ts         # API helper functions
-│       ├── logger.ts           # Logging utilities
-│       └── validators.ts       # Input validation
+│       ├── formatUtils.ts      # Date, tag, and domain formatting
+│       ├── yamlUtils.ts        # YAML frontmatter generation
+│       ├── securityUtils.ts    # Content sanitization
+│       ├── scrapingUtils.ts    # Archive content extraction
+│       └── downloadUtils.ts    # Native Raindrop attachment downloads
 ├── tests/
 │   ├── unit/                   # Unit tests
 │   ├── integration/            # Integration tests
-│   └── mocks/                  # Test fixtures and mocks
+│   ├── mocks/                  # Test fixtures and mocks
+│   └── setup.ts                # Shared test setup and mocks
 ├── docs/
 │   ├── index.md                # Documentation index
 │   ├── user-guide/             # User documentation
-│   └── developer-guide/        # Developer documentation
+│   ├── developer-guide/        # Developer documentation
+│   └── release-notes/          # Version history
 ├── scripts/
-│   └── esbuild.config.mjs      # Build configuration
+│   ├── esbuild.config.mjs      # Build configuration
+│   └── copy-to-vault.mjs       # Local deployment helper
 ├── manifest.json               # Plugin metadata
 ├── package.json                # npm configuration
 ├── tsconfig.json               # TypeScript configuration
@@ -222,14 +223,18 @@ make-it-rain/
 
 | File | Purpose |
 |------|---------|
-| `main.ts` | Plugin initialization and command registration |
-| `settingsTab.ts` | Settings UI for API token, templates, etc. |
-| `raindropClient.ts` | Wrapper around Raindrop.io REST API |
-| `raindropProcessor.ts` | Main logic for processing raindrops |
-| `FetchModal.ts` | UI for bulk import with filtering |
-| `QuickImportModal.ts` | UI for importing single bookmarks |
-| `fileUtils.ts` | Vault file operations (create, write, folders) |
-| `types.ts` | Type definitions for plugin data |
+| [`main.ts`](../../src/main.ts) | Plugin initialization, command registration, and raindrop processing |
+| [`settings.ts`](../../src/settings.ts) | Settings UI for API token, templates, and plugin preferences |
+| [`modals.ts`](../../src/modals.ts) | UI for bulk import with filtering and quick single-item import |
+| [`utils/apiUtils.ts`](../../src/utils/apiUtils.ts) | Raindrop.io REST API client with rate limiting and retries |
+| [`utils/templateUtils.ts`](../../src/utils/templateUtils.ts) | Nesting-aware AST template parser and renderer |
+| [`utils/fileUtils.ts`](../../src/utils/fileUtils.ts) | Vault file operations (create, write, folders) |
+| [`utils/formatUtils.ts`](../../src/utils/formatUtils.ts) | Date formatting, tag normalization, and domain extraction |
+| [`utils/yamlUtils.ts`](../../src/utils/yamlUtils.ts) | Type-coercion-safe YAML frontmatter generation |
+| [`utils/securityUtils.ts`](../../src/utils/securityUtils.ts) | Markdown content sanitization |
+| [`utils/scrapingUtils.ts`](../../src/utils/scrapingUtils.ts) | Archive content extraction via `htmlToMarkdown()` |
+| [`utils/downloadUtils.ts`](../../src/utils/downloadUtils.ts) | Native Raindrop attachment downloads |
+| [`types.ts`](../../src/types.ts) | Type definitions for plugin data |
 
 ---
 
@@ -283,14 +288,8 @@ npm run test:watch
 # Generate coverage report
 npm run test:coverage
 
-# Build for production
+# Build for production (includes type check)
 npm run build
-
-# Clean build artifacts
-npm run build:clean
-
-# Type check (no compilation)
-npm run type-check
 
 # Lint markdown documentation
 npm run lint:md
@@ -643,7 +642,7 @@ Access logs in:
 | Issue | Solution |
 |---|---|
 | **Changes not reflected** | Reload plugin (Ctrl/Cmd+R) or restart Obsidian |
-| **Type errors** | Run `npm run type-check` |
+| **Type errors** | Run `npm run build` to see TypeScript output |
 | **Build fails** | Check `npm run build` output |
 | **Tests fail** | Review error message, check mock setup |
 
@@ -662,7 +661,7 @@ Access logs in:
 
 - **[Obsidian Plugin Docs](https://docs.obsidian.md/Plugins/Getting+started/Build+a+plugin)** - Official plugin development
 - **[TypeScript Handbook](https://www.typescriptlang.org/docs/)** - TypeScript reference
-- **[Handlebars Docs](https://handlebarsjs.com/)** - Template syntax
+- **[Template System Guide](../user-guide/template-system.md)** - Custom Handlebars-like template syntax
 - **[Raindrop.io API](https://developer.raindrop.io/)** - API reference
 
 ---
@@ -674,7 +673,7 @@ Before submitting a pull request, ensure:
 - [ ] Code follows style guidelines (this document)
 - [ ] All tests pass (`npm test`)
 - [ ] New features have tests
-- [ ] TypeScript compiles without errors (`npm run type-check`)
+- [ ] TypeScript compiles without errors (`npm run build`)
 - [ ] Documentation is updated (if needed)
 - [ ] Commit messages are descriptive
 - [ ] No console.log() statements in production code

@@ -15,7 +15,7 @@ Common issues and solutions for the Make It Rain plugin development.
 
 ### Symptoms
 
-When running bash scripts (like `cleanup.sh`), you see errors like:
+When running bash scripts (like cleanup scripts), you see errors like:
 
 ```
 cleanup.sh: line 2: $'\r': command not found

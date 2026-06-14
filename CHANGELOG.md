@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Enforced stricter type safety for loaded settings and object assignments.
   - Addressed floating promises in modals.
   - Fixed synchronous UI rendering behaviors.
-- **Performance Optimizations**: 
+- **Performance Optimizations**:
   - Optimized regex instantiation in `securityUtils.ts`.
   - Improved `decodeHTMLEntity` execution speed.
 
@@ -118,8 +118,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Documentation
 
-- Updated `docs/template-system.md` and `docs/template-gallery.md` to reflect the new template variables and structure, including the mandatory `id: {{id}}` field.
-- Verified `docs/templates.md` (variable lists) and `docs/note-structure.md` (fallback structure) are consistent.
+- Updated `docs/user-guide/template-system.md` and `docs/user-guide/template-gallery.md` to reflect the new template variables and structure, including the mandatory `id: {{id}}` field.
+- Verified `docs/user-guide/note-structure.md` (fallback structure) is consistent.
 
 ## [1.6.1] - 2025-05-24
 

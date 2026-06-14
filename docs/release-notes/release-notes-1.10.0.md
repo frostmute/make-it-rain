@@ -25,13 +25,13 @@ Rewrote the archive scraping pipeline to use Obsidian's native `htmlToMarkdown()
 - **Leading-Quote Data Loss**: Strings starting with `"` or `'` in frontmatter are now properly escaped.
 - **Stale Closure in Template Rename**: Fixed stale closure bug in named template rename handler.
 - **Frontmatter Injection in Folder Notes**: Folder note generation now uses `createYamlFrontmatter`.
-- **ESLint & Tooling Configuration**: Downgraded `eslint-plugin-obsidianmd` to `0.0.1` for ESLint 8 compatibility; disabled buggy `obsidian/settings-tab` rule; fixed `no-case-declarations` and deprecated `substr` usage.
+- **ESLint & Tooling Configuration**: Downgraded `eslint-plugin-obsidianmd` to `0.0.1` for ESLint 8 compatibility; disabled buggy obsidian/settings-tab rule; fixed `no-case-declarations` and deprecated `substr` usage.
 
 ## 🔧 Changed
 
-- Removed unused `RaindropType` import from `apiUtils.ts`.
-- Optimized array concatenation in `main.ts`.
-- Eliminated redundant type guard in `main.ts`.
+- Removed unused `RaindropType` import from [`apiUtils.ts`](../../src/utils/apiUtils.ts).
+- Optimized array concatenation in [`main.ts`](../../src/main.ts).
+- Eliminated redundant type guard in [`main.ts`](../../src/main.ts).
 - Removed dead assignment in `processRaindrop`.
-- Removed unused `col` variable in `main.ts`.
+- Removed unused `col` variable in [`main.ts`](../../src/main.ts).
 - Performance: split var node name once during template validation.

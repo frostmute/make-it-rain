@@ -55,3 +55,6 @@ make-it-rain-beta-fix-58b.zip
 
 # AI Tool Artifacts
 .hermes/
+
+# oma docs generated artifacts
+docs/generated/

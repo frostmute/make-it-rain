@@ -165,9 +165,9 @@ describe('Import Workflow', () => {
 
 The plugin is structured around a functional utility pattern driven by a central orchestrator class:
 
-- **`RaindropToObsidian` (`main.ts`)**: The core orchestrator managing settings, plugin lifecycle, and the execution of bulk/quick import workflows.
-- **UI Modules (`modals.ts`, `settings.ts`)**: Provide the user interface for input and configuration.
-- **Utility Modules (`src/utils/*.ts`)**: Isolate pure data transformation and specific side-effects (e.g., `apiUtils` for network, `fileUtils` for Obsidian vault writes, `template-validator` for AST parsing).
+- **`RaindropToObsidian` ([`main.ts`](../../src/main.ts))**: The core orchestrator managing settings, plugin lifecycle, and the execution of bulk/quick import workflows.
+- **UI Modules ([`modals.ts`](../../src/modals.ts), [`settings.ts`](../../src/settings.ts))**: Provide the user interface for input and configuration.
+- **Utility Modules ([`src/utils/`](../../src/utils/))**: Isolate pure data transformation and specific side-effects (e.g., [`apiUtils.ts`](../../src/utils/apiUtils.ts) for network, [`fileUtils.ts`](../../src/utils/fileUtils.ts) for Obsidian vault writes, [`template-validator.ts`](../../src/template-validator.ts) for AST parsing).
 
 ### Modular Data Flow
 
