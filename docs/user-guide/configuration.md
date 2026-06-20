@@ -122,7 +122,7 @@ You can create specific templates for different types of content.
 
 For advanced users who want to modify the plugin beyond the provided settings, you can:
 
-1. Access the plugin's data file at `.obsidian/plugins/make-it-rain/data.json` in your vault
+1. Access the plugin's data file at `<!-- oma-docs:ignore-start -->.obsidian/plugins/make-it-rain/data.json<!-- oma-docs:ignore-end -->` in your vault
 2. Edit the JSON configuration directly (make a backup first!)
 3. Restart Obsidian for changes to take effect
 

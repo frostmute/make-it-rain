@@ -364,7 +364,7 @@ npm run test:coverage
 
 ## 📚 Resources
 
-- **Quick Start**: [TESTING_QUICK_START.md](../../TESTING_QUICK_START.md)
+- **Quick Start**: [TESTING_QUICK_START.md](TESTING_QUICK_START.md)
 - **Full Guide**: [docs/testing-guide.md](../developer-guide/testing-guide.md)
 - **Test Examples**: [tests/](tests/)
 - **Mock Data**: [tests/mocks/raindropData.ts](tests/mocks/raindropData.ts)
