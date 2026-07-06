@@ -2,7 +2,7 @@ import { App, PluginSettingTab, Setting, TextComponent, ButtonComponent, Notice,
 import type RaindropToObsidian from './main';
 import { RaindropTypes, RaindropType } from './types';
 import { MakeItRainSettings, TemplateData } from './types';
-import { VariableBrowserModal } from './modals';
+import { VariableBrowserModal, TemplateSharingModal } from './modals';
 import { validateTemplate, ValidationResult } from './template-validator';
 import { SAMPLE_RAINDROPS } from './utils/sampleData';
 
@@ -578,6 +578,28 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                     });
             });
 
+        new Setting(templateWrapper)
+            .setName('Import Template')
+            .setDesc('Import a template shared by the community.')
+            .addButton((button: ButtonComponent) => {
+                button
+                    .setButtonText("Import template")
+                    .setIcon("import")
+                    .onClick(() => {
+                        new TemplateSharingModal(this.app, this.plugin, 'import', '', async (jsonStr) => {
+                            const imported = this.plugin.importTemplate(jsonStr);
+                            if (imported) {
+                                // Just an example: we could save it as a named template, or apply it to a type.
+                                // Let's just create a named template for it.
+                                this.plugin.settings.namedTemplates[imported.name] = imported.template;
+                                await this.plugin.saveSettings();
+                                this.display();
+                                new Notice(`Template "${imported.name}" imported successfully!`);
+                            }
+                        }).open();
+                    });
+            });
+
         // Reusable Parts (Named Templates)
         new Setting(templateWrapper).setName('Reusable Partials').setHeading();
         const namedDesc = templateWrapper.createEl('p', { cls: 'setting-item-description' });
@@ -638,6 +660,16 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                         await this.plugin.saveSettings();
                         this.display(); // Re-render everything to update preview
                         new Notice("Default template has been reset.");
+                    });
+            })
+            .addButton((button: ButtonComponent) => {
+                button
+                    .setButtonText("Export")
+                    .setIcon("export")
+                    .setTooltip("Export this template")
+                    .onClick(() => {
+                        const jsonStr = this.plugin.exportTemplate('default', this.plugin.settings.defaultTemplate, 'Default Global Template');
+                        new TemplateSharingModal(this.app, this.plugin, 'export', jsonStr).open();
                     });
             });
 
@@ -713,6 +745,16 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                                 } else {
                                     new Notice('Error: Default template for ' + typeStr + ' not found.', 7000);
                                 }
+                            });
+                    })
+                    .addButton((button: ButtonComponent) => {
+                        button
+                            .setButtonText("Export")
+                            .setIcon("export")
+                            .setTooltip('Export ' + typeStr + ' template')
+                            .onClick(() => {
+                                const jsonStr = this.plugin.exportTemplate(`content-type-${typeStr}`, this.plugin.settings.contentTypeTemplates[typeKey], `Content-Type Template for ${typeStr}`);
+                                new TemplateSharingModal(this.app, this.plugin, 'export', jsonStr).open();
                             });
                     });
             } else {
@@ -862,6 +904,14 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                             // Clear and re-render just the named templates container
                             container.empty();
                             this.renderNamedTemplates(container);
+                        });
+                })
+                .addButton((button) => {
+                    button.setIcon('export')
+                        .setTooltip('Export template')
+                        .onClick(() => {
+                            const jsonStr = this.plugin.exportTemplate(`partial-${name}`, namedTemplates[name], `Named Partial Template: ${name}`);
+                            new TemplateSharingModal(this.app, this.plugin, 'export', jsonStr).open();
                         });
                 })
                 .addButton((button) => {

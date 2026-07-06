@@ -194,3 +194,11 @@ export type RaindropHighlight = {
     readonly color?: string;
     readonly created: string;
 };
+
+export interface SharedTemplate {
+    version: string;
+    name: string;
+    template: string;
+    description?: string;
+    author?: string;
+}
