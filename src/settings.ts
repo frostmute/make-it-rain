@@ -588,16 +588,18 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                     .onClick(() => {
                         new TemplateSharingModal(this.app, this.plugin, 'import', '', async (jsonStr) => {
                             const imported = this.plugin.importTemplate(jsonStr);
-                            if (imported) {
-                                let targetName = imported.name;
-                                if (Object.prototype.hasOwnProperty.call(this.plugin.settings.namedTemplates, targetName)) {
-                                    targetName = `${targetName}-imported-${Date.now()}`;
-                                }
-                                this.plugin.settings.namedTemplates[targetName] = imported.template;
-                                await this.plugin.saveSettings();
-                                this.display();
-                                new Notice(`Template "${targetName}" imported successfully!`);
+                            if (!imported) {
+                                return false;
                             }
+                            let targetName = imported.name;
+                            if (Object.prototype.hasOwnProperty.call(this.plugin.settings.namedTemplates, targetName)) {
+                                targetName = `${targetName}-imported-${Date.now()}`;
+                            }
+                            this.plugin.settings.namedTemplates[targetName] = imported.template;
+                            await this.plugin.saveSettings();
+                            this.display();
+                            new Notice(`Template "${targetName}" imported successfully!`);
+                            return true;
                         }).open();
                     });
             });

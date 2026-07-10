@@ -906,8 +906,10 @@ export class TemplateSharingModal extends Modal {
                     if (this.onImport) {
                         try {
                             JSON.parse(this.templateString);
-                            await this.onImport(this.templateString);
-                            this.close();
+                            const success = await this.onImport(this.templateString);
+                            if (success) {
+                                this.close();
+                            }
                         } catch (e) {
                             new Notice('Invalid JSON format or import failed.');
                         }
