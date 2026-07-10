@@ -1190,7 +1190,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
     importTemplate(jsonString: string): { name: string, template: string } | null {
         try {
             const parsed = JSON.parse(jsonString) as SharedTemplate;
-            if (!parsed.name || !parsed.template || !parsed.version) {
+            if (!parsed || typeof parsed !== 'object' || !parsed.name || !parsed.template || !parsed.version) {
                 new Notice('Invalid template JSON format.');
                 return null;
             }
