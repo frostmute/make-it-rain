@@ -1,4 +1,4 @@
-import { App, Modal, Setting, TextComponent, ButtonComponent, Notice, ToggleComponent, DropdownComponent } from 'obsidian';
+import { App, Modal, Setting, TextComponent, ButtonComponent, Notice, ToggleComponent, DropdownComponent, TextAreaComponent } from 'obsidian';
 import type RaindropToObsidian from './main';
 import { 
     IRaindropToObsidian,
@@ -821,6 +821,110 @@ export class VariableBrowserModal extends Modal {
             item.createEl('code', { text: `{{${v.name}}}` });
             item.createSpan({ text: ` - ${v.desc}`, cls: 'variable-description' });
         }
+    }
+}
+
+/**
+ * Modal for sharing/importing templates
+ */
+export class TemplateSharingModal extends Modal {
+    plugin: IRaindropToObsidian;
+    templateMode: 'export' | 'import';
+    templateString: string;
+    onImport?: (template: string) => boolean | Promise<boolean>;
+
+    constructor(app: App, plugin: IRaindropToObsidian, mode: 'export' | 'import', templateString: string = '', onImport?: (template: string) => boolean | Promise<boolean>) {
+        super(app);
+        this.plugin = plugin;
+        this.templateMode = mode;
+        this.templateString = templateString;
+        this.onImport = onImport;
+    }
+
+    onOpen() {
+        const { contentEl } = this;
+        contentEl.empty();
+        contentEl.addClass('make-it-rain-modal');
+
+        contentEl.createEl('h2', { text: this.templateMode === 'export' ? 'Export Template' : 'Import Template' });
+        
+        if (this.templateMode === 'export') {
+            contentEl.createEl('p', { 
+                text: 'Copy the JSON below to share this template with others.',
+                cls: 'setting-item-description'
+            });
+        } else {
+            contentEl.createEl('p', { 
+                text: 'Paste a valid template JSON below to import it.',
+                cls: 'setting-item-description'
+            });
+        }
+
+        const inputGroup = contentEl.createDiv({ cls: 'make-it-rain-modal-group' });
+
+        const textAreaSetting = new Setting(inputGroup)
+            .setClass('setting-item-stacked')
+            .addTextArea(text => {
+                text.setPlaceholder('Template JSON...')
+                    .setValue(this.templateString)
+                    .onChange(value => this.templateString = value);
+                text.inputEl.rows = 15;
+                text.inputEl.addClass('make-it-rain-full-width');
+                text.inputEl.addClass('make-it-rain-monospace');
+                
+                if (this.templateMode === 'export') {
+                    text.inputEl.readOnly = true;
+                }
+            });
+
+        const buttonsEl = contentEl.createDiv({ cls: 'modal-button-container' });
+        
+        if (this.templateMode === 'export') {
+            new ButtonComponent(buttonsEl)
+                .setButtonText('Copy to Clipboard')
+                .setCta()
+                .onClick(async () => {
+                    try {
+                        await navigator.clipboard.writeText(this.templateString);
+                        new Notice('Template copied to clipboard!');
+                    } catch (e) {
+                        new Notice('Failed to copy to clipboard. Please copy manually.');
+                        console.error('Clipboard write failed:', e);
+                        return;
+                    }
+                    this.close();
+                });
+        } else {
+            new ButtonComponent(buttonsEl)
+                .setButtonText('Import')
+                .setCta()
+                .onClick(async () => {
+                    if (!this.templateString.trim()) {
+                        new Notice('Please paste a template JSON.');
+                        return;
+                    }
+                    if (this.onImport) {
+                        try {
+                            JSON.parse(this.templateString);
+                            const success = await this.onImport(this.templateString);
+                            if (success) {
+                                this.close();
+                            }
+                        } catch (e) {
+                            new Notice('Invalid JSON format or import failed.');
+                        }
+                    }
+                });
+        }
+
+        new ButtonComponent(buttonsEl)
+            .setButtonText('Cancel')
+            .onClick(() => this.close());
+    }
+
+    onClose() {
+        const { contentEl } = this;
+        contentEl.empty();
     }
 }
 

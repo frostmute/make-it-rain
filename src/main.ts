@@ -18,16 +18,16 @@ import {
     RaindropGroup,
     CollectionResponse, 
     IRaindropToObsidian,
+    SharedTemplate,
     TagMatchTypes,
-    TemplateData
+    AggregateHighlightsOptions, 
+    TemplateData 
 } from './types';
 
 // Import utility functions from consolidated index
 import { DEFAULT_SETTINGS, RaindropToObsidianSettingTab } from './settings';
 import { RaindropFetchModal, QuickImportModal, HighlightsAggregateModal } from './modals';
-import { 
-    AggregateHighlightsOptions
-} from './types';
+
 import { 
     // File utilities
     sanitizeFileName,
@@ -1170,4 +1170,38 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             console.error(`Error aggregating highlights for tag ${options.tag}:`, error);
         }
     }
+
+    /**
+     * Export a template as a JSON string
+     */
+    exportTemplate(name: string, template: string, description?: string): string {
+        const shared: SharedTemplate = {
+            version: this.manifest.version,
+            name,
+            template,
+            description
+        };
+        return JSON.stringify(shared, null, 2);
+    }
+
+    /**
+     * Import a template from a JSON string
+     */
+    importTemplate(jsonString: string): { name: string, template: string } | null {
+        try {
+            const parsed = JSON.parse(jsonString) as SharedTemplate;
+            if (!parsed || typeof parsed !== 'object' || !parsed.name || typeof parsed.template !== 'string' || !parsed.version) {
+                new Notice('Invalid template JSON format.');
+                return null;
+            }
+            return {
+                name: parsed.name,
+                template: parsed.template
+            };
+        } catch (e) {
+            new Notice('Failed to parse template JSON.');
+            return null;
+        }
+    }
 }
+
