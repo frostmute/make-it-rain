@@ -831,9 +831,9 @@ export class TemplateSharingModal extends Modal {
     plugin: IRaindropToObsidian;
     templateMode: 'export' | 'import';
     templateString: string;
-    onImport?: (template: string) => void;
+    onImport?: (template: string) => boolean | Promise<boolean>;
 
-    constructor(app: App, plugin: IRaindropToObsidian, mode: 'export' | 'import', templateString: string = '', onImport?: (template: string) => void) {
+    constructor(app: App, plugin: IRaindropToObsidian, mode: 'export' | 'import', templateString: string = '', onImport?: (template: string) => boolean | Promise<boolean>) {
         super(app);
         this.plugin = plugin;
         this.templateMode = mode;
