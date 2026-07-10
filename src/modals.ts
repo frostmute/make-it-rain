@@ -884,8 +884,14 @@ export class TemplateSharingModal extends Modal {
                 .setButtonText('Copy to Clipboard')
                 .setCta()
                 .onClick(async () => {
-                    await navigator.clipboard.writeText(this.templateString);
-                    new Notice('Template copied to clipboard!');
+                    try {
+                        await navigator.clipboard.writeText(this.templateString);
+                        new Notice('Template copied to clipboard!');
+                    } catch (e) {
+                        new Notice('Failed to copy to clipboard. Please copy manually.');
+                        console.error('Clipboard write failed:', e);
+                        return;
+                    }
                     this.close();
                 });
         } else {
