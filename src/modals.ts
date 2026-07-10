@@ -898,7 +898,7 @@ export class TemplateSharingModal extends Modal {
             new ButtonComponent(buttonsEl)
                 .setButtonText('Import')
                 .setCta()
-                .onClick(() => {
+                .onClick(async () => {
                     if (!this.templateString.trim()) {
                         new Notice('Please paste a template JSON.');
                         return;
@@ -906,10 +906,10 @@ export class TemplateSharingModal extends Modal {
                     if (this.onImport) {
                         try {
                             JSON.parse(this.templateString);
-                            this.onImport(this.templateString);
+                            await this.onImport(this.templateString);
                             this.close();
                         } catch (e) {
-                            new Notice('Invalid JSON format.');
+                            new Notice('Invalid JSON format or import failed.');
                         }
                     }
                 });
