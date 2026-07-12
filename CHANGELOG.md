@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Safe Sync (#9)**: Detect Raindrop items deleted/renamed remotely, prompt the user in a modal where they can ignore, archive to `.trash/`, or permanently delete each local note. Scans the vault for `raindrop_id` frontmatter (added in 1.10.0), batch-checks each candidate against the Raindrop API (10-way concurrency), and offers a settings toggle (`Enable safe sync`) plus a default-action dropdown (`Prompt` / `Archive` / `Delete`) and configurable trash-folder location. Runs automatically after each import when enabled, or on demand via the command palette (`Safe sync: scan for deleted/renamed Raindrops`).
+
 ## [1.11.0] - 2026-06-09
 
 ### Fixed
