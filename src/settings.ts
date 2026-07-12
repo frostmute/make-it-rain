@@ -310,7 +310,10 @@ tags:
 - **Tags**: {{formattedTags}}
 {{/block}}
 {{#block 'footerLink'}}{{/block}}`
-    }
+    },
+    enableSafeSync: false,
+    safeSyncAction: 'Prompt',
+    trashFolderLocation: '.trash'
 };
 
 export class RaindropToObsidianSettingTab extends PluginSettingTab {
@@ -546,7 +549,50 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                     });
             });
 
-        // --- 4. Template Engine ---
+        // --- 4. Safe Sync (Issue #9) ---
+        const safeSyncSection = containerEl.createEl('details', { cls: 'make-it-rain-settings-section' });
+        safeSyncSection.createEl('summary', { text: 'Safe Sync & Cleanup', cls: 'make-it-rain-section-summary' });
+        const safeSyncContent = safeSyncSection.createDiv({ cls: 'make-it-rain-section-content' });
+
+        new Setting(safeSyncContent)
+            .setName('Enable safe sync')
+            .setDesc('After importing, scan for local notes whose remote Raindrop item was deleted or renamed, and prompt for action.')
+            .addToggle((toggle: ToggleComponent) => {
+                toggle.setValue(this.plugin.settings.enableSafeSync)
+                    .onChange(async (value: boolean) => {
+                        this.plugin.settings.enableSafeSync = value;
+                        await this.plugin.saveSettings();
+                    });
+            });
+
+        new Setting(safeSyncContent)
+            .setName('Safe sync default action')
+            .setDesc('Choose what happens when a remote item is missing. "Prompt" shows a review dialog; "Archive" moves notes to the trash folder; "Delete" removes them permanently.')
+            .addDropdown((dropdown: DropdownComponent) => {
+                dropdown.addOption('Prompt', 'Prompt (review each item)');
+                dropdown.addOption('Archive', 'Archive (move to trash folder)');
+                dropdown.addOption('Delete', 'Delete (remove permanently)');
+                dropdown.setValue(this.plugin.settings.safeSyncAction);
+                dropdown.onChange(async (value: string) => {
+                    this.plugin.settings.safeSyncAction = value as 'Prompt' | 'Archive' | 'Delete';
+                    await this.plugin.saveSettings();
+                });
+            });
+
+        new Setting(safeSyncContent)
+            .setName('Trash folder location')
+            .setDesc('Folder where archived (soft-deleted) notes are moved when using the "Archive" action. Relative to vault root.')
+            .addText((text: TextComponent) => {
+                text.setPlaceholder('.trash')
+                    .setValue(this.plugin.settings.trashFolderLocation)
+                    .onChange(async (value: string) => {
+                        this.plugin.settings.trashFolderLocation = value || '.trash';
+                        await this.plugin.saveSettings();
+                    });
+                text.inputEl.addClass('make-it-rain-full-width');
+            });
+
+        // --- 5. Template Engine ---
         const templateSection = containerEl.createEl('details', { cls: 'make-it-rain-settings-section make-it-rain-advanced-options' });
         templateSection.createEl('summary', { text: 'Template Engine', cls: 'make-it-rain-section-summary' });
         const templateContent = templateSection.createDiv({ cls: 'make-it-rain-section-content' });

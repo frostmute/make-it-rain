@@ -1,0 +1,159 @@
+/**
+ * Tests for safe sync utilities (Issue #9)
+ */
+
+import { scanVaultForRaindropIds, detectDeletedRaindrops, applySafeSyncActions } from '../../../src/utils/safeSyncUtils';
+import { App, TFile } from 'obsidian';
+
+// Mock Obsidian modules
+jest.mock('obsidian', () => ({
+    App: jest.fn(),
+    TFile: jest.fn(),
+    normalizePath: (p: string) => p,
+}));
+
+describe('scanVaultForRaindropIds', () => {
+    it('should return empty array when no markdown files exist', async () => {
+        const mockApp = {
+            vault: {
+                getMarkdownFiles: () => [],
+            },
+            metadataCache: {
+                getFileCache: () => null,
+            },
+        } as unknown as App;
+
+        const result = await scanVaultForRaindropIds(mockApp, '');
+        expect(result).toEqual([]);
+    });
+
+    it('should find files with raindrop_id in frontmatter', async () => {
+        const mockFile = { path: 'test.md', name: 'test.md' };
+        const mockApp = {
+            vault: {
+                getMarkdownFiles: () => [mockFile],
+            },
+            metadataCache: {
+                getFileCache: () => ({
+                    frontmatter: { raindrop_id: 12345, title: 'Test' },
+                }),
+            },
+        } as unknown as App;
+
+        const result = await scanVaultForRaindropIds(mockApp, '');
+        expect(result).toHaveLength(1);
+        expect(result[0].raindropId).toBe(12345);
+        expect(result[0].filePath).toBe('test.md');
+    });
+
+    it('should skip files without raindrop_id', async () => {
+        const mockFile = { path: 'test.md', name: 'test.md' };
+        const mockApp = {
+            vault: {
+                getMarkdownFiles: () => [mockFile],
+            },
+            metadataCache: {
+                getFileCache: () => ({
+                    frontmatter: { title: 'Test' },
+                }),
+            },
+        } as unknown as App;
+
+        const result = await scanVaultForRaindropIds(mockApp, '');
+        expect(result).toHaveLength(0);
+    });
+
+    it('should filter by vault path when provided', async () => {
+        const mockFileInPath = { path: 'Raindrops/test.md', name: 'test.md' };
+        const mockFileOutsidePath = { path: 'Other/test2.md', name: 'test2.md' };
+        const mockApp = {
+            vault: {
+                getMarkdownFiles: () => [mockFileInPath, mockFileOutsidePath],
+            },
+            metadataCache: {
+                getFileCache: () => ({
+                    frontmatter: { raindrop_id: 1 },
+                }),
+            },
+        } as unknown as App;
+
+        const result = await scanVaultForRaindropIds(mockApp, 'Raindrops');
+        expect(result).toHaveLength(1);
+        expect(result[0].filePath).toBe('Raindrops/test.md');
+    });
+});
+
+describe('detectDeletedRaindrops', () => {
+    it('should return empty array when no candidates provided', async () => {
+        const mockApp = {} as App;
+        const result = await detectDeletedRaindrops([], 'token', { checkLimit: jest.fn() } as any, mockApp);
+        expect(result).toEqual([]);
+    });
+});
+
+describe('applySafeSyncActions', () => {
+    function makeMockFile(path: string) {
+        return { path, name: path.split('/').pop() || path } as TFile;
+    }
+
+    it('should correctly count ignored items', async () => {
+        const mockApp = {
+            vault: {
+                getAbstractFileByPath: () => makeMockFile('test.md'),
+                delete: async () => {},
+                adapter: { exists: async () => true },
+            },
+        } as unknown as App;
+
+        const items = [
+            { filePath: 'test.md', fileName: 'test.md', raindropId: 1, action: 'ignore' as const },
+        ];
+
+        const result = await applySafeSyncActions(mockApp, items, '.trash', jest.fn());
+        expect(result.ignored).toBe(1);
+        expect(result.deleted).toBe(0);
+        expect(result.archived).toBe(0);
+    });
+
+    it('should archive items by moving to trash folder', async () => {
+        let existsCallCount = 0;
+        const mockApp = {
+            vault: {
+                getAbstractFileByPath: () => makeMockFile('test.md'),
+                adapter: {
+                    exists: async (path: string) => {
+                        existsCallCount++;
+                        return existsCallCount <= 1; // trash exists, but dest doesn't
+                    },
+                    mkdir: async () => {},
+                },
+                rename: async () => {},
+            },
+        } as unknown as App;
+
+        const items = [
+            { filePath: 'test.md', fileName: 'test.md', raindropId: 1, action: 'archive' as const },
+        ];
+
+        const result = await applySafeSyncActions(mockApp, items, '.trash', jest.fn());
+        expect(result.archived).toBe(1);
+        expect(result.ignored).toBe(0);
+    });
+
+    it('should delete items when action is delete', async () => {
+        const mockApp = {
+            vault: {
+                getAbstractFileByPath: () => makeMockFile('test.md'),
+                delete: async () => {},
+                adapter: { exists: async () => false },
+            },
+        } as unknown as App;
+
+        const items = [
+            { filePath: 'test.md', fileName: 'test.md', raindropId: 1, action: 'delete' as const },
+        ];
+
+        const result = await applySafeSyncActions(mockApp, items, '.trash', jest.fn());
+        expect(result.deleted).toBe(1);
+    });
+});

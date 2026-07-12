@@ -102,3 +102,11 @@ export {
     isHtmlOrText,
     getExtensionFromMagicBytes
 } from './downloadUtils';
+
+// Re-export safe sync utilities (Issue #9)
+export type { SafeSyncCandidate } from './safeSyncUtils';
+export {
+    scanVaultForRaindropIds,
+    detectDeletedRaindrops,
+    applySafeSyncActions,
+} from './safeSyncUtils';

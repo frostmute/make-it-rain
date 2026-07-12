@@ -26,7 +26,7 @@ import {
 
 // Import utility functions from consolidated index
 import { DEFAULT_SETTINGS, RaindropToObsidianSettingTab } from './settings';
-import { RaindropFetchModal, QuickImportModal, HighlightsAggregateModal } from './modals';
+import { RaindropFetchModal, QuickImportModal, HighlightsAggregateModal, SafeSyncModal } from './modals';
 
 import { 
     // File utilities
@@ -64,7 +64,12 @@ import {
 
     // Template utilities
     ASTNode,
-    parseTemplate
+    parseTemplate,
+
+    // Safe sync utilities (Issue #9)
+    scanVaultForRaindropIds,
+    detectDeletedRaindrops,
+    applySafeSyncActions,
 } from './utils';
 
 // System collection IDs from raindrop.io API docs
@@ -127,6 +132,14 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         });
 
         this.updateRibbonIcon();
+
+        this.addCommand({
+            id: 'safe-sync-scan',
+            name: 'Safe sync: scan for deleted/renamed Raindrops',
+            callback: () => {
+                this.runSafeSync();
+            }
+        });
 
         this.addSettingTab(new RaindropToObsidianSettingTab(this.app, this));
         console.debug('Make It Rain plugin loaded!');
@@ -590,6 +603,11 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         if (skippedCount > 0) summary += ` ${skippedCount} skipped (already exist).`;
         if (errorCount > 0) summary += ` ${errorCount} errors.`;
         new Notice(summary, 7000);
+
+        // Issue #9: trigger safe sync after import if enabled
+        if (this.settings.enableSafeSync) {
+            await this.runSafeSync(baseTargetFolderPath);
+        }
     }
 
     private async processRaindrop(
@@ -1203,5 +1221,92 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             return null;
         }
     }
-}
+    /**
+     * Issue #9: Scan the vault for notes with raindrop_id frontmatter,
+     * detect which ones have been deleted remotely, and show the SafeSyncModal.
+     */
+    async runSafeSync(vaultPath?: string): Promise<void> {
+        if (!this.settings.apiToken) {
+            new Notice('Please configure your Raindrop.io API token in the plugin settings.', 10000);
+            return;
+        }
 
+        const loadingNotice = new Notice('Safe sync: scanning vault for Raindrop notes...', 0);
+
+        try {
+            const targetPath = vaultPath || this.settings.defaultFolder || '';
+            loadingNotice.setMessage('Scanning vault for notes with raindrop_id...');
+
+            const candidates = await scanVaultForRaindropIds(this.app, targetPath);
+            if (candidates.length === 0) {
+                loadingNotice.hide();
+                new Notice('No notes with raindrop_id found in the vault.', 5000);
+                return;
+            }
+
+            loadingNotice.setMessage(`Found ${candidates.length} Raindrop notes. Checking against remote API...`);
+
+            const deleted = await detectDeletedRaindrops(candidates, this.settings.apiToken, this.rateLimiter, this.app);
+
+            loadingNotice.hide();
+
+            if (deleted.length === 0) {
+                new Notice(`Safe sync: all ${candidates.length} local notes have a matching item in Raindrop.`, 7000);
+                return;
+            }
+
+            // Open the modal with deleted items for user review
+            // If safeSyncAction is 'Prompt', default to 'ignore' (user must choose).
+            // If 'Archive' or 'Delete', pre-select that action.
+            const defaultAction: 'delete' | 'archive' | 'ignore' =
+                this.settings.safeSyncAction === 'Prompt' ? 'ignore' :
+                this.settings.safeSyncAction === 'Archive' ? 'archive' : 'delete';
+
+            const modal = new SafeSyncModal(this.app, this, deleted.map(d => ({
+                filePath: d.filePath,
+                fileName: d.fileName,
+                raindropId: d.raindropId,
+                action: defaultAction,
+            })), async (items) => {
+                await this.applySafeSyncResults(items);
+            });
+            modal.open();
+
+        } catch (error) {
+            loadingNotice.hide();
+            const msg = error instanceof Error ? error.message : String(error);
+            new Notice(`Safe sync error: ${msg}`, 10000);
+            console.error('Safe sync error:', error);
+        }
+    }
+
+    /**
+     * Apply the actions chosen by the user in the SafeSyncModal.
+     */
+    async applySafeSyncResults(items: { filePath: string; fileName: string; raindropId: number; action: 'delete' | 'archive' | 'ignore' }[]): Promise<void> {
+        const loadingNotice = new Notice('Applying safe sync actions...', 0);
+
+        try {
+            const result = await applySafeSyncActions(
+                this.app,
+                items,
+                this.settings.trashFolderLocation,
+                (msg) => loadingNotice.setMessage(msg),
+            );
+
+            loadingNotice.hide();
+
+            let summary = 'Safe sync complete:';
+            if (result.deleted > 0) summary += ` ${result.deleted} deleted`;
+            if (result.archived > 0) summary += ` ${result.archived} archived`;
+            if (result.ignored > 0) summary += ` ${result.ignored} ignored`;
+            if (result.errors > 0) summary += ` ${result.errors} errors`;
+            new Notice(summary, 7000);
+        } catch (error) {
+            loadingNotice.hide();
+            const msg = error instanceof Error ? error.message : String(error);
+            new Notice(`Error applying safe sync actions: ${msg}`, 10000);
+            console.error('Safe sync apply error:', error);
+        }
+    }
+}

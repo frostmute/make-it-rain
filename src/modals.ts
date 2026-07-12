@@ -928,3 +928,85 @@ export class TemplateSharingModal extends Modal {
     }
 }
 
+
+
+/**
+ * Safe Sync Modal (Issue #9) — shows deleted/renamed Raindrop items and prompts for action.
+ */
+export interface SafeSyncItem {
+    filePath: string;
+    fileName: string;
+    raindropId: number;
+    action: 'delete' | 'archive' | 'ignore';
+}
+
+export class SafeSyncModal extends Modal {
+    plugin: RaindropToObsidian;
+    items: SafeSyncItem[];
+    onApply: (items: SafeSyncItem[]) => Promise<void>;
+
+    constructor(app: App, plugin: RaindropToObsidian, items: SafeSyncItem[], onApply: (items: SafeSyncItem[]) => Promise<void>) {
+        super(app);
+        this.plugin = plugin;
+        this.items = items.map(i => ({ ...i, action: 'ignore' }));
+        this.onApply = onApply;
+    }
+
+    onOpen() {
+        const { contentEl } = this;
+        contentEl.empty();
+        contentEl.addClass('make-it-rain-modal');
+
+        contentEl.createEl('h2', { text: 'Safe Sync: Review Changes' });
+        contentEl.createEl('p', {
+            text: `Found ${this.items.length} local note(s) whose remote Raindrop item was deleted or renamed. Choose an action for each:`,
+            cls: 'setting-item-description'
+        });
+
+        contentEl.createEl('hr');
+
+        const listEl = contentEl.createDiv({ cls: 'make-it-rain-safesync-list' });
+
+        this.items.forEach((item, idx) => {
+            const row = listEl.createDiv({ cls: 'make-it-rain-safesync-row' });
+
+            row.createEl('span', { text: `📄 ${item.fileName}`, cls: 'make-it-rain-safesync-name' });
+            row.createEl('span', { text: ` (raindrop_id: ${item.raindropId})`, cls: 'setting-item-description' });
+
+            const actionRow = row.createDiv({ cls: 'make-it-rain-safesync-actions' });
+
+            new Setting(actionRow)
+                .setName('')
+                .addDropdown((dropdown) => {
+                    dropdown.addOption('ignore', 'Ignore');
+                    dropdown.addOption('archive', 'Archive');
+                    dropdown.addOption('delete', 'Delete');
+                    dropdown.setValue('ignore');
+                    dropdown.onChange((value: string) => {
+                        this.items[idx].action = value as 'delete' | 'archive' | 'ignore';
+                    });
+                });
+        });
+
+        contentEl.createEl('hr');
+
+        const buttonsEl = contentEl.createDiv({ cls: 'make-it-rain-button-container' });
+
+        new ButtonComponent(buttonsEl)
+            .setButtonText('Apply Actions')
+            .setCta()
+            .onClick(async () => {
+                await this.onApply(this.items);
+                this.close();
+            });
+
+        new ButtonComponent(buttonsEl)
+            .setButtonText('Cancel')
+            .onClick(() => { this.close(); });
+    }
+
+    onClose() {
+        const { contentEl } = this;
+        contentEl.empty();
+    }
+}

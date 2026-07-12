@@ -57,6 +57,9 @@ export interface MakeItRainSettings {
     createFolderNotes: boolean;
     archiveScraping: boolean;
     namedTemplates: Record<string, string>;
+    enableSafeSync: boolean;
+    safeSyncAction: 'Prompt' | 'Archive' | 'Delete';
+    trashFolderLocation: string;
 }
 
 export interface ModalFetchOptions {
