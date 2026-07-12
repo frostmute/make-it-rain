@@ -1246,29 +1246,45 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
 
             loadingNotice.setMessage(`Found ${candidates.length} Raindrop notes. Checking against remote API...`);
 
-            const deleted = await detectDeletedRaindrops(candidates, this.settings.apiToken, this.rateLimiter, this.app);
+            const { deleted, unknown } = await detectDeletedRaindrops(candidates, this.settings.apiToken, this.rateLimiter, this.app);
 
             loadingNotice.hide();
 
-            if (deleted.length === 0) {
+            if (deleted.length === 0 && unknown.length === 0) {
                 new Notice(`Safe sync: all ${candidates.length} local notes have a matching item in Raindrop.`, 7000);
                 return;
             }
 
-            // Open the modal with deleted items for user review
-            // If safeSyncAction is 'Prompt', default to 'ignore' (user must choose).
-            // If 'Archive' or 'Delete', pre-select that action.
+            // Ponytail: default 'deleted' items to the user's chosen default action
+            // (Prompt=ignore, Archive, Delete). 'unknown' items are ALWAYS forced
+            // to 'ignore' inside the modal — the user must explicitly confirm a
+            // destructive action on a non-definitive answer.
             const defaultAction: 'delete' | 'archive' | 'ignore' =
                 this.settings.safeSyncAction === 'Prompt' ? 'ignore' :
                 this.settings.safeSyncAction === 'Archive' ? 'archive' : 'delete';
 
-            const modal = new SafeSyncModal(this.app, this, deleted.map(d => ({
-                filePath: d.filePath,
-                fileName: d.fileName,
-                raindropId: d.raindropId,
-                action: defaultAction,
-            })), async (items) => {
-                await this.applySafeSyncResults(items);
+            const items: { filePath: string; fileName: string; raindropId: number; kind: 'deleted' | 'unknown'; action: 'delete' | 'archive' | 'ignore' }[] = [
+                ...deleted.map(d => ({
+                    filePath: d.filePath,
+                    fileName: d.fileName,
+                    raindropId: d.raindropId,
+                    kind: 'deleted' as const,
+                    action: defaultAction,
+                })),
+                ...unknown.map(u => ({
+                    filePath: u.filePath,
+                    fileName: u.fileName,
+                    raindropId: u.raindropId,
+                    kind: 'unknown' as const,
+                    action: 'ignore' as const,
+                })),
+            ];
+
+            const unknownNote = unknown.length > 0 ? `, ${unknown.length} ambiguous (review before acting)` : '';
+            new Notice(`Safe sync: ${deleted.length} confirmed deleted${unknownNote} of ${candidates.length}.`, 7000);
+
+            const modal = new SafeSyncModal(this.app, this, items, async (chosen) => {
+                await this.applySafeSyncResults(chosen);
             });
             modal.open();
 

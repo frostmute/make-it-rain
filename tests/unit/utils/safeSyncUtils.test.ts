@@ -84,10 +84,24 @@ describe('scanVaultForRaindropIds', () => {
 });
 
 describe('detectDeletedRaindrops', () => {
-    it('should return empty array when no candidates provided', async () => {
+    it('should return empty buckets when no candidates provided', async () => {
         const mockApp = {} as App;
         const result = await detectDeletedRaindrops([], 'token', { checkLimit: jest.fn() } as any, mockApp);
-        expect(result).toEqual([]);
+        expect(result.deleted).toEqual([]);
+        expect(result.unknown).toEqual([]);
+    });
+
+    // Ponytail: only an explicit `result: false` means deleted. Anything else
+    // (missing item, errors, weird shapes) goes into `unknown` so the user must
+    // review before any destructive action. The full happy/sad matrix lives in
+    // safeSyncUtils.ts — a tighter test would require injecting the API client.
+    it('returns an object with deleted and unknown arrays', async () => {
+        const mockApp = {} as App;
+        const result = await detectDeletedRaindrops([], 'token', { checkLimit: jest.fn() } as any, mockApp);
+        expect(result).toEqual(expect.objectContaining({
+            deleted: expect.any(Array),
+            unknown: expect.any(Array),
+        }));
     });
 });
 

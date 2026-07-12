@@ -937,6 +937,7 @@ export interface SafeSyncItem {
     filePath: string;
     fileName: string;
     raindropId: number;
+    kind: 'deleted' | 'unknown';
     action: 'delete' | 'archive' | 'ignore';
 }
 
@@ -948,7 +949,11 @@ export class SafeSyncModal extends Modal {
     constructor(app: App, plugin: RaindropToObsidian, items: SafeSyncItem[], onApply: (items: SafeSyncItem[]) => Promise<void>) {
         super(app);
         this.plugin = plugin;
-        this.items = items.map(i => ({ ...i, action: 'ignore' }));
+        // Ponytail: force 'unknown' items to 'ignore' on open. The user must explicitly
+        // pick 'delete' or 'archive' for an ambiguous item — we never preselect a
+        // destructive action on a non-definitive answer. Ceiling: if users complain
+        // they're being too cautious, we can add a per-item "trust this one" toggle.
+        this.items = items.map(i => ({ ...i, action: i.kind === 'unknown' ? 'ignore' : i.action }));
         this.onApply = onApply;
     }
 
@@ -957,38 +962,31 @@ export class SafeSyncModal extends Modal {
         contentEl.empty();
         contentEl.addClass('make-it-rain-modal');
 
+        const deletedItems = this.items.filter(i => i.kind === 'deleted');
+        const unknownItems = this.items.filter(i => i.kind === 'unknown');
+
         contentEl.createEl('h2', { text: 'Safe Sync: Review Changes' });
-        contentEl.createEl('p', {
-            text: `Found ${this.items.length} local note(s) whose remote Raindrop item was deleted or renamed. Choose an action for each:`,
-            cls: 'setting-item-description'
-        });
 
-        contentEl.createEl('hr');
+        if (unknownItems.length > 0) {
+            // Ponytail: never auto-act on a non-definitive answer. Render these
+            // first and force a manual decision before any destructive action.
+            const warn = contentEl.createDiv({ cls: 'make-it-rain-safesync-warning' });
+            warn.createEl('p', {
+                text: `⚠ ${unknownItems.length} note(s) had ambiguous results (API error, missing data, or unexpected shape). These are NOT confirmed deletions — review each before choosing an action. Default is to Ignore.`,
+                cls: 'setting-item-description'
+            });
+            this.renderList(unknownItems, contentEl);
+            contentEl.createEl('hr');
+        }
 
-        const listEl = contentEl.createDiv({ cls: 'make-it-rain-safesync-list' });
-
-        this.items.forEach((item, idx) => {
-            const row = listEl.createDiv({ cls: 'make-it-rain-safesync-row' });
-
-            row.createEl('span', { text: `📄 ${item.fileName}`, cls: 'make-it-rain-safesync-name' });
-            row.createEl('span', { text: ` (raindrop_id: ${item.raindropId})`, cls: 'setting-item-description' });
-
-            const actionRow = row.createDiv({ cls: 'make-it-rain-safesync-actions' });
-
-            new Setting(actionRow)
-                .setName('')
-                .addDropdown((dropdown) => {
-                    dropdown.addOption('ignore', 'Ignore');
-                    dropdown.addOption('archive', 'Archive');
-                    dropdown.addOption('delete', 'Delete');
-                    dropdown.setValue('ignore');
-                    dropdown.onChange((value: string) => {
-                        this.items[idx].action = value as 'delete' | 'archive' | 'ignore';
-                    });
-                });
-        });
-
-        contentEl.createEl('hr');
+        if (deletedItems.length > 0) {
+            contentEl.createEl('p', {
+                text: `${deletedItems.length} note(s) confirmed as remotely deleted:`,
+                cls: 'setting-item-description'
+            });
+            this.renderList(deletedItems, contentEl);
+            contentEl.createEl('hr');
+        }
 
         const buttonsEl = contentEl.createDiv({ cls: 'make-it-rain-button-container' });
 
@@ -1003,6 +1001,31 @@ export class SafeSyncModal extends Modal {
         new ButtonComponent(buttonsEl)
             .setButtonText('Cancel')
             .onClick(() => { this.close(); });
+    }
+
+    private renderList(items: SafeSyncItem[], container: HTMLElement) {
+        const listEl = container.createDiv({ cls: 'make-it-rain-safesync-list' });
+        items.forEach((item) => {
+            const idx = this.items.indexOf(item);
+            const row = listEl.createDiv({ cls: 'make-it-rain-safesync-row' });
+
+            row.createEl('span', { text: `📄 ${item.fileName}`, cls: 'make-it-rain-safesync-name' });
+            row.createEl('span', { text: ` (raindrop_id: ${item.raindropId})`, cls: 'setting-item-description' });
+
+            const actionRow = row.createDiv({ cls: 'make-it-rain-safesync-actions' });
+
+            new Setting(actionRow)
+                .setName('')
+                .addDropdown((dropdown) => {
+                    dropdown.addOption('ignore', 'Ignore');
+                    dropdown.addOption('archive', 'Archive');
+                    dropdown.addOption('delete', 'Delete');
+                    dropdown.setValue(item.action);
+                    dropdown.onChange((value: string) => {
+                        this.items[idx].action = value as 'delete' | 'archive' | 'ignore';
+                    });
+                });
+        });
     }
 
     onClose() {

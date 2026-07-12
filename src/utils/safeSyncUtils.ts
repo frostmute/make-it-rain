@@ -56,17 +56,20 @@ export async function scanVaultForRaindropIds(app: App, vaultPath: string): Prom
 
 /**
  * Given a list of local raindrop_ids, batch-check which ones still exist on Raindrop.
- * Raindrop API: fetch each raindrop by ID; if it returns result:false or empty, it's deleted remotely.
- * 
- * Returns the subset of candidates that are no longer present in the remote Raindrop account.
+ * Raindrop API: fetch each raindrop by ID; an explicit `result: false` means the
+ * bookmark is gone. Anything else (5xx, network, missing item, unexpected shape) is
+ * "unknown" — we never auto-delete on a non-definitive answer.
+ *
+ * Returns { deleted, unknown }. `deleted` items are safe to offer for archive/delete.
+ * `unknown` items must be reviewed manually before any destructive action.
  */
 export async function detectDeletedRaindrops(
     candidates: SafeSyncCandidate[],
     apiToken: string,
     rateLimiter: RateLimiter,
     app: App,
-): Promise<SafeSyncCandidate[]> {
-    if (candidates.length === 0) return [];
+): Promise<{ deleted: SafeSyncCandidate[]; unknown: SafeSyncCandidate[] }> {
+    if (candidates.length === 0) return { deleted: [], unknown: [] };
 
     const fetchOptions: RequestInit = {
         method: 'GET',
@@ -75,6 +78,7 @@ export async function detectDeletedRaindrops(
 
     const baseApiUrl = 'https://api.raindrop.io/rest/v1';
     const deleted: SafeSyncCandidate[] = [];
+    const unknown: SafeSyncCandidate[] = [];
 
     // Batch into concurrency-limited lookups (Raindrop supports individual item lookup)
     const workers = Math.min(10, candidates.length);
@@ -89,18 +93,24 @@ export async function detectDeletedRaindrops(
                 const response = await fetchWithRetry<{ result: boolean; item?: RaindropItem }>(
                     app, url, fetchOptions, rateLimiter
                 );
-                if (!response.result || !response.item) {
+                // Only an explicit `result: false` means the bookmark is gone.
+                // Any other shape (error, missing item, unexpected flag) -> unknown.
+                if (response.result === false) {
                     deleted.push(candidate);
+                } else if (response.result === true && response.item) {
+                    // Still exists. Skip.
+                } else {
+                    unknown.push(candidate);
                 }
             } catch {
-                // If the API returns an error for this ID, treat it as deleted/ inaccessible
-                deleted.push(candidate);
+                // Network/5xx/etc. -> unknown, never auto-delete.
+                unknown.push(candidate);
             }
         }
     };
 
     await Promise.all(Array.from({ length: workers }, () => worker()));
-    return deleted;
+    return { deleted, unknown };
 }
 
 /**
