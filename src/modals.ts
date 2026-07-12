@@ -1,4 +1,4 @@
-import { App, Modal, Setting, TextComponent, ButtonComponent, Notice, ToggleComponent, DropdownComponent, TextAreaComponent } from 'obsidian';
+import { App, Modal, Setting, TextComponent, ButtonComponent, Notice, ToggleComponent, DropdownComponent } from 'obsidian';
 import type RaindropToObsidian from './main';
 import { 
     IRaindropToObsidian,
@@ -862,7 +862,7 @@ export class TemplateSharingModal extends Modal {
 
         const inputGroup = contentEl.createDiv({ cls: 'make-it-rain-modal-group' });
 
-        const textAreaSetting = new Setting(inputGroup)
+        new Setting(inputGroup)
             .setClass('setting-item-stacked')
             .addTextArea(text => {
                 text.setPlaceholder('Template JSON...')
