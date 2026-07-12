@@ -89,6 +89,7 @@ When fetching, the plugin automatically handles:
 * **Archive Scraping**: If enabled in settings, the plugin will attempt to pull full content for articles.
 * **File Downloads**: Authenticated retrieval of PDF, EPUB, and media attachments.
 * **Folder Notes**: Generation of index files for collection folders.
+* **Safe Sync**: If enabled, the plugin scans for local notes whose remote Raindrop item was deleted or renamed, then opens a per-item review modal after the import completes.
 
 ## Fetching Process (Bulk/Filtered Import)
 

@@ -217,3 +217,24 @@ If you're still experiencing issues:
    - Screenshots if applicable
 
 The developer is active and responsive to bug reports and feature requests.
+
+## Safe Sync Issues
+
+### Safe Sync reports many `ambiguous` items on every run
+
+**Symptom:** Each manual `Safe sync` run reports a high count of `ambiguous (review before acting)` notices, even for notes you've confirmed still exist in Raindrop.
+
+**Cause:** The Raindrop API returned an error (after retries), a missing `item`, or an unexpected response shape for those `raindrop_id`s. The plugin intentionally does NOT classify these as deleted — that would risk wiping live bookmarks on transient hiccups — but the result is the modal defaults every ambiguous item to `Ignore`.
+
+**Fix:**
+1. Check your API token in plugin settings (Settings → Make It Rain → API Token). An expired or revoked token will surface as `401`/`403` on every item.
+2. Check Raindrop's status page for an ongoing outage.
+3. Re-run the command after a few minutes; if the network blip resolves, the items fall back into the `confirmed deleted` bucket or simply don't appear (because they exist remotely).
+
+### Notes I expect to see in the modal don't show up
+
+**Symptom:** A note has `raindrop_id: 12345` in its frontmatter but never appears in safe sync results.
+
+**Cause:** That bookmark still exists on Raindrop. Safe sync only flags candidates that are confirmed deleted or ambiguous — it never flags "still exists".
+
+**Fix:** No action needed; this is correct behavior. Verify by checking the Raindrop web UI to confirm the bookmark is still there.

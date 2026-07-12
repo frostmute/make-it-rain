@@ -53,6 +53,13 @@ Welcome to Make It Rain! This documentation will help you get the most out of th
 - **Detailed Logging**: Full transparency for troubleshooting
 - **Stable Builds**: Automated CI/CD ensures reliability
 
+### 🔄 Safe Sync
+
+- **Detect deleted/renamed bookmarks remotely**: Scans the vault for notes carrying `raindrop_id`, batch-checks each against the Raindrop API
+- **Per-item review modal**: Ignore / Archive to `.trash/` / Delete for each candidate individually
+- **Auto-trigger after import**: Optional; runs automatically when safe sync is enabled and an import completes
+- **Defense-in-depth on uncertain answers**: Ambiguous results (errors, missing data, unexpected shape) are bucketed separately and force a manual decision before any destructive action is taken
+
 ---
 
 ## 📚 Documentation Guide
@@ -116,6 +123,14 @@ Add bookmarks in raindrop.io → Run "Fetch raindrops (filtered)" → Organize i
 ```
 
 [Learn about importing →](user-guide/usage.md)
+
+### Cleaning Up Deleted Bookmarks
+
+```
+Enable safe sync → Import (or run command) → Modal shows confirmed-deleted + ambiguous → Choose actions → Apply
+```
+
+Ambiguous items default to `Ignore` to protect you from wiping live bookmarks on transient API hiccups — review each one before selecting `Archive` or `Delete`.
 
 ### Custom Templates
 

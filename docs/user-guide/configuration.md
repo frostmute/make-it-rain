@@ -85,6 +85,32 @@ This is the most important setting required for the plugin to function.
 - **Description**: Customizes the frontmatter field name used for the banner image
 - **Default**: `banner`
 
+## Safe Sync & Cleanup
+
+Safe sync detects when Raindrop bookmarks that already have a local note have been deleted or renamed remotely, and prompts you to keep, archive, or delete the now-orphaned local notes.
+
+### Enable safe sync
+
+- **Setting**: Enable safe sync
+- **Description**: After importing, scan for local notes whose remote Raindrop item was deleted or renamed, and prompt for action.
+- **Default**: Disabled
+
+### Safe sync default action
+
+- **Setting**: Safe sync default action
+- **Description**: What to do when a remote item is missing. `Prompt` shows the review modal so you choose per-item; `Archive` moves notes to the trash folder; `Delete` removes them permanently.
+- **Default**: `Prompt`
+
+### Trash folder location
+
+- **Setting**: Trash folder location
+- **Description**: Folder where archived (soft-deleted) notes are moved when using the `Archive` action. Relative to vault root.
+- **Default**: `.trash`
+
+### Defense-in-depth
+
+Ambiguous results (API errors after retries, missing or unexpected response shapes) are bucketed separately and force the per-item default to `Ignore`. You must explicitly pick `Archive` or `Delete` for each uncertain item.
+
 ## Template System
 
 The template system allows you to customize how your raindrop bookmarks are formatted in Obsidian notes.

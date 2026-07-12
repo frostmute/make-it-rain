@@ -75,8 +75,17 @@ Built to handle large Raindrop libraries with confidence.
 - **Enhanced tag handling** - Automatic tag sanitization and appending from settings
 - **Safe by default** - prevents accidental overwrites
 - **Detailed logging** for troubleshooting
-- **Comprehensive error handling**
+- **Comprehensive error handling** with descriptive user-facing notices
 - **Automated testing** with integration coverage
+
+### 🔄 Safe Sync (Issue #9)
+
+Detect Raindrop bookmarks that have been deleted or renamed remotely, then prompt for action in a per-item modal. Each candidate can be ignored, archived to `.trash/`, or permanently deleted. Settings let you choose the default action (`Prompt`, `Archive`, `Delete`), and ambiguous results (API errors after retries, missing data, unexpected shape) are bucketed separately and forced to `Ignore` until you review manually.
+
+- **Vault scan** for notes carrying `raindrop_id` (frontmatter added in 1.10.0)
+- **10-way concurrent** batch-checks against the Raindrop API
+- **Auto-runs after each import** when enabled, or on demand via command palette: `Safe sync: scan for deleted/renamed Raindrops`
+- **Defense-in-depth on uncertain answers** — only an explicit `result: false` from Raindrop counts as a confirmed deletion; everything else lands in an ambiguous bucket that requires manual review before any destructive action
 
 ---
 
