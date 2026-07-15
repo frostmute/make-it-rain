@@ -5,11 +5,23 @@ All notable changes to the Make It Rain plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.0.0-beta.2] - 2026-07-14
 
 ### Added
 
 - **Safe Sync (#9)**: Detect Raindrop items deleted/renamed remotely, prompt the user in a modal where they can ignore, archive to `.trash/`, or permanently delete each local note. Scans the vault for `raindrop_id` frontmatter (added in 1.10.0), batch-checks each candidate against the Raindrop API (10-way concurrency), and offers a settings toggle (`Enable safe sync`) plus a default-action dropdown (`Prompt` / `Archive` / `Delete`) and configurable trash-folder location. Runs automatically after each import when enabled, or on demand via the command palette (`Safe sync: scan for deleted/renamed Raindrops`).
+
+### Fixed
+
+- **S3 attachments stop 403'ing on redirect.** `fetchArchiveContent` no longer forwards the Raindrop `Authorization` header on the second hop to AWS S3 — fixes `403 Forbidden` on any cached archive attachment fetched via `/cache`.
+- **Safe Sync splits `deleted` vs. `unknown`.** Detection never auto-acts on ambiguous state; only on the explicit `deleted` bucket.
+- **Template import — modal no longer closes silently on failure.** The import modal stays open and reports the error so you can retry.
+- **Template import — no more race on close.** The import promise is awaited before the modal closes.
+- **Template import — name collisions are rejected**, not silently overwritten.
+- **Template export — clipboard-write errors surface** in the modal instead of being swallowed.
+- **Template round-trip preserves empty strings** end-to-end.
+- **Settings template preview — content-type lockdown.** The live preview is now locked to the selected content type (it was bleeding across types, showing the wrong preview after switching).
+- **Modals — dead code removal** in the template modals.
 
 ## [1.11.0] - 2026-06-09
 
