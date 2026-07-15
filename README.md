@@ -40,6 +40,8 @@ Fully customize how your notes look with our flexible template system. Choose fr
 - **Smart variables** (formatted dates, domains, tag lists, collection groups)
 - **One-click reset** to default templates
 - **Per-import overrides** to use different templates on demand
+- **Import / export templates** to JSON via clipboard — share, back up, or migrate template libraries between vaults (#84)
+- **Live template preview** in Settings — renders the currently-selected content-type template as you edit
 
 ### 🎯 Advanced Filtering & Selection
 
@@ -86,6 +88,7 @@ Detect Raindrop bookmarks that have been deleted or renamed remotely, then promp
 - **10-way concurrent** batch-checks against the Raindrop API
 - **Auto-runs after each import** when enabled, or on demand via command palette: `Safe sync: scan for deleted/renamed Raindrops`
 - **Defense-in-depth on uncertain answers** — only an explicit `result: false` from Raindrop counts as a confirmed deletion; everything else lands in an ambiguous bucket that requires manual review before any destructive action
+- **Configurable trash folder** (defaults to `.trash/`)
 
 ---
 
@@ -264,6 +267,20 @@ For complete details, see the [Note Structure documentation](https://frostmute.g
 2. Configure your filters
 3. Enable **"Use default template only"** or **"Force use of content-type templates"**
 4. Fetch!
+
+### Share a template between vaults
+
+1. Open **Settings → Make It Rain → Templates** → **Manage templates…**
+2. Click **Export** on the template you want to share — JSON goes to your clipboard
+3. On the destination vault, click **Import** in the same dialog, paste the JSON, name it
+4. Import rejects name collisions (no silent overwrite) and surfaces errors in the modal
+
+### Edit a template with live preview
+
+1. Open **Settings → Make It Rain → Templates**
+2. Pick a content type in the dropdown
+3. Edit the template on the left; the rendered preview on the right updates as you type
+4. The preview is locked to the selected content type, so switching types swaps the preview, no bleed
 
 ### Automatically organize by collection
 

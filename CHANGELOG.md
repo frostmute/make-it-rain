@@ -5,6 +5,42 @@ All notable changes to the Make It Rain plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-07-15
+
+First stable of the v2 line. Promotes every change from the `2.0.0-beta.2` pre-release with no API changes — install on top of `2.0.0-beta.2` and you get the same code, just no longer tagged as a pre-release. Safe Sync is the headline: one-way reconciliation of your local vault against raindrop.io, with explicit, per-row user consent for any destructive action.
+
+### Highlights
+
+- **Safe Sync (#9)** — Detect Raindrops deleted/renamed remotely, prompt for action per row (`Ignore` / `Archive to .trash/` / `Delete permanently`). Splits detection into `deleted` vs. `unknown` buckets and never auto-acts on `unknown`. 10-way concurrent API batch, settings toggle, default-action dropdown, command-palette entry, configurable trash folder.
+- **Template import/export (#84)** — Export any template to clipboard JSON; import via modal with collision detection, empty-string-safe roundtrip, error surfacing in modal.
+- **Live template preview** in Settings — renders the currently-selected content-type template as you edit, locked to that type only.
+
+### Added
+
+- Safe Sync (#9): vault scan for `raindrop_id` frontmatter, batched 10-way Raindrop API check, per-row decision modal, settings toggle, default-action dropdown, configurable trash folder, command palette entry, auto-runs after import when enabled.
+- Template import/export (#84): export any template to clipboard JSON; import via modal with name-collision detection, empty-string roundtrip, error-surfacing, awaited close.
+- Live template preview in Settings, locked to the selected content type.
+
+### Fixed
+
+- **S3 attachments stop 403'ing on redirect.** `fetchArchiveContent` no longer forwards the Raindrop `Authorization` header on the second hop to AWS S3 — fixes `403 Forbidden` on any cached archive attachment fetched via `/cache`.
+- **Safe Sync splits `deleted` vs. `unknown`.** Detection never auto-acts on ambiguous state; only on the explicit `deleted` bucket.
+- **Template import — modal no longer closes silently on failure.** The import modal stays open and reports the error so you can retry.
+- **Template import — no more race on close.** The import promise is awaited before the modal closes.
+- **Template import — name collisions are rejected**, not silently overwritten.
+- **Template export — clipboard-write errors surface** in the modal instead of being swallowed.
+- **Template round-trip preserves empty strings** end-to-end.
+- **Settings template preview — content-type lockdown.** The live preview is now locked to the selected content type (it was bleeding across types, showing the wrong preview after switching).
+- **Modals — dead code removal** in the template modals.
+
+### Upgrade notes
+
+- Wire-compatible with `2.0.0-beta.2` — no schema, settings, or template changes.
+- New setting: **Sync → Safe Sync** toggle (off by default — opt in).
+- New setting: **Sync → Default action** dropdown (`Prompt` / `Archive` / `Delete`).
+- New setting: **Sync → Trash folder** (defaults to `.trash/`).
+- First Safe Sync will surface any deleted/renamed items — pick `Prompt` as the default action if you want to review before any destructive action.
+
 ## [2.0.0-beta.2] - 2026-07-14
 
 ### Added
