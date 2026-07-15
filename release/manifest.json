@@ -1,0 +1,11 @@
+{
+	"id": "make-it-rain",
+	"name": "Make It Rain",
+	"minAppVersion": "1.13.0",
+	"description": "Pull Raindrop.io bookmarks, highlights, and attachments into Markdown notes with rich metadata, smart folder structures, and native file support.",
+	"author": "frostmute",
+	"authorUrl": "https://www.github.io/frostmute",
+	"fundingUrl": "https://ko-fi.com/frostmute",
+	"isDesktopOnly": false,
+	"version": "2.0.0-beta.2"
+}

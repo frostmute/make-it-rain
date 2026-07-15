@@ -11,4 +11,14 @@ plugins:
 exclude:
   - meta/
   - testsite/
+  # Agent harness (consumed by AI agents and contributors, not published):
+  - design-docs/
+  - plans/
+  - product-specs/
+  - references/
+  - PLANS.md
+  - QUALITY-SCORE.md
+  - CODE-REVIEW.md
+  - SECURITY.md
+  - PRODUCT-SENSE.md
   - ".DS_Store"

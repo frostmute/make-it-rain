@@ -48,10 +48,12 @@ knowledge_graph*.html
 # Tooling
 /src/index.ts
 /docs/meta/
+/docs/plans
 coverage/
 AGENTS.md
 issue-58-comment.md
 make-it-rain-beta-fix-58b.zip
+# /docs/plans: agent-harness local working notes (designs/, work/, tech-debt-tracker.md)
 
 # AI Tool Artifacts
 .hermes/

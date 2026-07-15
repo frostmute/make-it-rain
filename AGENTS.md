@@ -1,252 +1,99 @@
-# Make It Rain - AI Coding Agent Guide
+# Make It Rain — Agent Guide
 
-*Current Version: 1.10.0*
+> Pull Raindrop.io bookmarks, highlights, and attachments into Markdown
+> notes inside Obsidian. TypeScript + esbuild + Jest. Single package,
+> not a monorepo.
+>
+> Version: 1.11.0 · Last harness refresh: 2026-07-14
 
-## Architecture Overview
+## Architecture
 
-Make It Rain is an Obsidian plugin that imports Raindrop.io bookmarks into structured Markdown notes. The codebase follows a modular architecture centered around a main plugin class (`RaindropToObsidian`) that orchestrates:
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the full domain map:
+layering, invariants, data flow, and the template engine sub-system.
 
-- **API Integration**: Fetches bookmarks from Raindrop.io with rate limiting and retry logic
-- **Template System**: Nesting-aware AST-based template engine with Handlebars-like syntax for note formatting with content-type-specific templates
-- **Group & Collection Hierarchy**: Integrates Raindrop.io sidebar Groups into the folder structure
-- **File Management**: Creates organized folder structures mirroring Raindrop Groups and Collections with automatic folder notes
-- **Data Processing**: Transforms Raindrop items into YAML-frontmatter Markdown notes with robust type-coercion-safe YAML serialization
-- **File Downloads**: Downloads native Raindrop file attachments (PDFs, EPUBs, images, videos, etc.)
-- **Archive Scraping**: Extracts structured Markdown from Raindrop's permanent archives using Obsidian's native `htmlToMarkdown()`
+## Documentation
 
-## Key Components
+### Agent Harness (this folder + `docs/`)
 
-### Core Files
+- **[design-docs/](docs/design-docs/index.md)** — architectural decisions and operating principles
+  - **[core-beliefs.md](docs/design-docs/core-beliefs.md)** — read this first; it's the rules of the road
+- **[plans/](docs/plans/)** — design references (`designs/`) and execution plans (`work/`)
+  - **[tech-debt-tracker.md](docs/plans/work/tech-debt-tracker.md)** — known debt, prioritized
+- **[product-specs/](docs/product-specs/index.md)** — user-facing feature specs
+- **[references/](docs/references/index.md)** — TODO: LLM-formatted external API/library docs
 
-- `src/main.ts`: Main plugin class handling initialization, settings, and import orchestration
-- `src/modals.ts`: UI modals for bulk import and quick single-item import
-- `src/settings.ts`: Plugin configuration and settings tab
-- `src/types.ts`: TypeScript interfaces for Raindrop API responses and plugin settings
+### Domain Guides (root of `docs/`)
 
-### Utility Modules (`src/utils/`)
+- **[PLANS.md](docs/PLANS.md)** — how to write plans
+- **[QUALITY-SCORE.md](docs/QUALITY-SCORE.md)** — per-domain quality grades
+- **[CODE-REVIEW.md](docs/CODE-REVIEW.md)** — review checklist and severity levels
+- **[SECURITY.md](docs/SECURITY.md)** — threat model and content-handling rules
+- **[PRODUCT-SENSE.md](docs/PRODUCT-SENSE.md)** — who the user is, what we optimize for
 
-- `apiUtils.ts`: Rate limiting, authentication, API request handling
-- `fileUtils.ts`: File system operations, path sanitization, folder creation
-- `yamlUtils.ts`: YAML frontmatter generation with proper escaping (null-keyword quoting, reserved-word force-quoting)
-- `formatUtils.ts`: Date formatting, tag processing, domain extraction
-- `scrapingUtils.ts`: Archive content extraction using Obsidian's `htmlToMarkdown()`, with 303 redirect handling for S3
-- `securityUtils.ts`: Content sanitization and executable code defanging
-- `templateUtils.ts`: Nesting-aware AST parser and evaluator for template rendering
+### User / Developer Docs (Jekyll site at `docs/user-guide/`, `docs/developer-guide/`)
 
-## Critical Workflows
+These are the public documentation, served to humans on GitHub Pages.
+**Agent harness files are excluded from that site** via
+`docs/_config.yml` — do not write user-facing prose in agent docs.
 
-### Development
+## Project Layout
+
+```
+src/
+  main.ts            # RaindropToObsidian class — orchestration + lifecycle
+  modals.ts          # UI: bulk / quick / highlights / safe-sync
+  settings.ts        # SettingTab + DEFAULT_SETTINGS
+  template-validator.ts  # AST validator for the template DSL
+  types.ts           # central TypeScript interfaces
+  utils/             # 11 modules — see ARCHITECTURE.md for layering
+tests/
+  unit/utils/        # per-utility unit tests
+  integration/       # end-to-end flow tests
+  performance/       # securityUtils benchmark
+  setup.ts           # Obsidian + Raindrop mocks
+  KNOWN_ISSUES.md    # 9 known failing tests (see tech-debt-tracker P1)
+scripts/             # esbuild config, secret scanner, copy-to-vault, version bump
+docs/                # Jekyll site (user/developer docs) + agent harness subdirs
+.github/workflows/   # ci.yml, jekyll-gh-pages.yml, release.yml
+```
+
+## Quick Rules
+
+These are the non-negotiables. Full reasoning in
+[core-beliefs.md](docs/design-docs/core-beliefs.md) and
+[CODE-REVIEW.md](docs/CODE-REVIEW.md).
+
+1. **Rate-limit all API calls** through `apiUtils.fetchWithRetry`.
+2. **Sanitize all file/folder names** from user content via `fileUtils.sanitizeFileName`.
+3. **Sanitize all remote content** that lands in a note body via `securityUtils.sanitizeMarkdownContent`.
+4. **Build YAML frontmatter** via `yamlUtils`, not by hand.
+5. **Per-item errors in batch imports** must be caught and logged; the batch continues.
+6. **No live two-way sync** with Raindrop. The plugin is a one-way import tool by design.
+
+## Commands
 
 ```bash
-npm run dev          # Watch mode with esbuild
-npm run build        # Production build (TypeScript check + esbuild)
-npm run copy-to-vault # Copy built files to Obsidian vaults (hardcoded paths)
-npm run build-and-copy # Build and copy to vault in one command
+npm run dev            # esbuild watch mode (auto-copies to local vaults)
+npm run build          # tsc -noEmit -skipLibCheck && esbuild production
+npm run copy-to-vault  # copy built files to hardcoded local vaults
+npm test               # Jest
+npm run test:coverage  # Jest with coverage
+npm run lint           # ESLint on src/
+npm run lint:md        # markdownlint
+npm run scan-secrets   # block on hardcoded secrets
+npm run version        # bump manifest.json + versions.json
 ```
 
-### Testing
+## Submitting Work
 
-```bash
-npm test             # Run Jest test suite
-npm run test:watch   # Watch mode for tests
-npm run test:coverage # Generate coverage reports
-npm run test:verbose # Run tests with verbose output
-```
+- `npm test` + `npm run lint` + `npm run build` must all pass.
+- Open a PR to `main`. Do not push directly to `main`.
+- New architectural decision → add to `docs/design-docs/`.
+- New tech debt → add to `docs/plans/work/tech-debt-tracker.md`.
+- New user-facing feature → add a spec to `docs/product-specs/`.
 
-### Release
+<!-- MANUAL: Notes below this line are preserved on regeneration -->
 
-```bash
-npm run version      # Bump version in manifest.json and versions.json
-```
-
-### Code Quality
-
-```bash
-npm run lint         # Run ESLint on source files
-npm run lint:md      # Lint markdown files
-```
-
-### Submission Standards
-
-- **Deliverables**: Always push completed work to `main` or create a Pull Request. Verify this for all autonomous tasks.
-- **Quality Gate**: All submissions must pass `npm test`, `npm run lint`, and `npm run build`.
-- **CI Integration**: If CI actions fail, create a subtask for the failure and resolve it before considering the task complete.
-
-## Project-Specific Patterns
-
-### Template System
-
-Nesting-aware AST-based template engine implemented in `templateUtils.ts` with support for content-type-specific templates:
-
-- `{{variable}}`: Simple variable substitution
-- `{{#if condition}}...{{/if}}`: Conditional blocks with optional `{{else}}`
-- `{{#each array}}...{{/each}}`: Iteration over arrays
-- Pre-calculated helpers: `{{domain}}`, `{{renderedType}}`, `{{formattedCreatedDate}}`, `{{formattedUpdatedDate}}`, `{{formattedTags}}`
-
-Templates are configurable per content type (link, article, image, video, document, audio, book) with individual toggles. Modal options allow temporary overrides during import.
-
-Example template:
-
-```
----
-title: "{{title}}"
-source: {{link}}
-type: {{type}}
-created: {{created}}
-lastupdate: {{lastupdate}}
-id: {{id}}
-collectionId: {{collectionId}}
-collectionTitle: "{{collectionTitle}}"
-collectionPath: "{{collectionPath}}"
-{{#if collectionParentId}}collectionParentId: {{collectionParentId}}{{/if}}
-tags:
-{{#each tags}}
-  - {{this}}
-{{/each}}
-{{#if cover}}
-{{bannerFieldName}}: {{cover}}
-{{/if}}
----
-
-{{#if cover}}
-![{{title}}]({{cover}})
-{{/if}}
-
-# {{title}}
-
-{{#if excerpt}}
-## Description
-{{excerpt}}
-{{/if}}
-
-{{#if note}}
-## Notes
-{{note}}
-{{/if}}
-
-{{#if highlights}}
-## Highlights
-{{#each highlights}}
-- {{text}}
-{{#if note}}  *Note:* {{note}}{{/if}}
-{{/each}}
-{{/if}}
-```
-
-### File Naming
-
-Template-based with placeholders:
-
-- `{{title}}`: Raindrop title (sanitized)
-- `{{id}}`: Unique Raindrop ID
-- `{{date}}`: Creation date (YYYY-MM-DD)
-- `{{collectionTitle}}`: Collection name
-
-### Tag Processing
-
-Tags are normalized by:
-
-1. Converting spaces to underscores
-2. Removing invalid YAML characters: `#[?"*<>:|]`
-
-### Collection & Group Hierarchy
-
-Raindrop.io sidebar Groups are fetched and cached alongside collections. Collections are fetched in parallel (root + nested) and cached for 5 minutes. Paths are built by traversing Group → parent → child relationships to create nested folder structures. The `{{collectionGroup}}` variable provides access to the Group name, and `{{collectionPath}}` includes the Group as the root segment.
-
-### Rate Limiting
-
-Configurable rate limiter (default 60 req/min) with automatic delays between API calls. Uses `setTimeout` for delays, tested with Jest fake timers.
-
-### File Downloads
-
-For native Raindrop uploads and attachments:
-
-- Detects via `raindrop.link` containing `/v2/` and `/file`
-- Downloads via authenticated API endpoint with S3 redirect handling
-- Validates file type via MIME types and magic bytes
-- Supports PDFs, EPUBs, images, videos, audio files, and documents
-- Creates debug files on download failures for troubleshooting
-- Configurable via settings toggle
-
-### Automatic Folder Notes
-
-Plugin automatically generates index notes for collection folders:
-
-- Creates `FOLDER_NAME.md` files in each collection directory
-- Includes YAML frontmatter with collection metadata
-- Lists all notes in the collection with wiki-links
-- Improves Obsidian graph compatibility and navigation
-- Configurable via settings toggle
-
-### Error Handling
-
-- API errors show user notices but continue processing
-- File operation failures are logged but don't stop batch imports
-- Network timeouts and rate limits trigger automatic retries
-
-## Integration Points
-
-### External APIs
-
-- **Raindrop.io REST API v1**: Collections, raindrops, file downloads
-- Authentication via Bearer token in Authorization header
-
-### Obsidian APIs
-
-- `app.vault`: File creation, binary downloads, path operations
-- `app.vault.adapter`: Direct file system access for existence checks
-- `normalizePath()`: Cross-platform path handling
-
-### Build System
-
-- **esbuild**: Bundles TypeScript to CommonJS, excludes Obsidian and builtins
-- **TypeScript**: Strict checking before build
-- Output: `main.js`, `manifest.json`, `styles.css` in project root
-- Manifest relocated to root for better compatibility with automated submission tools
-
-## Testing Patterns
-
-### Mock Setup
-
-- Obsidian API automatically mocked in `tests/setup.ts`
-- Raindrop data mocked in `tests/mocks/raindropData.ts`
-- Use `mockApp`, `mockRequest` from setup for vault operations
-
-### Test Structure
-
-- Unit tests mirror source structure in `tests/unit/utils/`
-- Integration tests in `tests/integration/` for end-to-end flows
-- Jest with jsdom environment, ts-jest for TypeScript
-
-### Common Test Patterns
-
-```typescript
-// Mock API responses
-mockRequest.mockResolvedValue(JSON.stringify(mockResponse));
-
-// Test async operations
-await expect(asyncFunction()).resolves.toEqual(expected);
-
-// Test error handling
-await expect(asyncFunction()).rejects.toThrow('error message');
-```
-
-## Configuration
-
-### Settings Structure
-
-Plugin settings include API token, templates, file naming, download options, and UI preferences. Templates are stored per content type with toggle controls.
-
-### Environment Variables
-
-- `npm_package_version`: Used by version bump script
-- Hardcoded vault paths in copy script: `/home/frost/Obsidian Vault/` and `/home/frost/Make-It-Rain Test/`
-
-## Key Files for Reference
-
-- `src/main.ts`: Main plugin logic and import orchestration
-- `src/utils/index.ts`: Centralized utility exports
-- `src/types.ts`: Data structures and interfaces
-- `jest.config.js`: Test configuration with coverage thresholds
-- `scripts/esbuild.config.mjs`: Build configuration
-- `manifest.json`: Plugin metadata and version
+_This file is gitignored (see `.gitignore` → "Tooling"). The agent harness is
+intentionally local; the canonical project docs are the Jekyll site under
+`docs/user-guide/` and `docs/developer-guide/`._
