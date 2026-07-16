@@ -110,7 +110,7 @@ jobs:
       - name: Check if tag exists
         id: check_tag
         run: |
-          TAG_NAME=v${{ inputs.version }}
+          TAG_NAME=${{ inputs.version }}
           if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
             echo "exists=true" >> $GITHUB_OUTPUT
             echo "Tag $TAG_NAME already exists"
@@ -122,14 +122,14 @@ jobs:
       - name: Create Git Tag
         if: steps.check_tag.outputs.exists == 'false'
         run: |
-          TAG_NAME=v${{ inputs.version }}
+          TAG_NAME=${{ inputs.version }}
           git tag $TAG_NAME
           git push origin $TAG_NAME
 
       - name: Check if release exists
         id: check_release
         run: |
-          TAG_NAME=v${{ inputs.version }}
+          TAG_NAME=${{ inputs.version }}
           if gh release view "$TAG_NAME" --repo ${{ github.repository }} >/dev/null 2>&1; then
             echo "exists=true" >> $GITHUB_OUTPUT
             echo "Release $TAG_NAME already exists"
@@ -143,7 +143,7 @@ jobs:
       - name: Delete existing release (if force enabled)
         if: steps.check_release.outputs.exists == 'true' && inputs.force == true
         run: |
-          TAG_NAME=v${{ inputs.version }}
+          TAG_NAME=${{ inputs.version }}
           gh release delete "$TAG_NAME" --repo ${{ github.repository }} --yes
           echo "Deleted existing release $TAG_NAME"
         env:
@@ -153,8 +153,8 @@ jobs:
         id: create_release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ inputs.version }}
-          name: Release v${{ inputs.version }}
+          tag_name: ${{ inputs.version }}
+          name: Release ${{ inputs.version }}
           body_path: ./release-notes-${{ inputs.version }}.md
           draft: false
           prerelease: false
@@ -168,7 +168,7 @@ jobs:
       - name: Upload assets to existing release (if not recreated)
         if: steps.check_release.outputs.exists == 'true' && inputs.force == false
         run: |
-          TAG_NAME=v${{ inputs.version }}
+          TAG_NAME=${{ inputs.version }}
           echo "Uploading assets to existing release $TAG_NAME"
           gh release upload "$TAG_NAME" main.js manifest.json styles.css --repo ${{ github.repository }} --clobber
         env:
