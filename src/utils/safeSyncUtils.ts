@@ -144,7 +144,7 @@ export async function applySafeSyncActions(
     for (const item of items) {
         try {
             const file = app.vault.getAbstractFileByPath(item.filePath);
-            if (!file || typeof (file as TFile).path !== 'string') {
+            if (!(file instanceof TFile)) {
                 errors++;
                 continue;
             }
@@ -155,7 +155,9 @@ export async function applySafeSyncActions(
             }
 
             if (item.action === 'delete') {
-                await app.vault.delete(file);
+                // FileManager.trashFile respects the user's deletion preference
+                // (system trash vs Obsidian's .trash folder) where available.
+                await app.fileManager.trashFile(file);
                 deleted++;
                 continue;
             }

@@ -71,13 +71,13 @@ export class RaindropFetchModal extends Modal {
             .setDesc('Pick specific collections to import (loads automatically).');
             
         const collectionsContainer = collectionListSetting.controlEl.createDiv({ cls: 'make-it-rain-collections-list-container' });
-        collectionsContainer.createEl('div', { text: 'Loading collections...', cls: 'make-it-rain-loading-text' });
+        collectionsContainer.createDiv({ text: 'Loading collections...', cls: 'make-it-rain-loading-text' });
 
         void this.plugin.fetchAllUserCollections().then(collections => {
             collectionsContainer.empty();
 
             if (!collections || collections.length === 0) {
-                collectionsContainer.createEl('div', { text: 'No collections found or API token invalid.', cls: 'setting-item-description' });
+                collectionsContainer.createDiv({ text: 'No collections found or API token invalid.', cls: 'setting-item-description' });
                 return;
             }
 
@@ -120,7 +120,7 @@ export class RaindropFetchModal extends Modal {
         }).catch(error => {
             console.error('Error fetching collections:', error);
             collectionsContainer.empty();
-            collectionsContainer.createEl('div', { text: 'Error loading collections. Please check your API token.', cls: 'setting-item-description' });
+            collectionsContainer.createDiv({ text: 'Error loading collections. Please check your API token.', cls: 'setting-item-description' });
         });
 
         new Setting(sourceGroup)
@@ -294,20 +294,20 @@ export class RaindropFetchModal extends Modal {
 
         const renderCollections = (searchText: string = '') => {
             listContainer.empty();
-            listContainer.createEl('div', { text: 'Loading collections...', cls: 'make-it-rain-loading-text' });
+            listContainer.createDiv({ text: 'Loading collections...', cls: 'make-it-rain-loading-text' });
             
             this.plugin.fetchAllUserCollections().then(collections => {
                 listContainer.empty();
                 
                 if (collections.length === 0) {
-                    listContainer.createEl('div', { text: 'No collections found.', cls: 'make-it-rain-empty-state' });
+                    listContainer.createDiv({ text: 'No collections found.', cls: 'make-it-rain-empty-state' });
                     return;
                 }
 
                 const filtered = collections.filter(c => c.title.toLowerCase().includes(searchText));
                 
                 if (filtered.length === 0) {
-                    listContainer.createEl('div', { text: 'No matching collections.', cls: 'make-it-rain-empty-state' });
+                    listContainer.createDiv({ text: 'No matching collections.', cls: 'make-it-rain-empty-state' });
                     return;
                 }
 
@@ -333,7 +333,7 @@ export class RaindropFetchModal extends Modal {
 
                 collectionsWithPaths.forEach(({ displayPath }) => {
                     const item = listContainer.createDiv({ cls: 'make-it-rain-collection-item' });
-                    item.createEl('span', { text: displayPath });
+                    item.createSpan({ text: displayPath });
                     item.onClickEvent(() => {
                         const current = collectionsTextComponent.getValue();
                         const toAdd = displayPath;
@@ -348,7 +348,7 @@ export class RaindropFetchModal extends Modal {
                 });
             }).catch(error => {
                 listContainer.empty();
-                listContainer.createEl('div', { text: 'Failed to load collections. Check your API token.', cls: 'make-it-rain-error-text' });
+                listContainer.createDiv({ text: 'Failed to load collections. Check your API token.', cls: 'make-it-rain-error-text' });
                 console.error('Error fetching collections in modal:', error);
             });
         };
@@ -910,7 +910,7 @@ export class TemplateSharingModal extends Modal {
                             if (success) {
                                 this.close();
                             }
-                        } catch (e) {
+                        } catch {
                             new Notice('Invalid JSON format or import failed.');
                         }
                     }
@@ -1009,8 +1009,8 @@ export class SafeSyncModal extends Modal {
             const idx = this.items.indexOf(item);
             const row = listEl.createDiv({ cls: 'make-it-rain-safesync-row' });
 
-            row.createEl('span', { text: `📄 ${item.fileName}`, cls: 'make-it-rain-safesync-name' });
-            row.createEl('span', { text: ` (raindrop_id: ${item.raindropId})`, cls: 'setting-item-description' });
+            row.createSpan({ text: `📄 ${item.fileName}`, cls: 'make-it-rain-safesync-name' });
+            row.createSpan({ text: ` (raindrop_id: ${item.raindropId})`, cls: 'setting-item-description' });
 
             const actionRow = row.createDiv({ cls: 'make-it-rain-safesync-actions' });
 

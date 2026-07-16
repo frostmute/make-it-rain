@@ -169,6 +169,40 @@ class MockPluginSettingTab {
     }
 }
 
+// Mock Component class — minimal stand-in for Obsidian's Component lifecycle.
+class MockComponent {
+    _children: MockComponent[] = [];
+    _loaded = false;
+
+    load() {
+        this._loaded = true;
+        return this;
+    }
+
+    onload() {
+        // Override in subclasses
+    }
+
+    unload() {
+        this._loaded = false;
+        this._children = [];
+    }
+
+    onunload() {
+        // Override in subclasses
+    }
+
+    addChild<T extends MockComponent>(component: T): T {
+        this._children.push(component);
+        return component;
+    }
+
+    removeChild<T extends MockComponent>(component: T): T {
+        this._children = this._children.filter(c => c !== component);
+        return component;
+    }
+}
+
 // Mock Setting class
 class MockSetting {
     settingEl: HTMLElement;
@@ -420,6 +454,7 @@ class MockTextAreaComponent {
     PluginSettingTab: MockPluginSettingTab,
     Setting: MockSetting,
     TFile: MockTFile,
+    Component: MockComponent,
     request: mockRequest,
     requestUrl: mockRequestUrl,
     normalizePath: mockNormalizePath,
@@ -439,6 +474,7 @@ jest.mock('obsidian', () => ({
     PluginSettingTab: MockPluginSettingTab,
     Setting: MockSetting,
     TFile: MockTFile,
+    Component: MockComponent,
     request: mockRequest,
     requestUrl: mockRequestUrl,
     normalizePath: mockNormalizePath,

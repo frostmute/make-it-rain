@@ -107,7 +107,8 @@ describe('detectDeletedRaindrops', () => {
 
 describe('applySafeSyncActions', () => {
     function makeMockFile(path: string) {
-        return { path, name: path.split('/').pop() || path } as TFile;
+        // Real instanceof check requires an actual TFile instance, not a cast.
+        return Object.assign(Object.create(TFile.prototype), { path, name: path.split('/').pop() || path });
     }
 
     it('should correctly count ignored items', async () => {
@@ -158,8 +159,10 @@ describe('applySafeSyncActions', () => {
         const mockApp = {
             vault: {
                 getAbstractFileByPath: () => makeMockFile('test.md'),
-                delete: async () => {},
                 adapter: { exists: async () => false },
+            },
+            fileManager: {
+                trashFile: async () => {},
             },
         } as unknown as App;
 

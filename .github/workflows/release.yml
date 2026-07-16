@@ -126,12 +126,6 @@ jobs:
           git tag $TAG_NAME
           git push origin $TAG_NAME
 
-      - name: Create Plugin Zip
-        run: |
-          zip -r make-it-rain.zip main.js manifest.json styles.css
-          echo "Created make-it-rain.zip with contents:"
-          unzip -l make-it-rain.zip
-
       - name: Check if release exists
         id: check_release
         run: |
@@ -165,7 +159,6 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            make-it-rain.zip
             main.js
             manifest.json
             styles.css
@@ -177,6 +170,6 @@ jobs:
         run: |
           TAG_NAME=v${{ inputs.version }}
           echo "Uploading assets to existing release $TAG_NAME"
-          gh release upload "$TAG_NAME" make-it-rain.zip main.js manifest.json styles.css --repo ${{ github.repository }} --clobber
+          gh release upload "$TAG_NAME" main.js manifest.json styles.css --repo ${{ github.repository }} --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

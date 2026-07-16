@@ -137,7 +137,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             id: 'safe-sync-scan',
             name: 'Safe sync: scan for deleted/renamed Raindrops',
             callback: () => {
-                this.runSafeSync();
+                void this.runSafeSync();
             }
         });
 
@@ -1216,7 +1216,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 name: parsed.name,
                 template: parsed.template
             };
-        } catch (e) {
+        } catch {
             new Notice('Failed to parse template JSON.');
             return null;
         }
