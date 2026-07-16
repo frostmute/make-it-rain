@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting, TextComponent, ButtonComponent, Notice, request, ToggleComponent, TextAreaComponent, MarkdownRenderer, DropdownComponent } from 'obsidian';
+import { App, Component, PluginSettingTab, Setting, TextComponent, ButtonComponent, Notice, request, ToggleComponent, TextAreaComponent, MarkdownRenderer, DropdownComponent } from 'obsidian';
 import type RaindropToObsidian from './main';
 import { RaindropTypes, RaindropType } from './types';
 import { MakeItRainSettings, TemplateData } from './types';
@@ -319,6 +319,9 @@ tags:
 export class RaindropToObsidianSettingTab extends PluginSettingTab {
     plugin: RaindropToObsidian;
     selectedTemplateType: string = 'link';
+    // Tab-scoped component so MarkdownRenderer.render doesn't anchor
+    // child render lifecycles to the long-lived plugin instance.
+    private previewComponent: Component = new Component();
     // Per-preview sample type selection, keyed by preview container so that
     // each preview panel maintains its own independent dropdown state.
     private previewSampleTypes: WeakMap<HTMLElement, RaindropType> = new WeakMap();
@@ -326,6 +329,17 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
     constructor(app: App, plugin: RaindropToObsidian) {
         super(app, plugin);
         this.plugin = plugin;
+    }
+
+    /**
+     * Obsidian 1.13+ declarative settings API. This tab renders imperatively
+     * via display() for backward compatibility with pre-1.13 Obsidian and
+     * returns an empty definition list to opt out of declarative indexing.
+     * Override getSettingDefinitions() + getControlValue() + setControlValue()
+     * if you ever want settings search indexing on 1.13+.
+     */
+    getSettingDefinitions(): never[] {
+        return [];
     }
 
     private renderTemplatePreview(container: HTMLElement, template: string, lockedSampleType?: RaindropType) {
@@ -343,12 +357,12 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
             this.previewSampleTypes.set(container, selectedSampleType);
         }
 
-        let header = container.querySelector('.make-it-rain-preview-header') as HTMLElement | null;
-        let previewContent = container.querySelector('.make-it-rain-preview-content') as HTMLElement | null;
+        let header = container.querySelector<HTMLElement>('.make-it-rain-preview-header');
+        let previewContent = container.querySelector<HTMLElement>('.make-it-rain-preview-content');
 
         if (!header) {
             header = container.createDiv({ cls: 'make-it-rain-preview-header' });
-            header.createEl('span', { text: 'Live Preview', cls: 'make-it-rain-preview-title' });
+            header.createSpan({ text: 'Live Preview', cls: 'make-it-rain-preview-title' });
 
             if (!lockedSampleType) {
                 const sampleSelector = new DropdownComponent(header);
@@ -365,8 +379,8 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
             previewContent = container.createDiv({ cls: 'make-it-rain-preview-content' });
         }
 
-        const content = previewContent as HTMLElement;
-        content.empty();
+        if (!previewContent) return;
+        previewContent.empty();
 
         try {
             const sampleData = SAMPLE_RAINDROPS[selectedSampleType];
@@ -383,10 +397,11 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
 
             const rendered = this.plugin.renderTemplate(template, dataForRender);
             
-            // Render as Markdown
-            void MarkdownRenderer.render(this.app, rendered, content, '', this.plugin);
+            // Render as Markdown — use a tab-scoped Component so we don't leak
+            // child components through the plugin's long-lived lifecycle.
+            void MarkdownRenderer.render(this.app, rendered, previewContent, '', this.previewComponent);
         } catch (e) {
-            content.createEl('div', { 
+            previewContent.createDiv({
                 text: `Preview error: ${e instanceof Error ? e.message : String(e)}`,
                 cls: 'make-it-rain-preview-error'
             });
@@ -643,7 +658,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                             }
                             this.plugin.settings.namedTemplates[targetName] = imported.template;
                             await this.plugin.saveSettings();
-                            this.display();
+                            this.update();
                             new Notice(`Template "${targetName}" imported successfully!`);
                             return true;
                         }).open();
@@ -708,7 +723,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                     .onClick(async () => {
                         this.plugin.settings.defaultTemplate = DEFAULT_SETTINGS.defaultTemplate;
                         await this.plugin.saveSettings();
-                        this.display(); // Re-render everything to update preview
+                        this.update(); // Re-render everything to update preview
                         new Notice("Default template has been reset.");
                     });
             })
@@ -808,7 +823,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                             });
                     });
             } else {
-                previewAreaDiv.createEl('div', { 
+                previewAreaDiv.createDiv({
                     text: 'Enable the override to see a live preview of this content-type template.',
                     cls: 'setting-item-description'
                 });
@@ -886,7 +901,8 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
             if (typeof response === 'string') {
                 data = JSON.parse(response) as ApiResponse;
             } else {
-                data = response as ApiResponse;
+                // request() returns string; this branch is defensive for future API changes
+                data = response;
             }
 
             if (typeof data === 'object' && data !== null && 'result' in data && (data as ApiResponse).result) {
@@ -911,15 +927,15 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
     private renderValidationResult(container: HTMLElement, result: ValidationResult) {
         container.empty();
         if (result.errors.length === 0 && result.warnings.length === 0) {
-            container.createEl('div', { text: '✓ Template is valid', cls: 'make-it-rain-validation-valid' });
+            container.createDiv({ text: '✓ Template is valid', cls: 'make-it-rain-validation-valid' });
             return;
         }
 
         for (const error of result.errors) {
-            container.createEl('div', { text: `✗ ${error}`, cls: 'make-it-rain-validation-error' });
+            container.createDiv({ text: `✗ ${error}`, cls: 'make-it-rain-validation-error' });
         }
         for (const warning of result.warnings) {
-            container.createEl('div', { text: `⚠ ${warning}`, cls: 'make-it-rain-validation-warning' });
+            container.createDiv({ text: `⚠ ${warning}`, cls: 'make-it-rain-validation-warning' });
         }
     }
 
