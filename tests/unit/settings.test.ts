@@ -30,7 +30,7 @@ describe('RaindropToObsidianSettingTab', () => {
 
     it('should display settings options in the container', () => {
         const container = tab.containerEl;
-        tab.display();
+        tab.update();
 
         expect(container.classList.contains('make-it-rain-settings-container')).toBe(true);
         expect(container.innerHTML).toContain('Connection &amp; Core Setup');
@@ -40,7 +40,7 @@ describe('RaindropToObsidianSettingTab', () => {
 
     it('should verify token when verify button is clicked', async () => {
         const verifySpy = jest.spyOn(tab as any, 'verifyApiToken').mockResolvedValue(undefined);
-        tab.display();
+        tab.update();
         
         // Call directly
         await (tab as any).verifyApiToken();

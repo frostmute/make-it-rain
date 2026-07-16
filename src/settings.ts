@@ -408,7 +408,13 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
         }
     }
 
-    display(): void {
+    /**
+     * Imperative settings render. Renamed from display() (deprecated since
+     * Obsidian 1.13.0). manifest.json declares minAppVersion 1.13.0, so we
+     * only need the 1.13+ path. getSettingDefinitions() returns [] to opt out
+     * of declarative indexing — Obsidian then calls update() to render.
+     */
+    update(): void {
         const { containerEl } = this;
         containerEl.empty();
         
