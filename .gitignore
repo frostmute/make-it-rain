@@ -55,6 +55,16 @@ issue-58-comment.md
 make-it-rain-beta-fix-58b.zip
 # /docs/plans: agent-harness local working notes (designs/, work/, tech-debt-tracker.md)
 
+# Tests harness (local dev notes)
+tests/GEMINI.md
+tests/KNOWN_ISSUES.md
+tests/README.md
+tests/integration/README.md
+
+# One-off release/migration scripts
+patch_changelog.sh
+scripts/fix-json-parsing.patch
+
 # AI Tool Artifacts
 .hermes/
 
