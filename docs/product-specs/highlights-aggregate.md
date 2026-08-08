@@ -17,7 +17,7 @@
 5. Results are paginated and each source item becomes a heading linked to its
    original URL.
 6. Each highlight is listed below its source, with its optional note.
-7. The output is written to `Aggregated Highlights - #tag.md`. If that file
+7. The output is written to `Aggregated Highlights - tag.md`. If that file
    already exists, a timestamped note is created instead of overwriting it.
 
 The source of truth for this command is the Raindrop API, not existing local
