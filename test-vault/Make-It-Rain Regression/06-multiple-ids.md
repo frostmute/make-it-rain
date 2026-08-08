@@ -7,4 +7,4 @@ type: link
 source: "https://example.com/make-it-rain-regression/precedence"
 ---
 
-Safe Sync should use `id: 910000006` when multiple recognized keys exist.
+Safe Sync should use `raindrop_id: 910000666` when multiple recognized keys exist, because the explicit Raindrop key is preferred over the generic `id`.

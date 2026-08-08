@@ -87,10 +87,16 @@ settings-tab lifecycle and remain usable after reopening.
    - `01-current-default-id.md` — ID `910000001`
    - `02-legacy-snake-case.md` — ID `910000002`
    - `03-legacy-camel-case.md` — ID `910000003`
-7. Confirm `06-multiple-ids.md` appears only once and uses ID `910000006`.
+7. Confirm `06-multiple-ids.md` appears only once and uses ID `910000666`, the
+   explicit `raindrop_id` value preferred over the generic `id`.
 8. Confirm these notes are not listed:
    - `04-invalid-id.md`
    - `05-no-id.md`
+
+A note whose only Raindrop-related field is a bare `id` (with no `source`,
+`link`, `collectionId`, or `type`) is intentionally not detected, so notes from
+other plugins are never captured. All six fixtures carry a corroborating field
+except `05-no-id.md`, which has no ID at all.
 9. Choose **Ignore** for all synthetic candidates and apply the actions.
 10. Confirm no fixture note was deleted or moved.
 

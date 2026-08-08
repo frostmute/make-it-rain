@@ -14,15 +14,19 @@
 
 Safe Sync recognizes the following frontmatter keys:
 
-1. `id` — the key emitted by the current default template and fallback note
-   generator.
-2. `raindrop_id` — supported for notes created from the original Safe Sync
-   documentation and older user templates.
-3. `raindropId` — supported for user-authored templates using camelCase.
+1. `raindrop_id` — supported for notes created from the original Safe Sync
+   documentation and older user templates. Honored on its own.
+2. `raindropId` — supported for user-authored templates using camelCase.
+   Honored on its own.
+3. `id` — the key emitted by the current default template and fallback note
+   generator. Because `id` is also a common generic frontmatter key used by
+   other plugins, it is only honored when the note also carries a
+   Raindrop-emitted field (`source`, `link`, `collectionId`, or `type`). This
+   prevents unrelated notes from being captured for destructive actions.
 
-The scanner prefers `id` when more than one recognized key is present. It
-validates that the selected value is a positive integer and never rewrites
-frontmatter during scanning.
+The scanner prefers an explicit `raindrop_id`/`raindropId` over a bare `id`
+when more than one recognized key is present. It validates that the selected
+value is a positive integer and never rewrites frontmatter during scanning.
 
 ## Acceptance Criteria
 

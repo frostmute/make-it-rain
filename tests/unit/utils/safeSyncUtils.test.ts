@@ -27,7 +27,7 @@ describe('scanVaultForRaindropIds', () => {
         expect(result).toEqual([]);
     });
 
-    it('should find files with the current id key in frontmatter', async () => {
+    it('should find files with the current id key when a Raindrop field corroborates it', async () => {
         const mockFile = { path: 'default-template.md', name: 'default-template.md' };
         const mockApp = {
             vault: {
@@ -35,7 +35,7 @@ describe('scanVaultForRaindropIds', () => {
             },
             metadataCache: {
                 getFileCache: () => ({
-                    frontmatter: { id: 12345, title: 'Default template note' },
+                    frontmatter: { id: 12345, title: 'Default template note', source: 'https://example.com' },
                 }),
             },
         } as unknown as App;
@@ -43,6 +43,23 @@ describe('scanVaultForRaindropIds', () => {
         const result = await scanVaultForRaindropIds(mockApp, '');
         expect(result).toHaveLength(1);
         expect(result[0].raindropId).toBe(12345);
+    });
+
+    it('should ignore a bare id key without a corroborating Raindrop field', async () => {
+        const mockFile = { path: 'foreign-plugin-note.md', name: 'foreign-plugin-note.md' };
+        const mockApp = {
+            vault: {
+                getMarkdownFiles: () => [mockFile],
+            },
+            metadataCache: {
+                getFileCache: () => ({
+                    frontmatter: { id: 12345, title: 'Note from another plugin' },
+                }),
+            },
+        } as unknown as App;
+
+        const result = await scanVaultForRaindropIds(mockApp, '');
+        expect(result).toHaveLength(0);
     });
 
     it('should find files with raindrop_id in frontmatter', async () => {
@@ -82,18 +99,24 @@ describe('scanVaultForRaindropIds', () => {
         expect(result[0].raindropId).toBe(54321);
     });
 
-    it('should prefer id when multiple recognized keys are present', () => {
-        expect(getRaindropIdFromFrontmatter({ id: 111, raindrop_id: 222, raindropId: 333 })).toBe(111);
+    it('should prefer explicit raindrop_id over the generic id key', () => {
+        expect(getRaindropIdFromFrontmatter({ id: 111, raindrop_id: 222, raindropId: 333 })).toBe(222);
+    });
+
+    it('should honor a corroborated bare id when no explicit key is present', () => {
+        expect(getRaindropIdFromFrontmatter({ id: 111, source: 'https://example.com' })).toBe(111);
     });
 
     it.each([
-        [{ id: 0 }],
-        [{ id: -1 }],
-        [{ id: 'not-a-number' }],
-        [{ id: '   ' }],
+        [{ id: 0, source: 'https://example.com' }],
+        [{ id: -1, source: 'https://example.com' }],
+        [{ id: 'not-a-number', source: 'https://example.com' }],
+        [{ id: '   ', source: 'https://example.com' }],
+        [{ id: 12345 }],
+        [{ id: 12345, title: 'Only a generic id, no Raindrop field' }],
         [{ title: 'No Raindrop ID' }],
         [null],
-    ])('should reject invalid frontmatter values: %j', (frontmatter) => {
+    ])('should reject invalid or uncorroborated frontmatter values: %j', (frontmatter) => {
         expect(getRaindropIdFromFrontmatter(frontmatter)).toBeUndefined();
     });
 

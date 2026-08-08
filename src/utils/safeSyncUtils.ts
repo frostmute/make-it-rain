@@ -22,25 +22,52 @@ export interface SafeSyncResult {
     total: number;
 }
 
-const RAINDROP_ID_KEYS = ['id', 'raindrop_id', 'raindropId'] as const;
+// Keys that unambiguously identify a Raindrop-linked note. These are honored on
+// their own because a note carrying them was authored by Safe Sync's original
+// documentation or a user template specifically for Raindrop.
+const EXPLICIT_RAINDROP_ID_KEYS = ['raindrop_id', 'raindropId'] as const;
+
+// `id` is emitted by the current default template, but it is also an extremely
+// common generic frontmatter key used by other plugins and personal workflows.
+// It is only honored when the note also carries a Raindrop-emitted field, so
+// unrelated notes are never captured as Safe Sync candidates.
+const RAINDROP_CORROBORATING_KEYS = ['source', 'link', 'collectionId', 'type'] as const;
+
+function parseRaindropId(rawValue: unknown): number | undefined {
+    if (rawValue === null || rawValue === undefined) return undefined;
+    if (typeof rawValue === 'string' && rawValue.trim() === '') return undefined;
+    const id = Number(rawValue);
+    if (Number.isInteger(id) && id > 0) return id;
+    return undefined;
+}
 
 /**
  * Extract a valid Raindrop ID from frontmatter without rewriting the note.
  *
- * `id` is checked first because it is the key emitted by the current default
- * template. The other names are retained for compatibility with Safe Sync's
- * original documentation and user-authored templates.
+ * `raindrop_id` and `raindropId` are honored unconditionally because they only
+ * appear on Raindrop-linked notes. The generic `id` key is honored only when
+ * the note also carries a Raindrop-emitted field (`source`, `link`,
+ * `collectionId`, or `type`), so notes created by other plugins that happen to
+ * use a numeric `id` are never captured for destructive Safe Sync actions.
  */
 export function getRaindropIdFromFrontmatter(frontmatter: unknown): number | undefined {
     if (!frontmatter || typeof frontmatter !== 'object') return undefined;
 
     const values = frontmatter as Record<string, unknown>;
-    for (const key of RAINDROP_ID_KEYS) {
-        if (!Object.prototype.hasOwnProperty.call(values, key) || values[key] === null || values[key] === undefined) continue;
-        const rawValue = values[key];
-        if (typeof rawValue === 'string' && rawValue.trim() === '') continue;
-        const id = Number(rawValue);
-        if (Number.isInteger(id) && id > 0) return id;
+
+    for (const key of EXPLICIT_RAINDROP_ID_KEYS) {
+        if (!Object.prototype.hasOwnProperty.call(values, key)) continue;
+        const id = parseRaindropId(values[key]);
+        if (id !== undefined) return id;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(values, 'id')) {
+        const id = parseRaindropId(values.id);
+        const hasCorroboratingField = RAINDROP_CORROBORATING_KEYS.some(key =>
+            Object.prototype.hasOwnProperty.call(values, key) &&
+            values[key] !== null && values[key] !== undefined
+        );
+        if (id !== undefined && hasCorroboratingField) return id;
     }
 
     return undefined;
