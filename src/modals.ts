@@ -1010,7 +1010,7 @@ export class SafeSyncModal extends Modal {
             const row = listEl.createDiv({ cls: 'make-it-rain-safesync-row' });
 
             row.createSpan({ text: `📄 ${item.fileName}`, cls: 'make-it-rain-safesync-name' });
-            row.createSpan({ text: ` (raindrop_id: ${item.raindropId})`, cls: 'setting-item-description' });
+            row.createSpan({ text: ` (Raindrop ID: ${item.raindropId})`, cls: 'setting-item-description' });
 
             const actionRow = row.createDiv({ cls: 'make-it-rain-safesync-actions' });
 

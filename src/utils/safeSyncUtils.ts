@@ -1,7 +1,7 @@
 /**
  * Safe Sync Utilities (Issue #9)
  * 
- * Scans the vault for local notes with raindrop_id frontmatter,
+ * Scans the vault for local notes with a recognized Raindrop ID field,
  * compares against current Raindrop API data, and detects deleted/renamed items.
  */
 
@@ -22,8 +22,33 @@ export interface SafeSyncResult {
     total: number;
 }
 
+const RAINDROP_ID_KEYS = ['id', 'raindrop_id', 'raindropId'] as const;
+
 /**
- * Scan the vault for Markdown files that contain a `raindrop_id` field in their frontmatter.
+ * Extract a valid Raindrop ID from frontmatter without rewriting the note.
+ *
+ * `id` is checked first because it is the key emitted by the current default
+ * template. The other names are retained for compatibility with Safe Sync's
+ * original documentation and user-authored templates.
+ */
+export function getRaindropIdFromFrontmatter(frontmatter: unknown): number | undefined {
+    if (!frontmatter || typeof frontmatter !== 'object') return undefined;
+
+    const values = frontmatter as Record<string, unknown>;
+    for (const key of RAINDROP_ID_KEYS) {
+        if (!(key in values) || values[key] === null || values[key] === undefined) continue;
+        const rawValue = values[key];
+        if (typeof rawValue === 'string' && rawValue.trim() === '') continue;
+        const id = Number(rawValue);
+        if (Number.isInteger(id) && id > 0) return id;
+    }
+
+    return undefined;
+}
+
+/**
+ * Scan the vault for Markdown files that contain a recognized Raindrop ID
+ * field (`id`, `raindrop_id`, or `raindropId`) in their frontmatter.
  * Returns a list of { filePath, fileName, raindropId }.
  */
 export async function scanVaultForRaindropIds(app: App, vaultPath: string): Promise<SafeSyncCandidate[]> {
@@ -35,16 +60,13 @@ export async function scanVaultForRaindropIds(app: App, vaultPath: string): Prom
         if (targetFolder && !file.path.startsWith(targetFolder)) continue;
         try {
             const cache = app.metadataCache.getFileCache(file);
-            const fm = cache?.frontmatter;
-            if (fm && fm.raindrop_id !== undefined) {
-                const id = Number(fm.raindrop_id);
-                if (!isNaN(id) && id > 0) {
-                    candidates.push({
-                        filePath: file.path,
-                        fileName: file.name,
-                        raindropId: id,
-                    });
-                }
+            const id = getRaindropIdFromFrontmatter(cache?.frontmatter);
+            if (id !== undefined) {
+                candidates.push({
+                    filePath: file.path,
+                    fileName: file.name,
+                    raindropId: id,
+                });
             }
         } catch {
             // skip files we can't read
@@ -55,7 +77,7 @@ export async function scanVaultForRaindropIds(app: App, vaultPath: string): Prom
 }
 
 /**
- * Given a list of local raindrop_ids, batch-check which ones still exist on Raindrop.
+ * Given a list of local Raindrop IDs, batch-check which ones still exist on Raindrop.
  * Raindrop API: fetch each raindrop by ID; an explicit `result: false` means the
  * bookmark is gone. Anything else (5xx, network, missing item, unexpected shape) is
  * "unknown" — we never auto-delete on a non-definitive answer.

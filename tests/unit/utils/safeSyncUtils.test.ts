@@ -2,7 +2,7 @@
  * Tests for safe sync utilities (Issue #9)
  */
 
-import { scanVaultForRaindropIds, detectDeletedRaindrops, applySafeSyncActions } from '../../../src/utils/safeSyncUtils';
+import { getRaindropIdFromFrontmatter, scanVaultForRaindropIds, detectDeletedRaindrops, applySafeSyncActions } from '../../../src/utils/safeSyncUtils';
 import { App, TFile } from 'obsidian';
 
 // Mock Obsidian modules
@@ -27,6 +27,24 @@ describe('scanVaultForRaindropIds', () => {
         expect(result).toEqual([]);
     });
 
+    it('should find files with the current id key in frontmatter', async () => {
+        const mockFile = { path: 'default-template.md', name: 'default-template.md' };
+        const mockApp = {
+            vault: {
+                getMarkdownFiles: () => [mockFile],
+            },
+            metadataCache: {
+                getFileCache: () => ({
+                    frontmatter: { id: 12345, title: 'Default template note' },
+                }),
+            },
+        } as unknown as App;
+
+        const result = await scanVaultForRaindropIds(mockApp, '');
+        expect(result).toHaveLength(1);
+        expect(result[0].raindropId).toBe(12345);
+    });
+
     it('should find files with raindrop_id in frontmatter', async () => {
         const mockFile = { path: 'test.md', name: 'test.md' };
         const mockApp = {
@@ -46,7 +64,40 @@ describe('scanVaultForRaindropIds', () => {
         expect(result[0].filePath).toBe('test.md');
     });
 
-    it('should skip files without raindrop_id', async () => {
+    it('should find files with the legacy camelCase key in frontmatter', async () => {
+        const mockFile = { path: 'legacy.md', name: 'legacy.md' };
+        const mockApp = {
+            vault: {
+                getMarkdownFiles: () => [mockFile],
+            },
+            metadataCache: {
+                getFileCache: () => ({
+                    frontmatter: { raindropId: '54321' },
+                }),
+            },
+        } as unknown as App;
+
+        const result = await scanVaultForRaindropIds(mockApp, '');
+        expect(result).toHaveLength(1);
+        expect(result[0].raindropId).toBe(54321);
+    });
+
+    it('should prefer id when multiple recognized keys are present', () => {
+        expect(getRaindropIdFromFrontmatter({ id: 111, raindrop_id: 222, raindropId: 333 })).toBe(111);
+    });
+
+    it.each([
+        [{ id: 0 }],
+        [{ id: -1 }],
+        [{ id: 'not-a-number' }],
+        [{ id: '   ' }],
+        [{ title: 'No Raindrop ID' }],
+        [null],
+    ])('should reject invalid frontmatter values: %j', (frontmatter) => {
+        expect(getRaindropIdFromFrontmatter(frontmatter)).toBeUndefined();
+    });
+
+    it('should skip files without a recognized Raindrop ID', async () => {
         const mockFile = { path: 'test.md', name: 'test.md' };
         const mockApp = {
             vault: {

@@ -30,12 +30,20 @@ describe('RaindropToObsidianSettingTab', () => {
 
     it('should display settings options in the container', () => {
         const container = tab.containerEl;
-        tab.update();
+        tab.display();
 
         expect(container.classList.contains('make-it-rain-settings-container')).toBe(true);
         expect(container.innerHTML).toContain('Connection &amp; Core Setup');
         expect(container.innerHTML).toContain('Import &amp; Organization');
         expect(container.innerHTML).toContain('Template Engine');
+    });
+
+    it('should keep update() available for in-tab refreshes', () => {
+        const updateSpy = jest.spyOn(tab, 'update');
+
+        tab.display();
+
+        expect(updateSpy).toHaveBeenCalledTimes(1);
     });
 
     it('should verify token when verify button is clicked', async () => {

@@ -106,6 +106,7 @@ export {
 // Re-export safe sync utilities (Issue #9)
 export type { SafeSyncCandidate } from './safeSyncUtils';
 export {
+    getRaindropIdFromFrontmatter,
     scanVaultForRaindropIds,
     detectDeletedRaindrops,
     applySafeSyncActions,

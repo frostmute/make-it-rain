@@ -1092,7 +1092,13 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             return;
         }
 
-        const loadingNotice = new Notice(`Aggregating highlights for tag: #${options.tag}...`, 0);
+        const tag = options.tag.trim().replace(/^#+/, '');
+        if (!tag) {
+            new Notice('Please provide a tag to aggregate.', 5000);
+            return;
+        }
+
+        const loadingNotice = new Notice(`Aggregating highlights for tag: #${tag}...`, 0);
         const baseApiUrl = 'https://api.raindrop.io/rest/v1';
         const perPage = 50;
 
@@ -1107,11 +1113,11 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             };
 
             while (hasMore) {
-                loadingNotice.setMessage(`Fetching highlights for #${options.tag} (Page ${page + 1})...`);
+                loadingNotice.setMessage(`Fetching highlights for #${tag} (Page ${page + 1})...`);
                 const searchParams = new URLSearchParams({
                     perpage: perPage.toString(),
                     page: page.toString(),
-                    search: `#${options.tag} type:highlight`
+                    search: `#${tag} type:highlight`
                 });
 
                 const apiUrl = `${baseApiUrl}/raindrops/0?${searchParams.toString()}`;
@@ -1131,18 +1137,19 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 }
             }
 
-            if (allItems.length === 0) {
+            const itemsWithHighlights = allItems.filter(item => (item.highlights?.length || 0) > 0);
+            if (itemsWithHighlights.length === 0) {
                 loadingNotice.hide();
-                new Notice(`No highlights found for tag: #${options.tag}`, 5000);
+                new Notice(`No highlights found for tag: #${tag}`, 5000);
                 return;
             }
 
             // Generate content
             const lines: string[] = [];
-            lines.push(`# Aggregated Highlights: #${options.tag}\n`);
+            lines.push(`# Aggregated Highlights: #${tag}\n`);
             lines.push(`Generated on: ${new Date().toLocaleString()}\n`);
 
-            allItems.forEach(item => {
+            itemsWithHighlights.forEach(item => {
                 if (item.highlights && item.highlights.length > 0) {
                     lines.push(`## [${item.title}](${item.link})`);
                     item.highlights.forEach(highlight => {
@@ -1158,7 +1165,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             const content = lines.join('\n');
 
             // Save the note
-            const fileName = sanitizeFileName(`Aggregated Highlights - #${options.tag}`);
+            const fileName = sanitizeFileName(`Aggregated Highlights - #${tag}`);
             const folderPath = options.vaultPath || this.settings.defaultFolder || '';
             
             if (folderPath) {
@@ -1185,7 +1192,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             let errorMessage = 'An error occurred during highlight aggregation';
             if (error instanceof Error) errorMessage = error.message;
             new Notice(`${errorMessage}`, 10000);
-            console.error(`Error aggregating highlights for tag ${options.tag}:`, error);
+            console.error(`Error aggregating highlights for tag ${tag}:`, error);
         }
     }
 
@@ -1222,8 +1229,9 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
         }
     }
     /**
-     * Issue #9: Scan the vault for notes with raindrop_id frontmatter,
-     * detect which ones have been deleted remotely, and show the SafeSyncModal.
+     * Issue #9: Scan the vault for notes with a recognized Raindrop ID
+     * frontmatter field, detect which ones have been deleted remotely, and show
+     * the SafeSyncModal.
      */
     async runSafeSync(vaultPath?: string): Promise<void> {
         if (!this.settings.apiToken) {
@@ -1235,12 +1243,12 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
 
         try {
             const targetPath = vaultPath || this.settings.defaultFolder || '';
-            loadingNotice.setMessage('Scanning vault for notes with raindrop_id...');
+            loadingNotice.setMessage('Scanning vault for notes with a Raindrop ID...');
 
             const candidates = await scanVaultForRaindropIds(this.app, targetPath);
             if (candidates.length === 0) {
                 loadingNotice.hide();
-                new Notice('No notes with raindrop_id found in the vault.', 5000);
+                new Notice('No notes with a Raindrop ID found in the vault.', 5000);
                 return;
             }
 
