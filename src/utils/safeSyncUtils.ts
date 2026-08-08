@@ -36,7 +36,7 @@ export function getRaindropIdFromFrontmatter(frontmatter: unknown): number | und
 
     const values = frontmatter as Record<string, unknown>;
     for (const key of RAINDROP_ID_KEYS) {
-        if (!(key in values) || values[key] === null || values[key] === undefined) continue;
+        if (!Object.prototype.hasOwnProperty.call(values, key) || values[key] === null || values[key] === undefined) continue;
         const rawValue = values[key];
         if (typeof rawValue === 'string' && rawValue.trim() === '') continue;
         const id = Number(rawValue);
