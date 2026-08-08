@@ -2,7 +2,7 @@
  * Tests for safe sync utilities (Issue #9)
  */
 
-import { scanVaultForRaindropIds, detectDeletedRaindrops, applySafeSyncActions } from '../../../src/utils/safeSyncUtils';
+import { getRaindropIdFromFrontmatter, scanVaultForRaindropIds, detectDeletedRaindrops, applySafeSyncActions } from '../../../src/utils/safeSyncUtils';
 import { App, TFile } from 'obsidian';
 
 // Mock Obsidian modules
@@ -27,6 +27,41 @@ describe('scanVaultForRaindropIds', () => {
         expect(result).toEqual([]);
     });
 
+    it('should find files with the current id key when a Raindrop field corroborates it', async () => {
+        const mockFile = { path: 'default-template.md', name: 'default-template.md' };
+        const mockApp = {
+            vault: {
+                getMarkdownFiles: () => [mockFile],
+            },
+            metadataCache: {
+                getFileCache: () => ({
+                    frontmatter: { id: 12345, title: 'Default template note', source: 'https://example.com' },
+                }),
+            },
+        } as unknown as App;
+
+        const result = await scanVaultForRaindropIds(mockApp, '');
+        expect(result).toHaveLength(1);
+        expect(result[0].raindropId).toBe(12345);
+    });
+
+    it('should ignore a bare id key without a corroborating Raindrop field', async () => {
+        const mockFile = { path: 'foreign-plugin-note.md', name: 'foreign-plugin-note.md' };
+        const mockApp = {
+            vault: {
+                getMarkdownFiles: () => [mockFile],
+            },
+            metadataCache: {
+                getFileCache: () => ({
+                    frontmatter: { id: 12345, title: 'Note from another plugin' },
+                }),
+            },
+        } as unknown as App;
+
+        const result = await scanVaultForRaindropIds(mockApp, '');
+        expect(result).toHaveLength(0);
+    });
+
     it('should find files with raindrop_id in frontmatter', async () => {
         const mockFile = { path: 'test.md', name: 'test.md' };
         const mockApp = {
@@ -46,7 +81,46 @@ describe('scanVaultForRaindropIds', () => {
         expect(result[0].filePath).toBe('test.md');
     });
 
-    it('should skip files without raindrop_id', async () => {
+    it('should find files with the legacy camelCase key in frontmatter', async () => {
+        const mockFile = { path: 'legacy.md', name: 'legacy.md' };
+        const mockApp = {
+            vault: {
+                getMarkdownFiles: () => [mockFile],
+            },
+            metadataCache: {
+                getFileCache: () => ({
+                    frontmatter: { raindropId: '54321' },
+                }),
+            },
+        } as unknown as App;
+
+        const result = await scanVaultForRaindropIds(mockApp, '');
+        expect(result).toHaveLength(1);
+        expect(result[0].raindropId).toBe(54321);
+    });
+
+    it('should prefer explicit raindrop_id over the generic id key', () => {
+        expect(getRaindropIdFromFrontmatter({ id: 111, raindrop_id: 222, raindropId: 333 })).toBe(222);
+    });
+
+    it('should honor a corroborated bare id when no explicit key is present', () => {
+        expect(getRaindropIdFromFrontmatter({ id: 111, source: 'https://example.com' })).toBe(111);
+    });
+
+    it.each([
+        [{ id: 0, source: 'https://example.com' }],
+        [{ id: -1, source: 'https://example.com' }],
+        [{ id: 'not-a-number', source: 'https://example.com' }],
+        [{ id: '   ', source: 'https://example.com' }],
+        [{ id: 12345 }],
+        [{ id: 12345, title: 'Only a generic id, no Raindrop field' }],
+        [{ title: 'No Raindrop ID' }],
+        [null],
+    ])('should reject invalid or uncorroborated frontmatter values: %j', (frontmatter) => {
+        expect(getRaindropIdFromFrontmatter(frontmatter)).toBeUndefined();
+    });
+
+    it('should skip files without a recognized Raindrop ID', async () => {
         const mockFile = { path: 'test.md', name: 'test.md' };
         const mockApp = {
             vault: {

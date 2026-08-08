@@ -1,5 +1,5 @@
 import RaindropToObsidian from '../../src/main';
-import { mockApp, MockNotice } from '../setup';
+import { mockApp } from '../setup';
 import { App, PluginManifest } from 'obsidian';
 import { RaindropItem, RaindropType } from '../../src/types';
 
@@ -62,9 +62,14 @@ describe('RaindropToObsidian', () => {
             // Mock normalizePath which is usually a global in Obsidian but mocked in our setup
             // Mock createFolderStructure by mocking mkdir on adapter if needed
 
-            await plugin.aggregateHighlightsByTag({ tag: 'research' });
+            await plugin.aggregateHighlightsByTag({ tag: '##research' });
 
-            expect(fetchWithRetrySpy).toHaveBeenCalled();
+            expect(fetchWithRetrySpy).toHaveBeenCalledWith(
+                expect.anything(),
+                expect.stringContaining('search=%23research+type%3Ahighlight'),
+                expect.anything(),
+                expect.anything()
+            );
             expect(createSpy).toHaveBeenCalledWith(
                 expect.stringContaining('Aggregated Highlights - research.md'),
                 expect.stringContaining('## [Item 1](link1)')
@@ -77,6 +82,32 @@ describe('RaindropToObsidian', () => {
                 expect.stringContaining('Aggregated Highlights - research.md'),
                 expect.stringContaining('**Note**: n1')
             );
+        });
+
+        it('should ignore API items that contain no highlights', async () => {
+            plugin.settings.apiToken = 'test-token';
+            const apiUtils = require('../../src/utils/apiUtils');
+            jest.spyOn(apiUtils, 'fetchWithRetry').mockResolvedValue({
+                result: true,
+                items: [{ _id: 1, title: 'Empty item', link: 'link1', highlights: [] }]
+            });
+            const createSpy = jest.spyOn(plugin.app.vault, 'create').mockResolvedValue({} as any);
+
+            await plugin.aggregateHighlightsByTag({ tag: 'research' });
+
+            expect(createSpy).not.toHaveBeenCalled();
+            expect(mockApp.vault.create).not.toHaveBeenCalled();
+        });
+
+        it('should reject a blank tag before calling the API', async () => {
+            plugin.settings.apiToken = 'test-token';
+            const apiUtils = require('../../src/utils/apiUtils');
+            const fetchWithRetrySpy = jest.spyOn(apiUtils, 'fetchWithRetry');
+
+            await plugin.aggregateHighlightsByTag({ tag: '###' });
+
+            expect(fetchWithRetrySpy).not.toHaveBeenCalled();
+            expect(fetchWithRetrySpy).not.toHaveBeenCalled();
         });
     });
 

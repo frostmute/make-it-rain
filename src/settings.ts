@@ -333,10 +333,9 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
 
     /**
      * Obsidian 1.13+ declarative settings API. This tab renders imperatively
-     * via display() for backward compatibility with pre-1.13 Obsidian and
-     * returns an empty definition list to opt out of declarative indexing.
-     * Override getSettingDefinitions() + getControlValue() + setControlValue()
-     * if you ever want settings search indexing on 1.13+.
+     * via display() and returns an empty definition list to opt out of
+     * declarative indexing. Override the control-value methods if settings
+     * search indexing is added later.
      */
     getSettingDefinitions(): never[] {
         return [];
@@ -409,10 +408,20 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
     }
 
     /**
-     * Imperative settings render. Renamed from display() (deprecated since
-     * Obsidian 1.13.0). manifest.json declares minAppVersion 1.13.0, so we
-     * only need the 1.13+ path. getSettingDefinitions() returns [] to opt out
-     * of declarative indexing — Obsidian then calls update() to render.
+     * Obsidian's settings-tab lifecycle entry point.
+     *
+     * Keep the actual renderer in update() so existing refreshes from setting
+     * controls continue to work, while ensuring Obsidian invokes the renderer
+     * when the tab is opened (including Obsidian 1.13+).
+     */
+    display(): void {
+        this.update();
+    }
+
+    /**
+     * Imperative settings renderer shared by display() and in-tab refreshes.
+     * getSettingDefinitions() returns [] because this tab intentionally uses
+     * the richer imperative UI rather than declarative setting indexing.
      */
     update(): void {
         const { containerEl } = this;
