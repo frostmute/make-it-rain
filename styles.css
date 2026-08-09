@@ -223,6 +223,13 @@
     background-color: var(--background-secondary);
 }
 
+/* Template Engine section is OPEN by default — make the summary look like
+   a regular heading + a subtle "click to collapse" affordance, not like a
+   plain collapsed <details>. The other sections stay collapsed-looking. */
+.make-it-rain-template-section .make-it-rain-section-summary {
+    background-color: var(--background-secondary);
+}
+
 .make-it-rain-section-summary {
     padding: 1rem;
     font-weight: 600;
@@ -278,6 +285,43 @@
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
+}
+
+/* ─── Per-content-type template card ─── */
+.make-it-rain-type-card {
+    border: 1px solid var(--background-modifier-border);
+    border-radius: var(--radius-m);
+    background-color: var(--background-secondary);
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.make-it-rain-type-card .setting-item {
+    border-top: none;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+}
+
+.make-it-rain-type-card-body {
+    margin-top: 0.25rem;
+}
+
+/* ─── Template Preview Modal ─── */
+.make-it-rain-template-preview-modal .make-it-rain-template-preview-controls {
+    margin-bottom: 0.75rem;
+}
+
+.make-it-rain-template-preview-modal .make-it-rain-template-preview-content {
+    border: 1px solid var(--background-modifier-border);
+    border-radius: var(--radius-m);
+    padding: 1rem;
+    background-color: var(--background-primary);
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.make-it-rain-template-preview-modal .make-it-rain-template-preview-selector {
+    min-width: 12rem;
 }
 
 /* Make It Rain Modals */
