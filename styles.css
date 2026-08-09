@@ -54,31 +54,6 @@
   color: var(--text-warning);
 }
 
-.make-it-rain-advanced-options {
-  margin-top: 15px;
-  border: 1px solid var(--background-modifier-border);
-  border-radius: var(--radius-m);
-  padding: 0;
-}
-
-.make-it-rain-advanced-options summary {
-  padding: 10px;
-  cursor: pointer;
-  background-color: var(--background-secondary);
-  font-weight: var(--font-bold);
-  border-radius: var(--radius-m);
-}
-
-.make-it-rain-advanced-options[open] summary {
-  border-bottom: 1px solid var(--background-modifier-border);
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
-.make-it-rain-advanced-options > div {
-  padding: 10px;
-}
-
 /* Variable Browser Modal Styles */
 .make-it-rain-variable-browser .make-it-rain-variable-list-container {
   max-height: 60vh;
@@ -223,6 +198,13 @@
     background-color: var(--background-secondary);
 }
 
+/* Template Engine section is OPEN by default — make the summary look like
+   a regular heading + a subtle "click to collapse" affordance, not like a
+   plain collapsed <details>. The other sections stay collapsed-looking. */
+.make-it-rain-template-section .make-it-rain-section-summary {
+    background-color: var(--background-secondary);
+}
+
 .make-it-rain-section-summary {
     padding: 1rem;
     font-weight: 600;
@@ -278,6 +260,43 @@
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
+}
+
+/* ─── Per-content-type template card ─── */
+.make-it-rain-type-card {
+    border: 1px solid var(--background-modifier-border);
+    border-radius: var(--radius-m);
+    background-color: var(--background-secondary);
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.make-it-rain-type-card .setting-item {
+    border-top: none;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+}
+
+.make-it-rain-type-card-body {
+    margin-top: 0.25rem;
+}
+
+/* ─── Template Preview Modal ─── */
+.make-it-rain-template-preview-modal .make-it-rain-template-preview-controls {
+    margin-bottom: 0.75rem;
+}
+
+.make-it-rain-template-preview-modal .make-it-rain-template-preview-content {
+    border: 1px solid var(--background-modifier-border);
+    border-radius: var(--radius-m);
+    padding: 1rem;
+    background-color: var(--background-primary);
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.make-it-rain-template-preview-modal .make-it-rain-template-preview-selector {
+    min-width: 12rem;
 }
 
 /* Make It Rain Modals */
@@ -359,64 +378,7 @@
     margin: 0;
 }
 
-/* Template Preview Side-by-Side Layout */
-.make-it-rain-side-by-side {
-    display: flex;
-    gap: 16px;
-    margin-top: 12px;
-    align-items: stretch;
-}
-
-.make-it-rain-editor-area {
-    flex: 1;
-    min-width: 0;
-}
-
-.make-it-rain-preview-area {
-    flex: 1;
-    min-width: 0;
-    border: 1px solid var(--background-modifier-border);
-    border-radius: var(--radius-m);
-    padding: 12px;
-    background-color: var(--background-primary);
-    max-height: 600px;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-.make-it-rain-preview-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-    border-bottom: 1px solid var(--background-modifier-border);
-    padding-bottom: 8px;
-    flex-shrink: 0;
-}
-
-.make-it-rain-preview-title {
-    font-weight: 600;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    letter-spacing: 0.05em;
-}
-
-.make-it-rain-preview-content {
-    flex: 1;
-    overflow-y: auto;
-    font-size: var(--font-ui-small);
-}
-
-.make-it-rain-preview-content pre {
-    white-space: pre-wrap;
-    word-break: break-all;
-    background-color: transparent;
-    padding: 0;
-    margin: 0;
-}
-
+/* Preview error message (used by the template preview modal) */
 .make-it-rain-preview-error {
     color: var(--text-error);
     background-color: var(--background-message-error);
@@ -424,10 +386,4 @@
     border-radius: var(--radius-s);
     margin-top: 10px;
     font-size: var(--font-ui-smaller);
-}
-
-@media (max-width: 768px) {
-    .make-it-rain-side-by-side {
-        flex-direction: column;
-    }
 }

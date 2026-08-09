@@ -1,14 +1,15 @@
-import { App, Modal, Setting, TextComponent, ButtonComponent, Notice, ToggleComponent, DropdownComponent } from 'obsidian';
+import { App, Modal, Setting, TextComponent, ButtonComponent, Notice, ToggleComponent, DropdownComponent, MarkdownRenderer, Component } from 'obsidian';
 import type RaindropToObsidian from './main';
-import { 
+import {
     IRaindropToObsidian,
-    RaindropCollection, 
-    RaindropType, 
-    TagMatchTypes, 
-    RaindropTypes, 
+    RaindropCollection,
+    RaindropType,
+    TagMatchTypes,
+    RaindropTypes,
     ModalFetchOptions,
     AggregateHighlightsOptions
 } from './types';
+import { SAMPLE_RAINDROPS } from './utils/sampleData';
 
 /**
  * Modal for fetching raindrops with filters
@@ -821,6 +822,143 @@ export class VariableBrowserModal extends Modal {
             item.createEl('code', { text: `{{${v.name}}}` });
             item.createSpan({ text: ` - ${v.desc}`, cls: 'variable-description' });
         }
+    }
+}
+
+/**
+ * Template preview modal. Opt-in — replaces the always-on side-by-side
+ * preview that lived inside the settings panel. Previews are a deliberate
+ * action: click Preview, see the rendered note, close.
+ *
+ * If `lockedType` is set, the sample-type dropdown is hidden and the
+ * preview is always rendered against that type. Useful for content-type
+ * overrides where the template is type-specific.
+ */
+export class TemplatePreviewModal extends Modal {
+    plugin: RaindropToObsidian;
+    template: string;
+    buildContext: (sample: import('./utils/sampleData').SampleRaindrop) => import('./types').TemplateData;
+    lockedType?: RaindropType;
+    selectedSampleType: RaindropType;
+    private previewComponent: Component = new Component();
+    // Incremented on every render so a slow async render started before a
+    // rapid sample-type switch can detect it is stale and bail out.
+    private renderToken = 0;
+
+    constructor(
+        app: App,
+        plugin: RaindropToObsidian,
+        template: string,
+        buildContext: (sample: import('./utils/sampleData').SampleRaindrop) => import('./types').TemplateData,
+        lockedType?: RaindropType
+    ) {
+        super(app);
+        this.plugin = plugin;
+        this.template = template;
+        this.buildContext = buildContext;
+        this.lockedType = lockedType;
+        this.selectedSampleType = lockedType ?? RaindropTypes.LINK;
+    }
+
+    onOpen() {
+        const { contentEl } = this;
+        contentEl.empty();
+        contentEl.addClass('make-it-rain-modal');
+        contentEl.addClass('make-it-rain-template-preview-modal');
+
+        const header = contentEl.createDiv({ cls: 'make-it-rain-modal-header' });
+        header.createEl('h2', { text: 'Template preview' });
+        header.createEl('p', {
+            text: this.lockedType
+                ? `Rendered against a sample ${this.lockedType} raindrop.`
+                : 'Select a sample type below to see how this template renders.',
+            cls: 'setting-item-description'
+        });
+
+        const controls = contentEl.createDiv({ cls: 'make-it-rain-template-preview-controls' });
+        const previewArea = contentEl.createDiv({ cls: 'make-it-rain-template-preview-content' });
+
+        if (!this.lockedType) {
+            const selectorSetting = new Setting(controls)
+                .setName('Sample type')
+                .addDropdown((dropdown) => {
+                    Object.values(RaindropTypes).forEach(t => {
+                        dropdown.addOption(t, t.charAt(0).toUpperCase() + t.slice(1));
+                    });
+                    dropdown.setValue(this.selectedSampleType)
+                        .onChange((value) => {
+                            this.selectedSampleType = value as RaindropType;
+                            this.render(previewArea);
+                        });
+                });
+            selectorSetting.controlEl.addClass('make-it-rain-template-preview-selector');
+        }
+
+        this.render(previewArea);
+
+        const footer = contentEl.createDiv({ cls: 'make-it-rain-button-container' });
+        new ButtonComponent(footer)
+            .setButtonText('Close')
+            .onClick(() => this.close());
+    }
+
+    private render(container: HTMLElement) {
+        const token = ++this.renderToken;
+        container.empty();
+
+        // Tear down the previous render's component before starting a new one so
+        // listeners/components don't leak across renders, then load() the fresh
+        // one. Loading drives the onload lifecycle, which is what makes embeds
+        // and other nested renders created during markdown rendering initialize
+        // correctly. (Modal's typings don't expose addChild/removeChild, so we
+        // manage the component's lifecycle directly.)
+        this.previewComponent.unload();
+        this.previewComponent = new Component();
+        this.previewComponent.load();
+
+        try {
+            const sampleData = SAMPLE_RAINDROPS[this.selectedSampleType];
+            if (!sampleData) {
+                container.createDiv({
+                    text: `No sample data available for type "${this.selectedSampleType}".`,
+                    cls: 'make-it-rain-preview-error'
+                });
+                return;
+            }
+            const ctx = this.buildContext(sampleData);
+            const rendered = this.plugin.renderTemplate(this.template, ctx);
+            void MarkdownRenderer.render(this.app, rendered, container, '', this.previewComponent)
+                .then(() => {
+                    // A newer render superseded this one (rapid dropdown switching);
+                    // drop its output to avoid mixed/duplicated preview content.
+                    if (token !== this.renderToken) {
+                        container.empty();
+                    }
+                })
+                .catch((e) => {
+                    // Only surface the failure if this render is still the current
+                    // one — a stale render's rejection should be silently dropped.
+                    if (token !== this.renderToken) return;
+                    container.empty();
+                    container.createDiv({
+                        text: `Preview error: ${e instanceof Error ? e.message : String(e)}`,
+                        cls: 'make-it-rain-preview-error'
+                    });
+                });
+        } catch (e) {
+            container.createDiv({
+                text: `Preview error: ${e instanceof Error ? e.message : String(e)}`,
+                cls: 'make-it-rain-preview-error'
+            });
+        }
+    }
+
+    onClose() {
+        const { contentEl } = this;
+        contentEl.empty();
+        // We manage previewComponent's lifecycle manually, so unload it here to
+        // tear down any child renders created during the last preview.
+        this.previewComponent.unload();
     }
 }
 

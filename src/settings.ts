@@ -1,10 +1,10 @@
-import { App, Component, PluginSettingTab, Setting, TextComponent, ButtonComponent, Notice, request, ToggleComponent, TextAreaComponent, MarkdownRenderer, DropdownComponent } from 'obsidian';
+import { App, PluginSettingTab, Setting, TextComponent, ButtonComponent, Notice, request, ToggleComponent, TextAreaComponent, DropdownComponent } from 'obsidian';
 import type RaindropToObsidian from './main';
 import { RaindropTypes, RaindropType } from './types';
 import { MakeItRainSettings, TemplateData } from './types';
-import { VariableBrowserModal, TemplateSharingModal } from './modals';
+import { VariableBrowserModal, TemplateSharingModal, TemplatePreviewModal } from './modals';
 import { validateTemplate, ValidationResult } from './template-validator';
-import { SAMPLE_RAINDROPS } from './utils/sampleData';
+import { SampleRaindrop } from './utils/sampleData';
 
 export const DEFAULT_SETTINGS: MakeItRainSettings = {
     apiToken: '',
@@ -318,13 +318,6 @@ tags:
 
 export class RaindropToObsidianSettingTab extends PluginSettingTab {
     plugin: RaindropToObsidian;
-    selectedTemplateType: string = 'link';
-    // Tab-scoped component so MarkdownRenderer.render doesn't anchor
-    // child render lifecycles to the long-lived plugin instance.
-    private previewComponent: Component = new Component();
-    // Per-preview sample type selection, keyed by preview container so that
-    // each preview panel maintains its own independent dropdown state.
-    private previewSampleTypes: WeakMap<HTMLElement, RaindropType> = new WeakMap();
 
     constructor(app: App, plugin: RaindropToObsidian) {
         super(app, plugin);
@@ -341,69 +334,46 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
         return [];
     }
 
-    private renderTemplatePreview(container: HTMLElement, template: string, lockedSampleType?: RaindropType) {
-        // Store the latest template on the container so the dropdown's onChange
-        // handler (created once) always re-renders with the current value.
-        container.dataset.template = template;
+    /**
+     * Build the context object used for previews. Kept here so both the
+     * default-template preview and the content-type previews render
+     * identically.
+     */
+    private buildPreviewContext(sampleData: SampleRaindrop): TemplateData {
+        return {
+            ...sampleData,
+            bannerFieldName: this.plugin.settings.bannerFieldName,
+            url: sampleData.link,
+            domain: (() => { try { return new URL(sampleData.link).hostname; } catch { return ''; } })(),
+            renderedType: (() => {
+                const types: Record<string, string> = {
+                    link: 'web link', article: 'article', image: 'image',
+                    video: 'video', doc: 'document', audio: 'audio', book: 'book'
+                };
+                return types[sampleData.type] || sampleData.type;
+            })(),
+            formattedCreatedDate: new Date(sampleData.created).toLocaleDateString(),
+            formattedUpdatedDate: new Date(sampleData.lastupdate).toLocaleDateString(),
+            formattedTags: sampleData.tags.map(t => `#${t}`).join(' ')
+        } as unknown as TemplateData;
+    }
 
-        // Each preview keeps its own sample type so switching the dropdown in
-        // one panel doesn't leak into others. When a sample type is locked (e.g.
-        // for content-type overrides) the dropdown is omitted and that type is
-        // always used.
-        let selectedSampleType = lockedSampleType ?? this.previewSampleTypes.get(container);
-        if (!selectedSampleType) {
-            selectedSampleType = RaindropTypes.LINK;
-            this.previewSampleTypes.set(container, selectedSampleType);
-        }
-
-        let header = container.querySelector<HTMLElement>('.make-it-rain-preview-header');
-        let previewContent = container.querySelector<HTMLElement>('.make-it-rain-preview-content');
-
-        if (!header) {
-            header = container.createDiv({ cls: 'make-it-rain-preview-header' });
-            header.createSpan({ text: 'Live Preview', cls: 'make-it-rain-preview-title' });
-
-            if (!lockedSampleType) {
-                const sampleSelector = new DropdownComponent(header);
-                Object.values(RaindropTypes).forEach(t => {
-                    sampleSelector.addOption(t, t.charAt(0).toUpperCase() + t.slice(1));
-                });
-                sampleSelector.setValue(selectedSampleType)
-                    .onChange((value) => {
-                        this.previewSampleTypes.set(container, value as RaindropType);
-                        this.renderTemplatePreview(container, container.dataset.template || '');
-                    });
-            }
-
-            previewContent = container.createDiv({ cls: 'make-it-rain-preview-content' });
-        }
-
-        if (!previewContent) return;
-        previewContent.empty();
-
+    /**
+     * Open the opt-in template preview modal. Replaces the always-on
+     * side-by-side preview that ate half the editor width — previews are
+     * now a deliberate action, not ambient noise.
+     */
+    private openTemplatePreview(template: string, lockedType?: RaindropType) {
         try {
-            const sampleData = SAMPLE_RAINDROPS[selectedSampleType];
-            const dataForRender = {
-                ...sampleData,
-                bannerFieldName: this.plugin.settings.bannerFieldName,
-                url: sampleData.link,
-                domain: new URL(sampleData.link).hostname,
-                renderedType: (() => { const types: Record<string, string> = { link: 'web link', article: 'article', image: 'image', video: 'video', doc: 'document', audio: 'audio', book: 'book' }; return types[sampleData.type] || sampleData.type; })(),
-                formattedCreatedDate: new Date(sampleData.created).toLocaleDateString(),
-                formattedUpdatedDate: new Date(sampleData.lastupdate).toLocaleDateString(),
-                formattedTags: sampleData.tags.map(t => `#${t}`).join(' ')
-            } as unknown as TemplateData;
-
-            const rendered = this.plugin.renderTemplate(template, dataForRender);
-            
-            // Render as Markdown — use a tab-scoped Component so we don't leak
-            // child components through the plugin's long-lived lifecycle.
-            void MarkdownRenderer.render(this.app, rendered, previewContent, '', this.previewComponent);
+            new TemplatePreviewModal(
+                this.app,
+                this.plugin,
+                template,
+                (sample) => this.buildPreviewContext(sample),
+                lockedType
+            ).open();
         } catch (e) {
-            previewContent.createDiv({
-                text: `Preview error: ${e instanceof Error ? e.message : String(e)}`,
-                cls: 'make-it-rain-preview-error'
-            });
+            new Notice(`Preview failed: ${e instanceof Error ? e.message : String(e)}`, 7000);
         }
     }
 
@@ -623,13 +593,15 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
             });
 
         // --- 5. Template Engine ---
-        const templateSection = containerEl.createEl('details', { cls: 'make-it-rain-settings-section make-it-rain-advanced-options' });
+        // Section is OPEN by default — this is where 90% of users actually
+        // configure things. Wrapped in <details> so the rare non-template
+        // user can collapse it.
+        const templateSection = containerEl.createEl('details', { cls: 'make-it-rain-settings-section make-it-rain-template-section', attr: { open: '' } });
         templateSection.createEl('summary', { text: 'Template Engine', cls: 'make-it-rain-section-summary' });
         const templateContent = templateSection.createDiv({ cls: 'make-it-rain-section-content' });
 
-        const templateWrapper = templateContent.createDiv();
-        templateWrapper.style.display = this.plugin.settings.isTemplateSystemEnabled ? 'block' : 'none';
-
+        // Master enable toggle — hides the whole editor surface when off,
+        // so power users can disable templates without losing the toggle.
         new Setting(templateContent)
             .setName('Enable template system')
             .setDesc('Use custom Handlebars templates for formatting imported notes instead of the basic fallback structure.')
@@ -638,35 +610,27 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                     .onChange(async (value: boolean) => {
                         this.plugin.settings.isTemplateSystemEnabled = value;
                         await this.plugin.saveSettings();
-                        templateWrapper.style.display = value ? 'block' : 'none';
+                        templateBody.style.display = value ? 'block' : 'none';
                     });
             });
 
-        new Setting(templateWrapper)
-            .setName('Template Reference')
-            .setDesc('View all available variables, properties, and formatting helpers you can inject into your templates.')
-            .addButton((button: ButtonComponent) => {
-                button
-                    .setButtonText("Browse variables")
-                    .setIcon("search")
-                    .onClick(() => {
-                        new VariableBrowserModal(this.app).open();
-                    });
-            });
+        const templateBody = templateContent.createDiv();
+        templateBody.style.display = this.plugin.settings.isTemplateSystemEnabled ? 'block' : 'none';
 
-        new Setting(templateWrapper)
-            .setName('Import Template')
-            .setDesc('Import a template shared by the community.')
+        // Helper links row — kept compact, single setting row.
+        new Setting(templateBody)
+            .setName('Reference & sharing')
+            .setDesc('Browse variables, or import a template shared by the community.')
             .addButton((button: ButtonComponent) => {
-                button
-                    .setButtonText("Import template")
-                    .setIcon("import")
+                button.setButtonText('Browse variables').setIcon('search')
+                    .onClick(() => { new VariableBrowserModal(this.app).open(); });
+            })
+            .addButton((button: ButtonComponent) => {
+                button.setButtonText('Import template').setIcon('import')
                     .onClick(() => {
                         new TemplateSharingModal(this.app, this.plugin, 'import', '', async (jsonStr) => {
                             const imported = this.plugin.importTemplate(jsonStr);
-                            if (!imported) {
-                                return false;
-                            }
+                            if (!imported) return false;
                             let targetName = imported.name;
                             if (Object.prototype.hasOwnProperty.call(this.plugin.settings.namedTemplates, targetName)) {
                                 targetName = `${targetName}-imported-${Date.now()}`;
@@ -680,187 +644,119 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                     });
             });
 
-        // Reusable Parts (Named Templates)
-        new Setting(templateWrapper).setName('Reusable Partials').setHeading();
-        const namedDesc = templateWrapper.createEl('p', { cls: 'setting-item-description' });
-        namedDesc.appendText('Create reusable snippets that can be included in other templates using {{#include "name"}} or extended using {{#extends "name"}}.');
+        // ── Default Global Template ─────────────────────────────────────
+        new Setting(templateBody).setName('Default template').setHeading();
+        templateBody.createEl('p', {
+            text: 'Used when no content-type override below is enabled.',
+            cls: 'setting-item-description'
+        });
 
-        const namedTemplatesContainer = templateWrapper.createDiv('make-it-rain-named-templates-container');
-        this.renderNamedTemplates(namedTemplatesContainer);
+        // Captured by the textarea builder so the Reset button can refresh the
+        // editor in place instead of calling this.update() (which rebuilds every
+        // section and collapses the user's expanded <details> panels).
+        let defaultTextComponent: TextAreaComponent;
+        let updateDefaultValidation: (val: string) => void = () => {};
 
-        new Setting(templateWrapper)
-            .addButton((button: ButtonComponent) => {
-                button.setButtonText("+ Add new partial")
-                    .setCta()
-                    .onClick(async () => {
-                        const name = "new-partial-" + Date.now();
-                        this.plugin.settings.namedTemplates[name] = "";
-                        await this.plugin.saveSettings();
-                        this.renderNamedTemplates(namedTemplatesContainer);
-                    });
-            });
-
-        // Default Template
-        new Setting(templateWrapper).setName('Default Global Template').setHeading();
-        
-        const defaultTmplSideBySide = templateWrapper.createDiv({ cls: 'make-it-rain-side-by-side' });
-        const defaultEditorArea = defaultTmplSideBySide.createDiv({ cls: 'make-it-rain-editor-area' });
-        const defaultPreviewArea = defaultTmplSideBySide.createDiv({ cls: 'make-it-rain-preview-area' });
-
-        new Setting(defaultEditorArea)
-            .setDesc('This template is used if no content-type specific template is active below.')
+        new Setting(templateBody)
             .setClass('setting-item-stacked')
             .addTextArea((text: TextAreaComponent) => {
-                const validationContainer = defaultEditorArea.createDiv('make-it-rain-validation-container');
-                const updateValidation = (val: string) => {
+                defaultTextComponent = text;
+                const validationContainer = templateBody.createDiv('make-it-rain-validation-container');
+                updateDefaultValidation = (val: string) => {
                     const result = validateTemplate(val, this.plugin.settings);
                     this.renderValidationResult(validationContainer, result);
-                    this.renderTemplatePreview(defaultPreviewArea, val);
                 };
-
                 text.setPlaceholder('Enter your default handlebars template here.')
                     .setValue(this.plugin.settings.defaultTemplate)
                     .onChange(async (value: string) => {
                         this.plugin.settings.defaultTemplate = value;
                         await this.plugin.saveSettings();
-                        updateValidation(value);
+                        updateDefaultValidation(value);
                     });
-                text.inputEl.rows = 8;
+                text.inputEl.rows = 10;
                 text.inputEl.addClass('make-it-rain-full-width');
                 text.inputEl.addClass('make-it-rain-monospace');
-                updateValidation(this.plugin.settings.defaultTemplate);
+                updateDefaultValidation(this.plugin.settings.defaultTemplate);
             })
             .addButton((button: ButtonComponent) => {
-                button
-                    .setButtonText("Reset default")
-                    .setIcon("undo")
-                    .setTooltip("Reset this template to its original default value")
+                button.setButtonText('Preview').setIcon('eye')
+                    .setTooltip('Render this template against a sample raindrop')
+                    .onClick(() => {
+                        this.openTemplatePreview(this.plugin.settings.defaultTemplate);
+                    });
+            })
+            .addButton((button: ButtonComponent) => {
+                button.setButtonText('Reset').setIcon('undo')
+                    .setTooltip('Reset this template to its original default value')
                     .onClick(async () => {
                         this.plugin.settings.defaultTemplate = DEFAULT_SETTINGS.defaultTemplate;
                         await this.plugin.saveSettings();
-                        this.update(); // Re-render everything to update preview
-                        new Notice("Default template has been reset.");
+                        // Refresh just this editor in place.
+                        defaultTextComponent.setValue(DEFAULT_SETTINGS.defaultTemplate);
+                        updateDefaultValidation(DEFAULT_SETTINGS.defaultTemplate);
+                        new Notice('Default template has been reset.');
                     });
             })
             .addButton((button: ButtonComponent) => {
-                button
-                    .setButtonText("Export")
-                    .setIcon("export")
-                    .setTooltip("Export this template")
+                button.setButtonText('Export').setIcon('export')
+                    .setTooltip('Export this template')
                     .onClick(() => {
-                        const jsonStr = this.plugin.exportTemplate('default', this.plugin.settings.defaultTemplate, 'Default Global Template');
+                        const jsonStr = this.plugin.exportTemplate(
+                            'default',
+                            this.plugin.settings.defaultTemplate,
+                            'Default Global Template'
+                        );
                         new TemplateSharingModal(this.app, this.plugin, 'export', jsonStr).open();
                     });
             });
 
-        // Content-Type Editor
-        new Setting(templateWrapper).setName('Content-Type Overrides').setHeading();
-        const contentTypeDesc = templateWrapper.createEl('p', { cls: 'setting-item-description' });
-        contentTypeDesc.appendText('Define specific layout overrides for different raindrop types (e.g. extending the base template to show video timestamps vs article content).');
+        // ── Content-Type Overrides ──────────────────────────────────────
+        // The big change: every type gets its own visible, labeled block.
+        // No dropdown picker. Toggle hides/shows that type's textarea inline.
+        new Setting(templateBody).setName('Content-type overrides').setHeading();
+        templateBody.createEl('p', {
+            text: 'Define a custom template for each raindrop type. Toggle an override on to replace the default for that type only.',
+            cls: 'setting-item-description'
+        });
 
-        const editorCard = templateWrapper.createDiv({ cls: 'make-it-rain-settings-card' });
-        
-        const typeSelectorDiv = editorCard.createDiv({ cls: 'make-it-rain-type-selector' });
-        const sideBySideDiv = editorCard.createDiv({ cls: 'make-it-rain-side-by-side' });
-        const editorAreaDiv = sideBySideDiv.createDiv({ cls: 'make-it-rain-editor-area' });
-        const previewAreaDiv = sideBySideDiv.createDiv({ cls: 'make-it-rain-preview-area' });
-        
-        const renderEditor = () => {
-            editorAreaDiv.empty();
-            previewAreaDiv.empty();
-            
-            const typeStr = this.selectedTemplateType;
-            // Map API type to internal property name (document -> doc to avoid global conflicts)
-            const typeKey = (typeStr === 'document' ? 'doc' : typeStr) as keyof typeof this.plugin.settings.contentTypeTemplates;
-            const isEnabled = this.plugin.settings.contentTypeTemplateToggles[typeKey];
-            
-            new Setting(editorAreaDiv)
-                .setName('Enable override')
-                .setDesc('Use a custom template for ' + typeStr + ' items instead of the global default.')
-                .addToggle((toggle: ToggleComponent) => {
-                    toggle
-                        .setValue(isEnabled)
-                        .onChange(async (value: boolean) => {
-                            this.plugin.settings.contentTypeTemplateToggles[typeKey] = value;
-                            await this.plugin.saveSettings();
-                            renderEditor();
-                        });
-                });
+        // Render in stable, predictable order (not Object.keys order).
+        // RaindropTypes values use 'document' but the settings key is 'doc'
+        // (the 'doc' avoids a global Document clash in templates). Map here.
+        type ContentTypeKey = keyof MakeItRainSettings['contentTypeTemplates'];
+        const orderedTypes: Array<{ typeStr: RaindropType; typeKey: ContentTypeKey }> = [
+            { typeStr: RaindropTypes.LINK, typeKey: 'link' },
+            { typeStr: RaindropTypes.ARTICLE, typeKey: 'article' },
+            { typeStr: RaindropTypes.IMAGE, typeKey: 'image' },
+            { typeStr: RaindropTypes.VIDEO, typeKey: 'video' },
+            { typeStr: RaindropTypes.DOCUMENT, typeKey: 'doc' },
+            { typeStr: RaindropTypes.AUDIO, typeKey: 'audio' },
+            { typeStr: RaindropTypes.BOOK, typeKey: 'book' }
+        ];
 
-            if (isEnabled) {
-                new Setting(editorAreaDiv)
-                    .setDesc('Template for ' + typeStr + ' content.')
-                    .setClass('setting-item-stacked')
-                    .addTextArea((text: TextAreaComponent) => {
-                        const validationContainer = editorAreaDiv.createDiv('make-it-rain-validation-container');
-                        const updateValidation = (val: string) => {
-                            const result = validateTemplate(val, this.plugin.settings);
-                            this.renderValidationResult(validationContainer, result);
-                            this.renderTemplatePreview(previewAreaDiv, val, this.selectedTemplateType as RaindropType);
-                        };
+        for (const entry of orderedTypes) {
+            this.renderContentTypeCard(templateBody, entry.typeStr, entry.typeKey);
+        }
 
-                        text.setPlaceholder('Enter template for ' + typeStr + ' items...')
-                            .setValue(this.plugin.settings.contentTypeTemplates[typeKey] || '')
-                            .onChange(async (value: string) => {
-                                this.plugin.settings.contentTypeTemplates[typeKey] = value;
-                                await this.plugin.saveSettings();
-                                updateValidation(value);
-                            });
-                        text.inputEl.rows = 12;
-                        text.inputEl.addClass('make-it-rain-full-width');
-                        text.inputEl.addClass('make-it-rain-monospace');
-                        updateValidation(this.plugin.settings.contentTypeTemplates[typeKey] || '');
-                    })
-                    .addButton((button: ButtonComponent) => {
-                        button
-                            .setButtonText("Reset")
-                            .setIcon("undo")
-                            .setTooltip('Reset ' + typeStr + ' template to its original default')
-                            .onClick(async () => {
-                                if (DEFAULT_SETTINGS.contentTypeTemplates[typeKey]) {
-                                    this.plugin.settings.contentTypeTemplates[typeKey] = DEFAULT_SETTINGS.contentTypeTemplates[typeKey];
-                                    await this.plugin.saveSettings();
-                                    renderEditor();
-                                    new Notice(typeStr.charAt(0).toUpperCase() + typeStr.slice(1) + ' template has been reset.');
-                                } else {
-                                    new Notice('Error: Default template for ' + typeStr + ' not found.', 7000);
-                                }
-                            });
-                    })
-                    .addButton((button: ButtonComponent) => {
-                        button
-                            .setButtonText("Export")
-                            .setIcon("export")
-                            .setTooltip('Export ' + typeStr + ' template')
-                            .onClick(() => {
-                                const jsonStr = this.plugin.exportTemplate(`content-type-${typeStr}`, this.plugin.settings.contentTypeTemplates[typeKey], `Content-Type Template for ${typeStr}`);
-                                new TemplateSharingModal(this.app, this.plugin, 'export', jsonStr).open();
-                            });
-                    });
-            } else {
-                previewAreaDiv.createDiv({
-                    text: 'Enable the override to see a live preview of this content-type template.',
-                    cls: 'setting-item-description'
-                });
-            }
-        };
+        // ── Reusable Partials (Named Templates) ────────────────────────
+        new Setting(templateBody).setName('Reusable partials').setHeading();
+        templateBody.createEl('p', {
+            text: 'Reusable snippets. Include via {{#include "name"}} or extend via {{#extends "name"}}.',
+            cls: 'setting-item-description'
+        });
 
-        new Setting(typeSelectorDiv)
-            .setName('Select content type')
-            .setDesc('Choose which template to customize.')
-            .addDropdown((dropdown) => {
-                const contentTypes = Object.keys(RaindropTypes).map(key => RaindropTypes[key as keyof typeof RaindropTypes]);
-                contentTypes.forEach(type => {
-                    dropdown.addOption(type, type.charAt(0).toUpperCase() + type.slice(1));
-                });
-                dropdown.setValue(this.selectedTemplateType)
-                    .onChange((value) => {
-                        this.selectedTemplateType = value;
-                        renderEditor();
+        const namedTemplatesContainer = templateBody.createDiv('make-it-rain-named-templates-container');
+        this.renderNamedTemplates(namedTemplatesContainer);
+
+        new Setting(templateBody)
+            .addButton((button: ButtonComponent) => {
+                button.setButtonText('+ Add new partial').setCta()
+                    .onClick(async () => {
+                        const name = 'new-partial-' + Date.now();
+                        this.plugin.settings.namedTemplates[name] = '';
+                        await this.plugin.saveSettings();
+                        this.renderNamedTemplates(namedTemplatesContainer);
                     });
             });
-
-        renderEditor();
 
         // --- Footer Section ---
         containerEl.createEl('hr');
@@ -939,6 +835,101 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
         }
     }
 
+    /**
+     * Render one content-type card into the templates section. Extracted
+     * from update() so closures bind to `this` naturally.
+     */
+    private renderContentTypeCard(
+        parent: HTMLElement,
+        typeStr: RaindropType,
+        typeKey: keyof MakeItRainSettings['contentTypeTemplates']
+    ) {
+        const toggles = this.plugin.settings.contentTypeTemplateToggles;
+        const templates = this.plugin.settings.contentTypeTemplates;
+
+        const card = parent.createDiv({ cls: 'make-it-rain-type-card' });
+
+        new Setting(card)
+            .setName(`${typeStr.charAt(0).toUpperCase() + typeStr.slice(1)} items`)
+            .setDesc('Use a custom template for ' + typeStr + ' items instead of the global default.')
+            .addToggle((toggle: ToggleComponent) => {
+                toggle.setValue(toggles[typeKey])
+                    .onChange(async (value: boolean) => {
+                        toggles[typeKey] = value;
+                        await this.plugin.saveSettings();
+                        bodyEl.style.display = value ? 'block' : 'none';
+                    });
+            });
+
+        const bodyEl = card.createDiv({ cls: 'make-it-rain-type-card-body' });
+        bodyEl.style.display = toggles[typeKey] ? 'block' : 'none';
+
+        // Captured by the textarea builder so the Reset button can refresh the
+        // editor in place instead of calling this.update() (which rebuilds every
+        // section and collapses the user's expanded <details> panels).
+        let textComponent: TextAreaComponent;
+        let updateValidation: (val: string) => void = () => {};
+
+        new Setting(bodyEl)
+            .setClass('setting-item-stacked')
+            .addTextArea((text: TextAreaComponent) => {
+                textComponent = text;
+                const validationContainer = bodyEl.createDiv('make-it-rain-validation-container');
+                updateValidation = (val: string) => {
+                    const result = validateTemplate(val, this.plugin.settings);
+                    this.renderValidationResult(validationContainer, result);
+                };
+                text.setPlaceholder('Enter template for ' + typeStr + ' items...')
+                    .setValue(templates[typeKey] || '')
+                    .onChange(async (value: string) => {
+                        templates[typeKey] = value;
+                        await this.plugin.saveSettings();
+                        updateValidation(value);
+                    });
+                text.inputEl.rows = 8;
+                text.inputEl.addClass('make-it-rain-full-width');
+                text.inputEl.addClass('make-it-rain-monospace');
+                updateValidation(templates[typeKey] || '');
+            })
+            .addButton((button: ButtonComponent) => {
+                button.setButtonText('Preview').setIcon('eye')
+                    .setTooltip('Render this template against a sample ' + typeStr + ' raindrop')
+                    .onClick(() => {
+                        this.openTemplatePreview(templates[typeKey] || '', typeStr);
+                    });
+            })
+            .addButton((button: ButtonComponent) => {
+                button.setButtonText('Reset').setIcon('undo')
+                    .setTooltip('Reset ' + typeStr + ' template to its original default')
+                    .onClick(async () => {
+                        if (DEFAULT_SETTINGS.contentTypeTemplates[typeKey]) {
+                            const defaultVal = DEFAULT_SETTINGS.contentTypeTemplates[typeKey];
+                            templates[typeKey] = defaultVal;
+                            await this.plugin.saveSettings();
+                            // Refresh just this card's editor in place.
+                            textComponent.setValue(defaultVal);
+                            updateValidation(defaultVal);
+                            new Notice(typeStr.charAt(0).toUpperCase() + typeStr.slice(1) +
+                                ' template has been reset.');
+                        } else {
+                            new Notice('Error: Default template for ' + typeStr + ' not found.', 7000);
+                        }
+                    });
+            })
+            .addButton((button: ButtonComponent) => {
+                button.setButtonText('Export').setIcon('export')
+                    .setTooltip('Export ' + typeStr + ' template')
+                    .onClick(() => {
+                        const jsonStr = this.plugin.exportTemplate(
+                            `content-type-${typeStr}`,
+                            templates[typeKey] || '',
+                            `Content-Type Template for ${typeStr}`
+                        );
+                        new TemplateSharingModal(this.app, this.plugin, 'export', jsonStr).open();
+                    });
+            });
+    }
+
     private renderValidationResult(container: HTMLElement, result: ValidationResult) {
         container.empty();
         if (result.errors.length === 0 && result.warnings.length === 0) {
@@ -965,9 +956,10 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
 
         for (const name of templateNames) {
             const templateDiv = container.createDiv('make-it-rain-named-template-item');
-            
+
+            // Header row: rename + actions
             new Setting(templateDiv)
-                .setName(`Template: ${name}`)
+                .setName(`Partial: ${name}`)
                 .addText((text) => {
                     text.setValue(name)
                         .setPlaceholder('Template name')
@@ -981,46 +973,45 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                             delete namedTemplates[name];
                             namedTemplates[newName] = content;
                             await this.plugin.saveSettings();
-                            
-                            // Clear and re-render just the named templates container
                             container.empty();
                             this.renderNamedTemplates(container);
                         });
                 })
                 .addButton((button) => {
-                    button.setIcon('export')
-                        .setTooltip('Export template')
+                    button.setIcon('eye').setTooltip('Preview partial')
                         .onClick(() => {
-                            const jsonStr = this.plugin.exportTemplate(`partial-${name}`, namedTemplates[name], `Named Partial Template: ${name}`);
+                            this.openTemplatePreview(namedTemplates[name] || '');
+                        });
+                })
+                .addButton((button) => {
+                    button.setIcon('export').setTooltip('Export template')
+                        .onClick(() => {
+                            const jsonStr = this.plugin.exportTemplate(
+                                `partial-${name}`,
+                                namedTemplates[name],
+                                `Named Partial Template: ${name}`
+                            );
                             new TemplateSharingModal(this.app, this.plugin, 'export', jsonStr).open();
                         });
                 })
                 .addButton((button) => {
-                    button.setIcon('trash')
-                        .setDestructive()
-                        .setTooltip('Delete template')
+                    button.setIcon('trash').setDestructive().setTooltip('Delete template')
                         .onClick(async () => {
                             delete namedTemplates[name];
                             await this.plugin.saveSettings();
-                            
-                            // Clear and re-render just the named templates container
                             container.empty();
                             this.renderNamedTemplates(container);
                         });
                 });
 
-            const sideBySide = templateDiv.createDiv({ cls: 'make-it-rain-side-by-side' });
-            const editorArea = sideBySide.createDiv({ cls: 'make-it-rain-editor-area' });
-            const previewArea = sideBySide.createDiv({ cls: 'make-it-rain-preview-area' });
-
-            new Setting(editorArea)
+            // Body: full-width textarea + inline validation. No side-by-side.
+            new Setting(templateDiv)
                 .setClass('setting-item-stacked')
                 .addTextArea((text) => {
-                    const validationContainer = editorArea.createDiv('make-it-rain-validation-container');
+                    const validationContainer = templateDiv.createDiv('make-it-rain-validation-container');
                     const updateValidation = (val: string) => {
                         const result = validateTemplate(val, this.plugin.settings);
                         this.renderValidationResult(validationContainer, result);
-                        this.renderTemplatePreview(previewArea, val);
                     };
 
                     text.setValue(namedTemplates[name])
@@ -1035,7 +1026,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                     text.inputEl.addClass('make-it-rain-monospace');
                     updateValidation(namedTemplates[name]);
                 });
-            
+
             container.createEl('hr');
         }
     }
