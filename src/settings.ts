@@ -369,7 +369,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                 this.app,
                 this.plugin,
                 template,
-                this.buildPreviewContext,
+                (sample) => this.buildPreviewContext(sample),
                 lockedType
             ).open();
         } catch (e) {
@@ -651,11 +651,18 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
             cls: 'setting-item-description'
         });
 
+        // Captured by the textarea builder so the Reset button can refresh the
+        // editor in place instead of calling this.update() (which rebuilds every
+        // section and collapses the user's expanded <details> panels).
+        let defaultTextComponent: TextAreaComponent;
+        let updateDefaultValidation: (val: string) => void = () => {};
+
         new Setting(templateBody)
             .setClass('setting-item-stacked')
             .addTextArea((text: TextAreaComponent) => {
+                defaultTextComponent = text;
                 const validationContainer = templateBody.createDiv('make-it-rain-validation-container');
-                const updateValidation = (val: string) => {
+                updateDefaultValidation = (val: string) => {
                     const result = validateTemplate(val, this.plugin.settings);
                     this.renderValidationResult(validationContainer, result);
                 };
@@ -664,12 +671,12 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                     .onChange(async (value: string) => {
                         this.plugin.settings.defaultTemplate = value;
                         await this.plugin.saveSettings();
-                        updateValidation(value);
+                        updateDefaultValidation(value);
                     });
                 text.inputEl.rows = 10;
                 text.inputEl.addClass('make-it-rain-full-width');
                 text.inputEl.addClass('make-it-rain-monospace');
-                updateValidation(this.plugin.settings.defaultTemplate);
+                updateDefaultValidation(this.plugin.settings.defaultTemplate);
             })
             .addButton((button: ButtonComponent) => {
                 button.setButtonText('Preview').setIcon('eye')
@@ -684,7 +691,9 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                     .onClick(async () => {
                         this.plugin.settings.defaultTemplate = DEFAULT_SETTINGS.defaultTemplate;
                         await this.plugin.saveSettings();
-                        this.update();
+                        // Refresh just this editor in place.
+                        defaultTextComponent.setValue(DEFAULT_SETTINGS.defaultTemplate);
+                        updateDefaultValidation(DEFAULT_SETTINGS.defaultTemplate);
                         new Notice('Default template has been reset.');
                     });
             })
@@ -855,11 +864,18 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
         const bodyEl = card.createDiv({ cls: 'make-it-rain-type-card-body' });
         bodyEl.style.display = toggles[typeKey] ? 'block' : 'none';
 
+        // Captured by the textarea builder so the Reset button can refresh the
+        // editor in place instead of calling this.update() (which rebuilds every
+        // section and collapses the user's expanded <details> panels).
+        let textComponent: TextAreaComponent;
+        let updateValidation: (val: string) => void = () => {};
+
         new Setting(bodyEl)
             .setClass('setting-item-stacked')
             .addTextArea((text: TextAreaComponent) => {
+                textComponent = text;
                 const validationContainer = bodyEl.createDiv('make-it-rain-validation-container');
-                const updateValidation = (val: string) => {
+                updateValidation = (val: string) => {
                     const result = validateTemplate(val, this.plugin.settings);
                     this.renderValidationResult(validationContainer, result);
                 };
@@ -887,9 +903,12 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                     .setTooltip('Reset ' + typeStr + ' template to its original default')
                     .onClick(async () => {
                         if (DEFAULT_SETTINGS.contentTypeTemplates[typeKey]) {
-                            templates[typeKey] = DEFAULT_SETTINGS.contentTypeTemplates[typeKey];
+                            const defaultVal = DEFAULT_SETTINGS.contentTypeTemplates[typeKey];
+                            templates[typeKey] = defaultVal;
                             await this.plugin.saveSettings();
-                            this.update();
+                            // Refresh just this card's editor in place.
+                            textComponent.setValue(defaultVal);
+                            updateValidation(defaultVal);
                             new Notice(typeStr.charAt(0).toUpperCase() + typeStr.slice(1) +
                                 ' template has been reset.');
                         } else {
@@ -903,7 +922,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                     .onClick(() => {
                         const jsonStr = this.plugin.exportTemplate(
                             `content-type-${typeStr}`,
-                            templates[typeKey],
+                            templates[typeKey] || '',
                             `Content-Type Template for ${typeStr}`
                         );
                         new TemplateSharingModal(this.app, this.plugin, 'export', jsonStr).open();

@@ -841,6 +841,9 @@ export class TemplatePreviewModal extends Modal {
     lockedType?: RaindropType;
     selectedSampleType: RaindropType;
     private previewComponent: Component = new Component();
+    // Incremented on every render so a slow async render started before a
+    // rapid sample-type switch can detect it is stale and bail out.
+    private renderToken = 0;
 
     constructor(
         app: App,
@@ -900,7 +903,14 @@ export class TemplatePreviewModal extends Modal {
     }
 
     private render(container: HTMLElement) {
+        const token = ++this.renderToken;
         container.empty();
+
+        // Tear down child components from the previous render before starting a
+        // new one so listeners/components don't leak across renders.
+        this.previewComponent.unload();
+        this.previewComponent = new Component();
+
         try {
             const sampleData = SAMPLE_RAINDROPS[this.selectedSampleType];
             if (!sampleData) {
@@ -912,7 +922,13 @@ export class TemplatePreviewModal extends Modal {
             }
             const ctx = this.buildContext(sampleData);
             const rendered = this.plugin.renderTemplate(this.template, ctx);
-            void MarkdownRenderer.render(this.app, rendered, container, '', this.previewComponent);
+            void MarkdownRenderer.render(this.app, rendered, container, '', this.previewComponent).then(() => {
+                // A newer render superseded this one (rapid dropdown switching);
+                // drop its output to avoid mixed/duplicated preview content.
+                if (token !== this.renderToken) {
+                    container.empty();
+                }
+            });
         } catch (e) {
             container.createDiv({
                 text: `Preview error: ${e instanceof Error ? e.message : String(e)}`,
