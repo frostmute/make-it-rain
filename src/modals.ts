@@ -907,9 +907,14 @@ export class TemplatePreviewModal extends Modal {
         container.empty();
 
         // Tear down child components from the previous render before starting a
-        // new one so listeners/components don't leak across renders.
-        this.previewComponent.unload();
+        // new one so listeners/components don't leak across renders. Register
+        // the new one as a child of the modal (via addChild) so it is loaded —
+        // Obsidian only drives onload/onunload on registered children, which is
+        // what makes embeds/nested renders created during markdown rendering
+        // initialize correctly and get torn down when the modal closes.
+        this.removeChild(this.previewComponent);
         this.previewComponent = new Component();
+        this.addChild(this.previewComponent);
 
         try {
             const sampleData = SAMPLE_RAINDROPS[this.selectedSampleType];
@@ -922,13 +927,24 @@ export class TemplatePreviewModal extends Modal {
             }
             const ctx = this.buildContext(sampleData);
             const rendered = this.plugin.renderTemplate(this.template, ctx);
-            void MarkdownRenderer.render(this.app, rendered, container, '', this.previewComponent).then(() => {
-                // A newer render superseded this one (rapid dropdown switching);
-                // drop its output to avoid mixed/duplicated preview content.
-                if (token !== this.renderToken) {
+            void MarkdownRenderer.render(this.app, rendered, container, '', this.previewComponent)
+                .then(() => {
+                    // A newer render superseded this one (rapid dropdown switching);
+                    // drop its output to avoid mixed/duplicated preview content.
+                    if (token !== this.renderToken) {
+                        container.empty();
+                    }
+                })
+                .catch((e) => {
+                    // Only surface the failure if this render is still the current
+                    // one — a stale render's rejection should be silently dropped.
+                    if (token !== this.renderToken) return;
                     container.empty();
-                }
-            });
+                    container.createDiv({
+                        text: `Preview error: ${e instanceof Error ? e.message : String(e)}`,
+                        cls: 'make-it-rain-preview-error'
+                    });
+                });
         } catch (e) {
             container.createDiv({
                 text: `Preview error: ${e instanceof Error ? e.message : String(e)}`,
@@ -940,7 +956,8 @@ export class TemplatePreviewModal extends Modal {
     onClose() {
         const { contentEl } = this;
         contentEl.empty();
-        this.previewComponent.unload();
+        // previewComponent is registered via addChild(), so Obsidian unloads it
+        // automatically when the modal closes — no manual unload needed here.
     }
 }
 
