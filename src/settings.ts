@@ -737,7 +737,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
             this.renderContentTypeCard(templateBody, entry.typeStr, entry.typeKey);
         }
 
-        // ── Reusable Partials (Named Templates) ────────────────────────
+        // ── Reusable Partials ────────────────────────────────────────
         new Setting(templateBody).setName('Reusable partials').setHeading();
         templateBody.createEl('p', {
             text: 'Reusable snippets. Include via {{#include "name"}} or extend via {{#extends "name"}}.',
@@ -950,7 +950,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
         const templateNames = Object.keys(namedTemplates).sort();
 
         if (templateNames.length === 0) {
-            container.createEl('p', { text: 'No named templates created yet.', cls: 'setting-item-description' });
+            container.createEl('p', { text: 'No partials created yet.', cls: 'setting-item-description' });
             return;
         }
 

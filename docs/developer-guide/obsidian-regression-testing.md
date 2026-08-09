@@ -64,8 +64,7 @@ vault.
    - Template Engine
 4. Change a harmless setting, such as **Show ribbon icon**.
 5. Close settings, reopen settings, and confirm the value persisted.
-6. Expand **Template Engine** and confirm the live preview renders without
-   blank controls or an exception.
+6. Expand **Template Engine** and click the **Preview** button next to the default template or a content-type template to open the preview modal and confirm the template renders correctly.
 7. If the page is blank or controls disappear, open **Help → Toggle developer
    tools**, inspect the Console, and record the first error and stack trace.
 
