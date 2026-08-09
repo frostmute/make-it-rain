@@ -8,7 +8,7 @@ export const copyToVaults = () => {
     }
 
     const targetVaultPaths = [
-        '/Users/thewytchhaus/workspace/Nexus Vault/.obsidian/plugins/make-it-rain/',
+        '/Users/frost/Library/Mobile\ Documents/iCloud\~md\~obsidian/Documents/nexus-vault/.obsidian/plugins/make-it-rain/',
     ];
     const sourceFiles = [
         'main.js',
@@ -37,20 +37,20 @@ export const copyToVaults = () => {
                 if (!existsSync(sourcePath)) {
                     sourcePath = `build/${file}`;
                 }
-                
+
                 if (!existsSync(sourcePath)) {
                     console.error(`Error: Source file ${file} not found in build/ or root.`);
                     continue;
                 }
 
                 const targetPath = `${targetVaultPath}${file}`;
-                
+
                 // Ensure the target directory exists
                 const targetDir = dirname(targetPath);
                 if (!existsSync(targetDir)) {
                     mkdirSync(targetDir, { recursive: true });
                 }
-                
+
                 copyFileSync(sourcePath, targetPath);
                 console.log(`Copied ${file} (from ${sourcePath}) to ${targetPath}`);
             }
