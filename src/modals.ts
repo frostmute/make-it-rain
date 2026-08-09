@@ -906,15 +906,15 @@ export class TemplatePreviewModal extends Modal {
         const token = ++this.renderToken;
         container.empty();
 
-        // Tear down child components from the previous render before starting a
-        // new one so listeners/components don't leak across renders. Register
-        // the new one as a child of the modal (via addChild) so it is loaded —
-        // Obsidian only drives onload/onunload on registered children, which is
-        // what makes embeds/nested renders created during markdown rendering
-        // initialize correctly and get torn down when the modal closes.
-        this.removeChild(this.previewComponent);
+        // Tear down the previous render's component before starting a new one so
+        // listeners/components don't leak across renders, then load() the fresh
+        // one. Loading drives the onload lifecycle, which is what makes embeds
+        // and other nested renders created during markdown rendering initialize
+        // correctly. (Modal's typings don't expose addChild/removeChild, so we
+        // manage the component's lifecycle directly.)
+        this.previewComponent.unload();
         this.previewComponent = new Component();
-        this.addChild(this.previewComponent);
+        this.previewComponent.load();
 
         try {
             const sampleData = SAMPLE_RAINDROPS[this.selectedSampleType];
@@ -956,8 +956,9 @@ export class TemplatePreviewModal extends Modal {
     onClose() {
         const { contentEl } = this;
         contentEl.empty();
-        // previewComponent is registered via addChild(), so Obsidian unloads it
-        // automatically when the modal closes — no manual unload needed here.
+        // We manage previewComponent's lifecycle manually, so unload it here to
+        // tear down any child renders created during the last preview.
+        this.previewComponent.unload();
     }
 }
 
