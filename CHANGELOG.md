@@ -5,6 +5,21 @@ All notable changes to the Make It Rain plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.1] - 2026-08-09
+
+### Added
+
+- **Aggregate highlights by tag (Issue #10).** Use the Command Palette to create a single note of highlights for a Raindrop tag. The command searches every collection, follows paginated results, groups highlights beneath linked sources, includes highlight notes, accepts tags with or without `#`, and never overwrites an existing output note.
+
+### Fixed
+
+- **Settings pane no longer opens blank (Issue #87).** Template previews now render in an opt-in modal with a properly managed Obsidian component lifecycle; rendering errors are surfaced in the modal instead of leaving Settings unusable.
+- **Safe Sync recognizes notes created by the default template (Issue #88).** It now accepts the default `id` frontmatter field when it is accompanied by Raindrop metadata, while retaining support for `raindrop_id` and `raindropId` and avoiding false matches on unrelated notes.
+
+### Changed
+
+- Refreshed the template settings UI with full-width editors, per-content-type cards, explicit Preview actions, and clearer reusable-partial labels.
+
 ## [2.0.0] - 2026-07-15
 
 First stable of the v2 line. Promotes every change from the `2.0.0-beta.2` pre-release with no API changes — install on top of `2.0.0-beta.2` and you get the same code, just no longer tagged as a pre-release. Safe Sync is the headline: one-way reconciliation of your local vault against raindrop.io, with explicit, per-row user consent for any destructive action.
