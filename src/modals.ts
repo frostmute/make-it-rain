@@ -442,6 +442,7 @@ export class RaindropFetchModal extends Modal {
         void this.plugin.saveSettings().then(() => {
             this.plugin.refreshPresetCommands();
             this.selectedPresetId = '';
+            this.resetToDefaults();
             new Notice(`Preset "${removed.name}" deleted.`);
             this.render();
         });
@@ -777,7 +778,11 @@ export class RaindropFetchModal extends Modal {
 export class SavePresetModal extends Modal {
     plugin: RaindropToObsidian;
     initialName: string;
-    onSubmit: (name: string) => Promise<void> | void;
+    /**
+     * Handle the entered name. Return `false` (or throw) to reject it and keep
+     * the dialog open so the user can correct their input.
+     */
+    onSubmit: (name: string) => Promise<boolean | void> | boolean | void;
     title: string;
     description: string;
 
@@ -785,7 +790,7 @@ export class SavePresetModal extends Modal {
         app: App,
         plugin: RaindropToObsidian,
         initialName: string,
-        onSubmit: (name: string) => Promise<void> | void,
+        onSubmit: (name: string) => Promise<boolean | void> | boolean | void,
         title: string = 'Save import preset',
         description: string = 'Save the current fetch configuration as a reusable preset. If a preset with this name already exists, it will be updated.'
     ) {
@@ -818,17 +823,36 @@ export class SavePresetModal extends Modal {
                 text.inputEl.addClass('make-it-rain-full-width');
             });
 
+        const errorEl = contentEl.createDiv({ cls: 'make-it-rain-error-text' });
+        errorEl.style.display = 'none';
+
+        const showError = (message: string) => {
+            errorEl.textContent = message;
+            errorEl.style.display = '';
+        };
+
         const buttonsEl = contentEl.createDiv({ cls: 'modal-button-container' });
         new ButtonComponent(buttonsEl)
             .setButtonText('Save')
             .setCta()
             .onClick(() => {
+                errorEl.style.display = 'none';
                 const name = nameInput.getValue().trim();
                 if (!name) {
-                    new Notice('Please enter a preset name.');
+                    showError('Please enter a preset name.');
                     return;
                 }
-                void Promise.resolve(this.onSubmit(name)).then(() => this.close());
+                // The handler rejects a name by returning false (or throwing);
+                // keep the dialog open in that case so the typed name survives.
+                void Promise.resolve(this.onSubmit(name))
+                    .then(accepted => {
+                        if (accepted !== false) this.close();
+                    })
+                    .catch((e: unknown) => {
+                        const message = e instanceof Error ? e.message : String(e);
+                        console.error('Preset name submission failed:', e);
+                        showError(message);
+                    });
             });
 
         new ButtonComponent(buttonsEl)
