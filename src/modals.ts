@@ -445,6 +445,12 @@ export class RaindropFetchModal extends Modal {
             this.resetToDefaults();
             new Notice(`Preset "${removed.name}" deleted.`);
             this.render();
+        }).catch((e: unknown) => {
+            // Roll back the in-memory removal so the list and disk agree.
+            presets.splice(index, 0, removed);
+            console.error('Failed to delete preset:', e);
+            new Notice(`Could not delete preset "${removed.name}": ${e instanceof Error ? e.message : String(e)}`);
+            this.render();
         });
     }
 

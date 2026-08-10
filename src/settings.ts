@@ -842,9 +842,18 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                         .setWarning()
                         .setTooltip('Delete this preset')
                         .onClick(async () => {
-                            this.plugin.settings.importPresets = (this.plugin.settings.importPresets || [])
-                                .filter(p => p.id !== preset.id);
-                            await this.plugin.saveSettings();
+                            const previous = this.plugin.settings.importPresets || [];
+                            this.plugin.settings.importPresets = previous.filter(p => p.id !== preset.id);
+                            try {
+                                await this.plugin.saveSettings();
+                            } catch (e: unknown) {
+                                // Restore the list so the UI and disk agree.
+                                this.plugin.settings.importPresets = previous;
+                                console.error('Failed to delete preset:', e);
+                                new Notice(`Could not delete preset "${preset.name}": ${e instanceof Error ? e.message : String(e)}`);
+                                this.renderImportPresets(container);
+                                return;
+                            }
                             this.plugin.refreshPresetCommands();
                             new Notice(`Preset "${preset.name}" deleted.`);
                             this.renderImportPresets(container);

@@ -224,6 +224,37 @@ describe('Import Preset Workflow Integration', () => {
         expect(container.textContent).toContain('No saved presets yet');
     });
 
+    it('should keep the preset when a delete fails to persist', async () => {
+        plugin.settings.importPresets = [{
+            id: 'preset-1',
+            name: 'Reading backlog',
+            vaultPath: '',
+            collections: 'Reading',
+            apiFilterTags: '',
+            includeSubcollections: true,
+            appendTagsToNotes: '',
+            useRaindropTitleForFileName: true,
+            tagMatchType: 'all',
+            filterType: 'all',
+            fetchOnlyNew: true,
+            updateExisting: false,
+            useDefaultTemplate: false,
+            overrideTemplates: false
+        }];
+        jest.spyOn(console, 'error').mockImplementation(() => undefined);
+        (plugin.saveData as jest.Mock).mockRejectedValue(new Error('disk full'));
+
+        const tab = new RaindropToObsidianSettingTab(mockApp as unknown as App, plugin);
+        const container = document.createElement('div');
+        tab.renderImportPresets(container);
+
+        clickButton(container, 'Delete');
+        await new Promise(process.nextTick);
+
+        expect(plugin.settings.importPresets).toHaveLength(1);
+        expect(container.textContent).toContain('Reading backlog');
+    });
+
     it('should keep the rename dialog open and surface the error on a duplicate name', async () => {
         plugin.settings.importPresets = [
             {
