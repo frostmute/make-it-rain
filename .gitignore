@@ -69,3 +69,12 @@ scripts/fix-json-parsing.patch
 
 # oma docs generated artifacts
 docs/generated/
+
+# oh-my-agent runtime (local artifacts — do not commit)
+.antigravitycli/
+.agents/results/
+.agents/state/
+.agents/backup/
+docs/plans/
+.migration-backup/
+.qwen/tmp/
