@@ -68,6 +68,49 @@ export function upsertPreset(
 }
 
 /**
+ * Coerce persisted preset records into well-formed `ImportPreset`s. Saved
+ * data can be hand-edited or written by an older version, so every field is
+ * defaulted and entries without a usable id/name are dropped.
+ */
+export function normalizeImportPresets(value: unknown): ImportPreset[] {
+    if (!Array.isArray(value)) return [];
+
+    const str = (input: unknown, fallback = ''): string =>
+        typeof input === 'string' ? input : fallback;
+    const bool = (input: unknown, fallback: boolean): boolean =>
+        typeof input === 'boolean' ? input : fallback;
+
+    return value.reduce<ImportPreset[]>((presets, entry) => {
+        if (!entry || typeof entry !== 'object') return presets;
+        const raw = entry as Record<string, unknown>;
+        const id = str(raw.id);
+        const name = str(raw.name);
+        if (!id || !name) return presets;
+
+        const filterType = str(raw.filterType, 'all');
+        presets.push({
+            id,
+            name,
+            vaultPath: str(raw.vaultPath),
+            collections: str(raw.collections),
+            apiFilterTags: str(raw.apiFilterTags),
+            includeSubcollections: bool(raw.includeSubcollections, true),
+            appendTagsToNotes: str(raw.appendTagsToNotes),
+            useRaindropTitleForFileName: bool(raw.useRaindropTitleForFileName, true),
+            tagMatchType: raw.tagMatchType === TagMatchTypes.ANY ? TagMatchTypes.ANY : TagMatchTypes.ALL,
+            filterType: (Object.values(RaindropTypes) as string[]).includes(filterType)
+                ? filterType as RaindropType
+                : 'all',
+            fetchOnlyNew: bool(raw.fetchOnlyNew, true),
+            updateExisting: bool(raw.updateExisting, false),
+            useDefaultTemplate: bool(raw.useDefaultTemplate, false),
+            overrideTemplates: bool(raw.overrideTemplates, false)
+        });
+        return presets;
+    }, []);
+}
+
+/**
  * Modal for fetching raindrops with filters
  */
 export class RaindropFetchModal extends Modal {
@@ -85,6 +128,8 @@ export class RaindropFetchModal extends Modal {
     useDefaultTemplate: boolean = false;
     overrideTemplates: boolean = false;
     selectedPresetId: string = '';
+    /** Set before a re-render triggered by the preset controls. */
+    private refocusPresetDropdown: boolean = false;
 
     constructor(app: App, plugin: RaindropToObsidian) {
         super(app);
@@ -127,6 +172,12 @@ export class RaindropFetchModal extends Modal {
         presetSetting.addDropdown((dropdown: DropdownComponent) => {
             dropdown.addOption('', '— Default (no preset) —');
             presets.forEach(preset => dropdown.addOption(preset.id, preset.name));
+            // Re-rendering rebuilds the dropdown, so put focus back on it when
+            // the render was triggered by the preset controls themselves.
+            if (this.refocusPresetDropdown) {
+                this.refocusPresetDropdown = false;
+                dropdown.selectEl.focus();
+            }
             dropdown.setValue(this.selectedPresetId)
                 .onChange((value: string) => {
                     const preset = presets.find(p => p.id === value);
@@ -140,6 +191,7 @@ export class RaindropFetchModal extends Modal {
                         this.selectedPresetId = '';
                         this.resetToDefaults();
                     }
+                    this.refocusPresetDropdown = true;
                     this.render();
                 });
         });
@@ -421,12 +473,21 @@ export class RaindropFetchModal extends Modal {
         const presets = this.plugin.settings.importPresets || [];
         const existing = presets.find(p => p.id === this.selectedPresetId);
         new SavePresetModal(this.app, this.plugin, existing?.name || '', async (name: string) => {
+            const previous = this.plugin.settings.importPresets;
             const result = upsertPreset(presets, name, this.toPresetFields());
             this.plugin.settings.importPresets = result.presets;
-            await this.plugin.saveSettings();
+            try {
+                await this.plugin.saveSettings();
+            } catch (e: unknown) {
+                // Never leave an unsaved preset in memory: a later unrelated
+                // save would silently persist it.
+                this.plugin.settings.importPresets = previous;
+                throw e;
+            }
             this.plugin.refreshPresetCommands();
             this.selectedPresetId = result.preset.id;
             new Notice(result.created ? `Preset "${name}" saved.` : `Preset "${name}" updated.`);
+            this.refocusPresetDropdown = true;
             this.render();
         }).open();
     }
@@ -444,6 +505,7 @@ export class RaindropFetchModal extends Modal {
             this.selectedPresetId = '';
             this.resetToDefaults();
             new Notice(`Preset "${removed.name}" deleted.`);
+            this.refocusPresetDropdown = true;
             this.render();
         }).catch((e: unknown) => {
             // Roll back the in-memory removal so the list and disk agree.

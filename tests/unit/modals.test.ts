@@ -1,5 +1,5 @@
 import RaindropToObsidian from '../../src/main';
-import { RaindropFetchModal, QuickImportModal, VariableBrowserModal, SavePresetModal, upsertPreset, importPresetToOptions } from '../../src/modals';
+import { RaindropFetchModal, QuickImportModal, VariableBrowserModal, SavePresetModal, upsertPreset, importPresetToOptions, normalizeImportPresets } from '../../src/modals';
 import { mockApp } from '../setup';
 import { App, PluginManifest } from 'obsidian';
 import { ImportPreset, ImportPresetFields } from '../../src/types';
@@ -251,6 +251,45 @@ describe('Modals', () => {
             expect(options.vaultPath).toBe('');
             expect(options.appendTagsToNotes).toBe('');
             expect(options.useRaindropTitleForFileName).toBe(true);
+        });
+
+        it('normalizeImportPresets should coerce malformed records and drop unusable ones', () => {
+            const normalized = normalizeImportPresets([
+                null,
+                'not-a-preset',
+                { name: 'No id' },
+                { id: 'p-1' },
+                {
+                    id: 'p-2',
+                    name: 'Partial',
+                    collections: 42,
+                    tagMatchType: 'weird',
+                    filterType: 'nonsense',
+                    updateExisting: 'yes'
+                }
+            ]);
+
+            expect(normalized).toHaveLength(1);
+            const [preset] = normalized;
+            expect(preset.id).toBe('p-2');
+            expect(preset.collections).toBe('');
+            expect(preset.apiFilterTags).toBe('');
+            expect(preset.vaultPath).toBe('');
+            expect(preset.tagMatchType).toBe('all');
+            expect(preset.filterType).toBe('all');
+            expect(preset.updateExisting).toBe(false);
+            expect(preset.includeSubcollections).toBe(true);
+            expect(preset.fetchOnlyNew).toBe(true);
+        });
+
+        it('normalizeImportPresets should return an empty list for non-array data', () => {
+            expect(normalizeImportPresets(undefined)).toEqual([]);
+            expect(normalizeImportPresets({ nope: true })).toEqual([]);
+        });
+
+        it('normalizeImportPresets should preserve valid records', () => {
+            const valid: ImportPreset = { id: 'p-1', name: 'Weekly', ...fields, filterType: 'article', tagMatchType: 'any' };
+            expect(normalizeImportPresets([valid])).toEqual([valid]);
         });
     });
 });

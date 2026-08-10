@@ -316,6 +316,7 @@ class MockSetting {
 
     addDropdown(callback: (component: any) => void) {
         const component = {
+            selectEl: document.createElement('select'),
             addOption: jest.fn().mockReturnThis(),
             setValue: jest.fn().mockReturnThis(),
             onChange: jest.fn().mockReturnThis()

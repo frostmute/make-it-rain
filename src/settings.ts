@@ -824,8 +824,17 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                                     if (clash) {
                                         throw new Error(`A preset named "${name}" already exists.`);
                                     }
+                                    const previousName = preset.name;
                                     preset.name = name;
-                                    await this.plugin.saveSettings();
+                                    try {
+                                        await this.plugin.saveSettings();
+                                    } catch (e: unknown) {
+                                        // Undo the rename so a later unrelated
+                                        // save can't persist it behind the scenes.
+                                        preset.name = previousName;
+                                        this.renderImportPresets(container);
+                                        throw e;
+                                    }
                                     this.plugin.refreshPresetCommands();
                                     new Notice(`Preset renamed to "${name}".`);
                                     this.renderImportPresets(container);

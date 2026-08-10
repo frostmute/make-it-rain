@@ -151,7 +151,7 @@ describe('Import Preset Workflow Integration', () => {
         // Replay the preset dropdown's callback with a stub component so the
         // real onChange handler can be exercised.
         const handlers: ((value: string) => void)[] = [];
-        const stub: Record<string, unknown> = {};
+        const stub: Record<string, unknown> = { selectEl: document.createElement('select') };
         stub.addOption = () => stub;
         stub.setValue = () => stub;
         stub.onChange = (handler: (value: string) => void) => {
@@ -222,6 +222,54 @@ describe('Import Preset Workflow Integration', () => {
         expect(plugin.settings.importPresets).toHaveLength(0);
         expect(removeCommandSpy).toHaveBeenCalledWith('fetch-preset-preset-1');
         expect(container.textContent).toContain('No saved presets yet');
+    });
+
+    it('should discard the new preset and keep the dialog open when saving fails', async () => {
+        jest.spyOn(console, 'error').mockImplementation(() => undefined);
+        (plugin.saveData as jest.Mock).mockRejectedValue(new Error('disk full'));
+
+        const modal = new RaindropFetchModal(mockApp as unknown as App, plugin);
+        modal.onOpen();
+        modal.collections = 'Reading';
+
+        clickButton(modal.contentEl, 'Save current as preset');
+        const nameModal = await submitName('Reading backlog');
+
+        expect(plugin.settings.importPresets).toHaveLength(0);
+        expect(modal.selectedPresetId).toBe('');
+        expect(nameModal.contentEl.textContent).toContain('disk full');
+    });
+
+    it('should restore the old name and keep the dialog open when a rename fails to persist', async () => {
+        plugin.settings.importPresets = [{
+            id: 'preset-1',
+            name: 'Reading backlog',
+            vaultPath: '',
+            collections: 'Reading',
+            apiFilterTags: '',
+            includeSubcollections: true,
+            appendTagsToNotes: '',
+            useRaindropTitleForFileName: true,
+            tagMatchType: 'all',
+            filterType: 'all',
+            fetchOnlyNew: true,
+            updateExisting: false,
+            useDefaultTemplate: false,
+            overrideTemplates: false
+        }];
+        jest.spyOn(console, 'error').mockImplementation(() => undefined);
+        (plugin.saveData as jest.Mock).mockRejectedValue(new Error('disk full'));
+
+        const tab = new RaindropToObsidianSettingTab(mockApp as unknown as App, plugin);
+        const container = document.createElement('div');
+        tab.renderImportPresets(container);
+
+        clickButton(container, 'Rename');
+        const nameModal = await submitName('Weekly reading');
+
+        expect(plugin.settings.importPresets[0].name).toBe('Reading backlog');
+        expect(container.textContent).toContain('Reading backlog');
+        expect(nameModal.contentEl.textContent).toContain('disk full');
     });
 
     it('should keep the preset when a delete fails to persist', async () => {

@@ -26,7 +26,7 @@ import {
 
 // Import utility functions from consolidated index
 import { DEFAULT_SETTINGS, RaindropToObsidianSettingTab } from './settings';
-import { RaindropFetchModal, QuickImportModal, HighlightsAggregateModal, SafeSyncModal, importPresetToOptions } from './modals';
+import { RaindropFetchModal, QuickImportModal, HighlightsAggregateModal, SafeSyncModal, importPresetToOptions, normalizeImportPresets } from './modals';
 
 import { 
     // File utilities
@@ -192,7 +192,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 ...data,
                 // Presets are optional in saved data (pre-2.2.0); default to an
                 // empty list so iteration never touches a non-array.
-                importPresets: Array.isArray(data.importPresets) ? data.importPresets : [],
+                importPresets: normalizeImportPresets(data.importPresets),
                 contentTypeTemplates: {
                     ...this.settings.contentTypeTemplates,
                     ...(data.contentTypeTemplates
