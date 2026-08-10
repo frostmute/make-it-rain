@@ -5,6 +5,12 @@ All notable changes to the Make It Rain plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Saved import presets.** Capture a full bulk-import configuration (collections, tag filter and match mode, content type, subcollections, destination folder, append tags, filename source, fetch-only-new / update-existing, and template overrides) as a named preset and reload it from the fetch modal. Each preset also registers a `Fetch: {preset name}` command in the command palette, and presets can be renamed or deleted from the new **Import Presets** section in plugin settings.
+
 ## [2.1.1] - 2026-08-09
 
 ### Added

@@ -114,6 +114,32 @@ describe('Modals', () => {
             expect(modal.overrideTemplates).toBe(true);
         });
 
+        it('should restore defaults when the preset selection is cleared', () => {
+            plugin.settings.importPresets = [preset];
+            plugin.settings.defaultFolder = 'Raindrops';
+            jest.spyOn(plugin, 'fetchAllUserCollections').mockResolvedValue([]);
+
+            const modal = new RaindropFetchModal(mockApp as unknown as App, plugin);
+            (modal as unknown as { applyPreset(p: ImportPreset): void }).applyPreset(preset);
+            modal.selectedPresetId = preset.id;
+
+            modal.resetToDefaults();
+            modal.selectedPresetId = '';
+
+            expect(modal.vaultPath).toBe('Raindrops');
+            expect(modal.collections).toBe('');
+            expect(modal.apiFilterTags).toBe('');
+            expect(modal.includeSubcollections).toBe(true);
+            expect(modal.appendTagsToNotes).toBe('');
+            expect(modal.useRaindropTitleForFileName).toBe(true);
+            expect(modal.tagMatchType).toBe('all');
+            expect(modal.filterType).toBe('all');
+            expect(modal.fetchOnlyNew).toBe(true);
+            expect(modal.updateExisting).toBe(false);
+            expect(modal.useDefaultTemplate).toBe(false);
+            expect(modal.overrideTemplates).toBe(false);
+        });
+
         it('should snapshot current fields into preset payload and fetch options', () => {
             jest.spyOn(plugin, 'fetchAllUserCollections').mockResolvedValue([]);
 

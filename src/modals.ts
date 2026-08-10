@@ -129,12 +129,18 @@ export class RaindropFetchModal extends Modal {
             presets.forEach(preset => dropdown.addOption(preset.id, preset.name));
             dropdown.setValue(this.selectedPresetId)
                 .onChange((value: string) => {
-                    this.selectedPresetId = value;
                     const preset = presets.find(p => p.id === value);
                     if (preset) {
+                        this.selectedPresetId = preset.id;
                         this.applyPreset(preset);
-                        this.render();
+                    } else {
+                        // Blank entry (or a preset that vanished): drop back to
+                        // the modal defaults instead of silently keeping the
+                        // previously loaded preset's values.
+                        this.selectedPresetId = '';
+                        this.resetToDefaults();
                     }
+                    this.render();
                 });
         });
 
@@ -368,6 +374,24 @@ export class RaindropFetchModal extends Modal {
      */
     private getFetchOptions(): ModalFetchOptions {
         return importPresetToOptions(this.toPresetFields());
+    }
+
+    /**
+     * Restore every field to the modal's initial (no preset) state.
+     */
+    resetToDefaults(): void {
+        this.vaultPath = this.plugin.settings.defaultFolder;
+        this.collections = '';
+        this.apiFilterTags = '';
+        this.includeSubcollections = true;
+        this.appendTagsToNotes = '';
+        this.useRaindropTitleForFileName = true;
+        this.tagMatchType = TagMatchTypes.ALL;
+        this.filterType = 'all';
+        this.fetchOnlyNew = true;
+        this.updateExisting = false;
+        this.useDefaultTemplate = false;
+        this.overrideTemplates = false;
     }
 
     /**
@@ -754,12 +778,23 @@ export class SavePresetModal extends Modal {
     plugin: RaindropToObsidian;
     initialName: string;
     onSubmit: (name: string) => Promise<void> | void;
+    title: string;
+    description: string;
 
-    constructor(app: App, plugin: RaindropToObsidian, initialName: string, onSubmit: (name: string) => Promise<void> | void) {
+    constructor(
+        app: App,
+        plugin: RaindropToObsidian,
+        initialName: string,
+        onSubmit: (name: string) => Promise<void> | void,
+        title: string = 'Save import preset',
+        description: string = 'Save the current fetch configuration as a reusable preset. If a preset with this name already exists, it will be updated.'
+    ) {
         super(app);
         this.plugin = plugin;
         this.initialName = initialName;
         this.onSubmit = onSubmit;
+        this.title = title;
+        this.description = description;
     }
 
     onOpen() {
@@ -767,9 +802,9 @@ export class SavePresetModal extends Modal {
         contentEl.empty();
         contentEl.addClass('make-it-rain-modal');
 
-        contentEl.createEl('h3', { text: 'Save import preset', cls: 'make-it-rain-h3' });
+        contentEl.createEl('h3', { text: this.title, cls: 'make-it-rain-h3' });
         contentEl.createEl('p', {
-            text: 'Save the current fetch configuration as a reusable preset. If a preset with this name already exists, it will be updated.',
+            text: this.description,
             cls: 'setting-item-description'
         });
 
