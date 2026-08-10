@@ -139,6 +139,10 @@ class MockPlugin {
         // Mock implementation
     }
 
+    removeCommand(commandId: string) {
+        // Mock implementation
+    }
+
     addSettingTab(tab: any) {
         // Mock implementation
     }
@@ -247,12 +251,22 @@ class MockSetting {
     }
 
     addText(callback: (component: any) => void) {
+        // Stateful so getValue() reflects the last setValue() / DOM value,
+        // which lets tests drive text inputs through the real DOM. The input
+        // is appended to the control area like the real Setting.addText.
         const component = {
-            setValue: jest.fn().mockReturnThis(),
+            inputEl: document.createElement('input'),
+            setValue: jest.fn(function (this: any, v: string) {
+                this.inputEl.value = v;
+                return this;
+            }),
+            getValue: jest.fn(function (this: any) {
+                return this.inputEl.value;
+            }),
             setPlaceholder: jest.fn().mockReturnThis(),
-            onChange: jest.fn().mockReturnThis(),
-            inputEl: document.createElement('input')
+            onChange: jest.fn().mockReturnThis()
         };
+        this.controlEl.appendChild(component.inputEl);
         callback(component);
         return this;
     }
@@ -279,16 +293,23 @@ class MockSetting {
 
     addButton(callback: (component: any) => void) {
         const component = {
-            setButtonText: jest.fn().mockReturnThis(),
+            buttonEl: document.createElement('button'),
+            setButtonText: jest.fn(function (this: any, text: string) {
+                this.buttonEl.textContent = text;
+                return this;
+            }),
             setIcon: jest.fn().mockReturnThis(),
             setTooltip: jest.fn().mockReturnThis(),
-            onClick: jest.fn().mockReturnThis(),
+            onClick: jest.fn(function (this: any, cb: () => void) {
+                this.buttonEl.addEventListener('click', cb);
+                return this;
+            }),
             setCta: jest.fn().mockReturnThis(),
             setWarning: jest.fn().mockReturnThis(),
             setDestructive: jest.fn().mockReturnThis(),
-            setDisabled: jest.fn().mockReturnThis(),
-            buttonEl: document.createElement('button')
+            setDisabled: jest.fn().mockReturnThis()
         };
+        this.controlEl.appendChild(component.buttonEl);
         callback(component);
         return this;
     }
@@ -397,10 +418,16 @@ class MockButtonComponent {
         this.buttonEl = document.createElement('button');
         containerEl.appendChild(this.buttonEl);
     }
-    setButtonText = jest.fn().mockReturnThis();
+    setButtonText = jest.fn(function (this: any, text: string) {
+        this.buttonEl.textContent = text;
+        return this;
+    });
     setIcon = jest.fn().mockReturnThis();
     setTooltip = jest.fn().mockReturnThis();
-    onClick = jest.fn().mockReturnThis();
+    onClick = jest.fn(function (this: any, cb: () => void) {
+        this.buttonEl.addEventListener('click', cb);
+        return this;
+    });
     setCta = jest.fn().mockReturnThis();
     setWarning = jest.fn().mockReturnThis();
     setDestructive = jest.fn().mockReturnThis();

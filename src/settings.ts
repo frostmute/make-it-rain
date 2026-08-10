@@ -313,7 +313,8 @@ tags:
     },
     enableSafeSync: false,
     safeSyncAction: 'Prompt',
-    trashFolderLocation: '.trash'
+    trashFolderLocation: '.trash',
+    importPresets: []
 };
 
 export class RaindropToObsidianSettingTab extends PluginSettingTab {

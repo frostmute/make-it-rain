@@ -60,6 +60,31 @@ export interface MakeItRainSettings {
     enableSafeSync: boolean;
     safeSyncAction: 'Prompt' | 'Archive' | 'Delete';
     trashFolderLocation: string;
+    importPresets: ImportPreset[];
+}
+
+/**
+ * Snapshot of the fetch-modal options that a preset captures (everything
+ * except the preset's identity fields).
+ */
+export interface ImportPresetFields {
+    vaultPath: string;
+    collections: string;
+    apiFilterTags: string;
+    includeSubcollections: boolean;
+    appendTagsToNotes: string;
+    useRaindropTitleForFileName: boolean;
+    tagMatchType: 'all' | 'any';
+    filterType: RaindropType | 'all';
+    fetchOnlyNew: boolean;
+    updateExisting: boolean;
+    useDefaultTemplate: boolean;
+    overrideTemplates: boolean;
+}
+
+export interface ImportPreset extends ImportPresetFields {
+    id: string;
+    name: string;
 }
 
 export interface ModalFetchOptions {

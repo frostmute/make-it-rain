@@ -232,4 +232,83 @@ describe('RaindropToObsidian', () => {
             expect(addRibbonIconSpy).not.toHaveBeenCalled();
         });
     });
+
+    describe('preset commands', () => {
+        it('should register one command per saved preset', async () => {
+            plugin.settings.importPresets = [{
+                id: 'preset-abc',
+                name: 'Reading backlog',
+                vaultPath: '',
+                collections: 'Reading',
+                apiFilterTags: '',
+                includeSubcollections: true,
+                appendTagsToNotes: '',
+                useRaindropTitleForFileName: true,
+                tagMatchType: 'all',
+                filterType: 'all',
+                fetchOnlyNew: true,
+                updateExisting: false,
+                useDefaultTemplate: false,
+                overrideTemplates: false
+            }];
+
+            const addCommandSpy = jest.spyOn(plugin, 'addCommand');
+            const fetchSpy = jest.spyOn(plugin, 'fetchRaindrops').mockResolvedValue();
+
+            plugin.refreshPresetCommands();
+
+            expect(addCommandSpy).toHaveBeenCalledWith(expect.objectContaining({
+                id: 'fetch-preset-preset-abc',
+                name: 'Fetch: Reading backlog'
+            }));
+
+            // Invoking the command should trigger a fetch with the preset's options
+            const commandCall = addCommandSpy.mock.calls.find(call => call[0]?.id === 'fetch-preset-preset-abc');
+            expect(commandCall).toBeDefined();
+            const command = commandCall?.[0];
+            expect(command).toBeDefined();
+            command?.callback?.();
+            await new Promise(process.nextTick);
+
+            expect(fetchSpy).toHaveBeenCalledWith(expect.objectContaining({
+                collections: 'Reading'
+            }));
+        });
+
+        it('should re-register commands after presets change', async () => {
+            plugin.settings.importPresets = [{
+                id: 'preset-1',
+                name: 'One',
+                vaultPath: '',
+                collections: 'A',
+                apiFilterTags: '',
+                includeSubcollections: true,
+                appendTagsToNotes: '',
+                useRaindropTitleForFileName: true,
+                tagMatchType: 'all',
+                filterType: 'all',
+                fetchOnlyNew: true,
+                updateExisting: false,
+                useDefaultTemplate: false,
+                overrideTemplates: false
+            }];
+
+            const removeCommandSpy = jest.spyOn(plugin, 'removeCommand');
+            const addCommandSpy = jest.spyOn(plugin, 'addCommand');
+
+            plugin.refreshPresetCommands();
+            expect(removeCommandSpy).not.toHaveBeenCalled();
+            expect(addCommandSpy).toHaveBeenCalledWith(expect.objectContaining({ id: 'fetch-preset-preset-1' }));
+
+            // Rename the preset and refresh again: the old id is removed, the new one added.
+            plugin.settings.importPresets[0].name = 'Two';
+            plugin.refreshPresetCommands();
+
+            expect(removeCommandSpy).toHaveBeenCalledWith('fetch-preset-preset-1');
+            expect(addCommandSpy).toHaveBeenCalledWith(expect.objectContaining({
+                id: 'fetch-preset-preset-1',
+                name: 'Fetch: Two'
+            }));
+        });
+    });
 });
