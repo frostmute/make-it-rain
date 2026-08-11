@@ -1,8 +1,8 @@
 import { App, PluginSettingTab, Setting, TextComponent, ButtonComponent, Notice, request, ToggleComponent, TextAreaComponent, DropdownComponent } from 'obsidian';
 import type RaindropToObsidian from './main';
 import { RaindropTypes, RaindropType } from './types';
-import { MakeItRainSettings, TemplateData } from './types';
-import { VariableBrowserModal, TemplateSharingModal, TemplatePreviewModal } from './modals';
+import { ImportPreset, MakeItRainSettings, TemplateData } from './types';
+import { VariableBrowserModal, TemplateSharingModal, TemplatePreviewModal, SavePresetModal } from './modals';
 import { validateTemplate, ValidationResult } from './template-validator';
 import { SampleRaindrop } from './utils/sampleData';
 
@@ -313,7 +313,8 @@ tags:
     },
     enableSafeSync: false,
     safeSyncAction: 'Prompt',
-    trashFolderLocation: '.trash'
+    trashFolderLocation: '.trash',
+    importPresets: []
 };
 
 export class RaindropToObsidianSettingTab extends PluginSettingTab {
@@ -592,7 +593,13 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                 text.inputEl.addClass('make-it-rain-full-width');
             });
 
-        // --- 5. Template Engine ---
+        // --- 5. Import Presets ---
+        const presetSection = containerEl.createEl('details', { cls: 'make-it-rain-settings-section' });
+        presetSection.createEl('summary', { text: 'Import Presets', cls: 'make-it-rain-section-summary' });
+        const presetContent = presetSection.createDiv({ cls: 'make-it-rain-section-content' });
+        this.renderImportPresets(presetContent);
+
+        // --- 6. Template Engine ---
         // Section is OPEN by default — this is where 90% of users actually
         // configure things. Wrapped in <details> so the rare non-template
         // user can collapse it.
@@ -773,6 +780,112 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
         rightFooter.createEl('a', { href: 'https://ko-fi.com/frostmute', text: '☕️ Support Development', attr: { target: '_blank' } });
         rightFooter.createEl('br');
         rightFooter.createEl('a', { href: 'https://github.com/frostmute/make-it-rain/issues', text: '🐛 Report an Issue', attr: { target: '_blank' } });
+    }
+
+    /**
+     * Render the saved-preset manager: one row per preset with rename and
+     * delete actions. Presets are created from the bulk import modal; this
+     * screen is where they can be reviewed and cleaned up.
+     */
+    renderImportPresets(container: HTMLElement): void {
+        container.empty();
+
+        const presets = this.plugin.settings.importPresets || [];
+
+        container.createEl('p', {
+            text: 'Presets capture a full bulk-import configuration and are saved from the "Bulk Import Raindrops" modal. Each preset also gets a "Fetch: {name}" command in the command palette.',
+            cls: 'setting-item-description'
+        });
+
+        if (presets.length === 0) {
+            container.createEl('p', {
+                text: 'No saved presets yet. Open the bulk import modal and use "Save current as preset" to create one.',
+                cls: 'setting-item-description'
+            });
+            return;
+        }
+
+        presets.forEach((preset: ImportPreset) => {
+            new Setting(container)
+                .setName(preset.name)
+                .setDesc(this.describePreset(preset))
+                .addButton((button: ButtonComponent) => {
+                    button.setButtonText('Rename')
+                        .setIcon('pencil')
+                        .setTooltip('Rename this preset')
+                        .onClick(() => {
+                            new SavePresetModal(
+                                this.app,
+                                this.plugin,
+                                preset.name,
+                                async (name: string) => {
+                                    const clash = (this.plugin.settings.importPresets || [])
+                                        .some(p => p.id !== preset.id && p.name === name);
+                                    if (clash) {
+                                        throw new Error(`A preset named "${name}" already exists.`);
+                                    }
+                                    const previousName = preset.name;
+                                    preset.name = name;
+                                    try {
+                                        await this.plugin.saveSettings();
+                                    } catch (e: unknown) {
+                                        // Undo the rename so a later unrelated
+                                        // save can't persist it behind the scenes.
+                                        preset.name = previousName;
+                                        this.renderImportPresets(container);
+                                        throw e;
+                                    }
+                                    this.plugin.refreshPresetCommands();
+                                    new Notice(`Preset renamed to "${name}".`);
+                                    this.renderImportPresets(container);
+                                    return true;
+                                },
+                                'Rename import preset',
+                                'Give this preset a new name. Its captured options and command-palette entry are preserved.'
+                            ).open();
+                        });
+                })
+                .addButton((button: ButtonComponent) => {
+                    button.setButtonText('Delete')
+                        .setIcon('trash')
+                        .setWarning()
+                        .setTooltip('Delete this preset')
+                        .onClick(async () => {
+                            const previous = this.plugin.settings.importPresets || [];
+                            this.plugin.settings.importPresets = previous.filter(p => p.id !== preset.id);
+                            try {
+                                await this.plugin.saveSettings();
+                            } catch (e: unknown) {
+                                // Restore the list so the UI and disk agree.
+                                this.plugin.settings.importPresets = previous;
+                                console.error('Failed to delete preset:', e);
+                                new Notice(`Could not delete preset "${preset.name}": ${e instanceof Error ? e.message : String(e)}`);
+                                this.renderImportPresets(container);
+                                return;
+                            }
+                            this.plugin.refreshPresetCommands();
+                            new Notice(`Preset "${preset.name}" deleted.`);
+                            this.renderImportPresets(container);
+                        });
+                });
+        });
+    }
+
+    /**
+     * One-line human summary of a preset's captured options, shown under its
+     * name in the settings list.
+     */
+    private describePreset(preset: ImportPreset): string {
+        const parts: string[] = [];
+        parts.push(`Collections: ${preset.collections.trim() || 'all'}`);
+        if (preset.apiFilterTags.trim()) {
+            parts.push(`Tags (${preset.tagMatchType}): ${preset.apiFilterTags.trim()}`);
+        }
+        if (preset.filterType !== 'all') {
+            parts.push(`Type: ${preset.filterType}`);
+        }
+        parts.push(`Destination: ${preset.vaultPath.trim() || 'plugin default'}`);
+        return parts.join(' · ');
     }
 
     async verifyApiToken(): Promise<void> {

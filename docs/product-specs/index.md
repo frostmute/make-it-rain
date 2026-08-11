@@ -17,6 +17,7 @@
 | [Per-content-type templates](per-content-type-templates.md) | Shipped | Configure Markdown output per Raindrop content type (link, article, image, video, document, audio, book) |
 | [Folder notes](folder-notes.md) | Shipped | Auto-generate index notes for each collection folder |
 | [Binary attachment download](binary-attachment-download.md) | Shipped | Download native Raindrop file attachments (PDF, EPUB, image, video, audio) |
+| [Import presets](import-presets.md) | Shipped | Save named bulk-import configurations and re-run them from the modal or command palette |
 
 ## Conventions
 

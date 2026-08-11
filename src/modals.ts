@@ -7,9 +7,108 @@ import {
     TagMatchTypes,
     RaindropTypes,
     ModalFetchOptions,
-    AggregateHighlightsOptions
+    AggregateHighlightsOptions,
+    ImportPreset,
+    ImportPresetFields
 } from './types';
 import { SAMPLE_RAINDROPS } from './utils/sampleData';
+
+/**
+ * Build a unique, URL-safe id for a new preset. Kept dependency-free
+ * (no crypto imports) — collision odds are negligible for this use case.
+ */
+function generatePresetId(): string {
+    return 'preset-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+}
+
+/**
+ * Convert a preset's captured fields into the options object the fetch
+ * pipeline expects. Shared by the modal (live fetch) and the per-preset
+ * command-palette entries so both paths stay in lockstep.
+ */
+export function importPresetToOptions(preset: ImportPresetFields): ModalFetchOptions {
+    return {
+        collections: preset.collections,
+        apiFilterTags: preset.apiFilterTags,
+        vaultPath: preset.vaultPath,
+        appendTagsToNotes: preset.appendTagsToNotes,
+        useRaindropTitleForFileName: preset.useRaindropTitleForFileName,
+        tagMatchType: preset.tagMatchType,
+        filterType: preset.filterType,
+        includeSubcollections: preset.includeSubcollections,
+        fetchOnlyNew: preset.fetchOnlyNew,
+        updateExisting: preset.updateExisting,
+        useDefaultTemplate: preset.useDefaultTemplate,
+        overrideTemplates: preset.overrideTemplates
+    };
+}
+
+/**
+ * Create or update a preset by name (case-sensitive). Updating keeps the
+ * existing id so command-palette bindings stay stable across edits.
+ */
+export function upsertPreset(
+    presets: ImportPreset[],
+    name: string,
+    fields: ImportPresetFields
+): { presets: ImportPreset[]; preset: ImportPreset; created: boolean } {
+    const existingIndex = presets.findIndex(p => p.name === name);
+    const preset: ImportPreset = {
+        id: existingIndex >= 0 ? presets[existingIndex].id : generatePresetId(),
+        name,
+        ...fields
+    };
+    const next = presets.slice();
+    if (existingIndex >= 0) {
+        next[existingIndex] = preset;
+    } else {
+        next.push(preset);
+    }
+    return { presets: next, preset, created: existingIndex < 0 };
+}
+
+/**
+ * Coerce persisted preset records into well-formed `ImportPreset`s. Saved
+ * data can be hand-edited or written by an older version, so every field is
+ * defaulted and entries without a usable id/name are dropped.
+ */
+export function normalizeImportPresets(value: unknown): ImportPreset[] {
+    if (!Array.isArray(value)) return [];
+
+    const str = (input: unknown, fallback = ''): string =>
+        typeof input === 'string' ? input : fallback;
+    const bool = (input: unknown, fallback: boolean): boolean =>
+        typeof input === 'boolean' ? input : fallback;
+
+    return value.reduce<ImportPreset[]>((presets, entry) => {
+        if (!entry || typeof entry !== 'object') return presets;
+        const raw = entry as Record<string, unknown>;
+        const id = str(raw.id);
+        const name = str(raw.name);
+        if (!id || !name) return presets;
+
+        const filterType = str(raw.filterType, 'all');
+        presets.push({
+            id,
+            name,
+            vaultPath: str(raw.vaultPath),
+            collections: str(raw.collections),
+            apiFilterTags: str(raw.apiFilterTags),
+            includeSubcollections: bool(raw.includeSubcollections, true),
+            appendTagsToNotes: str(raw.appendTagsToNotes),
+            useRaindropTitleForFileName: bool(raw.useRaindropTitleForFileName, true),
+            tagMatchType: raw.tagMatchType === TagMatchTypes.ANY ? TagMatchTypes.ANY : TagMatchTypes.ALL,
+            filterType: (Object.values(RaindropTypes) as string[]).includes(filterType)
+                ? filterType as RaindropType
+                : 'all',
+            fetchOnlyNew: bool(raw.fetchOnlyNew, true),
+            updateExisting: bool(raw.updateExisting, false),
+            useDefaultTemplate: bool(raw.useDefaultTemplate, false),
+            overrideTemplates: bool(raw.overrideTemplates, false)
+        });
+        return presets;
+    }, []);
+}
 
 /**
  * Modal for fetching raindrops with filters
@@ -28,6 +127,9 @@ export class RaindropFetchModal extends Modal {
     updateExisting: boolean = false;
     useDefaultTemplate: boolean = false;
     overrideTemplates: boolean = false;
+    selectedPresetId: string = '';
+    /** Set before a re-render triggered by the preset controls. */
+    private refocusPresetDropdown: boolean = false;
 
     constructor(app: App, plugin: RaindropToObsidian) {
         super(app);
@@ -35,8 +137,15 @@ export class RaindropFetchModal extends Modal {
         this.vaultPath = plugin.settings.defaultFolder;
     }
 
-
     onOpen() {
+        this.render();
+    }
+
+    /**
+     * Render the full modal body. Called on open and again whenever a preset
+     * is loaded/saved/deleted so every control reflects the current state.
+     */
+    render() {
         const { contentEl } = this;
         contentEl.empty();
         contentEl.addClass('make-it-rain-modal');
@@ -49,6 +158,60 @@ export class RaindropFetchModal extends Modal {
             cls: 'setting-item-description'
         });
         
+        contentEl.createEl('hr');
+
+        // --- 0. Presets ---
+        const presetGroup = contentEl.createDiv({ cls: 'make-it-rain-modal-group' });
+        presetGroup.createEl('h3', { text: 'Presets', cls: 'make-it-rain-h3' });
+
+        const presets = this.plugin.settings.importPresets || [];
+        const presetSetting = new Setting(presetGroup)
+            .setName('Import preset')
+            .setDesc('Load a saved fetch configuration, or save the current one to reuse later. Selecting a preset overwrites the fields below.');
+
+        presetSetting.addDropdown((dropdown: DropdownComponent) => {
+            dropdown.addOption('', '— Default (no preset) —');
+            presets.forEach(preset => dropdown.addOption(preset.id, preset.name));
+            // Re-rendering rebuilds the dropdown, so put focus back on it when
+            // the render was triggered by the preset controls themselves.
+            if (this.refocusPresetDropdown) {
+                this.refocusPresetDropdown = false;
+                dropdown.selectEl.focus();
+            }
+            dropdown.setValue(this.selectedPresetId)
+                .onChange((value: string) => {
+                    const preset = presets.find(p => p.id === value);
+                    if (preset) {
+                        this.selectedPresetId = preset.id;
+                        this.applyPreset(preset);
+                    } else {
+                        // Blank entry (or a preset that vanished): drop back to
+                        // the modal defaults instead of silently keeping the
+                        // previously loaded preset's values.
+                        this.selectedPresetId = '';
+                        this.resetToDefaults();
+                    }
+                    this.refocusPresetDropdown = true;
+                    this.render();
+                });
+        });
+
+        presetSetting.addButton((button: ButtonComponent) => {
+            button.setButtonText('Save current as preset')
+                .setIcon('save')
+                .setTooltip('Save the current fetch configuration as a reusable preset')
+                .onClick(() => this.openSavePresetModal());
+        });
+
+        presetSetting.addButton((button: ButtonComponent) => {
+            button.setButtonText('Delete preset')
+                .setIcon('trash')
+                .setDestructive()
+                .setTooltip('Delete the currently selected preset')
+                .setDisabled(!this.selectedPresetId)
+                .onClick(() => this.deleteSelectedPreset());
+        });
+
         contentEl.createEl('hr');
 
         // --- 1. Source & Scope ---
@@ -228,26 +391,129 @@ export class RaindropFetchModal extends Modal {
             .setCta()
             .onClick(() => {
                 this.close();
-                const options: ModalFetchOptions = {
-                    collections: this.collections,
-                    apiFilterTags: this.apiFilterTags,
-                    vaultPath: this.vaultPath,
-                    appendTagsToNotes: this.appendTagsToNotes,
-                    useRaindropTitleForFileName: this.useRaindropTitleForFileName,
-                    tagMatchType: this.tagMatchType,
-                    filterType: this.filterType,
-                    includeSubcollections: this.includeSubcollections,
-                    fetchOnlyNew: this.fetchOnlyNew,
-                    updateExisting: this.updateExisting,
-                    useDefaultTemplate: this.useDefaultTemplate,
-                    overrideTemplates: this.overrideTemplates
-                };
-                void this.plugin.fetchRaindrops(options);
+                void this.plugin.fetchRaindrops(this.getFetchOptions());
             });
             
         new ButtonComponent(buttonsEl)
             .setButtonText('Cancel')
             .onClick(() => this.close());
+    }
+
+    /**
+     * Snapshot the modal's current field values into a preset payload
+     * (everything except id/name, which are assigned on save).
+     */
+    private toPresetFields(): ImportPresetFields {
+        return {
+            vaultPath: this.vaultPath,
+            collections: this.collections,
+            apiFilterTags: this.apiFilterTags,
+            includeSubcollections: this.includeSubcollections,
+            appendTagsToNotes: this.appendTagsToNotes,
+            useRaindropTitleForFileName: this.useRaindropTitleForFileName,
+            tagMatchType: this.tagMatchType,
+            filterType: this.filterType,
+            fetchOnlyNew: this.fetchOnlyNew,
+            updateExisting: this.updateExisting,
+            useDefaultTemplate: this.useDefaultTemplate,
+            overrideTemplates: this.overrideTemplates
+        };
+    }
+
+    /**
+     * Build the ModalFetchOptions for the current field values. Kept in one
+     * place so the live fetch and preset snapshots stay identical.
+     */
+    private getFetchOptions(): ModalFetchOptions {
+        return importPresetToOptions(this.toPresetFields());
+    }
+
+    /**
+     * Restore every field to the modal's initial (no preset) state.
+     */
+    resetToDefaults(): void {
+        this.vaultPath = this.plugin.settings.defaultFolder;
+        this.collections = '';
+        this.apiFilterTags = '';
+        this.includeSubcollections = true;
+        this.appendTagsToNotes = '';
+        this.useRaindropTitleForFileName = true;
+        this.tagMatchType = TagMatchTypes.ALL;
+        this.filterType = 'all';
+        this.fetchOnlyNew = true;
+        this.updateExisting = false;
+        this.useDefaultTemplate = false;
+        this.overrideTemplates = false;
+    }
+
+    /**
+     * Overwrite the modal fields with a preset's captured values.
+     */
+    private applyPreset(preset: ImportPreset): void {
+        this.vaultPath = preset.vaultPath;
+        this.collections = preset.collections;
+        this.apiFilterTags = preset.apiFilterTags;
+        this.includeSubcollections = preset.includeSubcollections;
+        this.appendTagsToNotes = preset.appendTagsToNotes;
+        this.useRaindropTitleForFileName = preset.useRaindropTitleForFileName;
+        this.tagMatchType = preset.tagMatchType;
+        this.filterType = preset.filterType;
+        this.fetchOnlyNew = preset.fetchOnlyNew;
+        this.updateExisting = preset.updateExisting;
+        this.useDefaultTemplate = preset.useDefaultTemplate;
+        this.overrideTemplates = preset.overrideTemplates;
+    }
+
+    /**
+     * Open the name-entry modal, then persist the current fields as a new
+     * preset (or update the preset with the same name), refresh the
+     * per-preset commands, and re-render to select the saved preset.
+     */
+    private openSavePresetModal(): void {
+        const presets = this.plugin.settings.importPresets || [];
+        const existing = presets.find(p => p.id === this.selectedPresetId);
+        new SavePresetModal(this.app, this.plugin, existing?.name || '', async (name: string) => {
+            const previous = this.plugin.settings.importPresets;
+            const result = upsertPreset(presets, name, this.toPresetFields());
+            this.plugin.settings.importPresets = result.presets;
+            try {
+                await this.plugin.saveSettings();
+            } catch (e: unknown) {
+                // Never leave an unsaved preset in memory: a later unrelated
+                // save would silently persist it.
+                this.plugin.settings.importPresets = previous;
+                throw e;
+            }
+            this.plugin.refreshPresetCommands();
+            this.selectedPresetId = result.preset.id;
+            new Notice(result.created ? `Preset "${name}" saved.` : `Preset "${name}" updated.`);
+            this.refocusPresetDropdown = true;
+            this.render();
+        }).open();
+    }
+
+    /**
+     * Delete the currently selected preset, refresh commands, and re-render.
+     */
+    private deleteSelectedPreset(): void {
+        const presets = this.plugin.settings.importPresets || [];
+        const index = presets.findIndex(p => p.id === this.selectedPresetId);
+        if (index < 0) return;
+        const [removed] = presets.splice(index, 1);
+        void this.plugin.saveSettings().then(() => {
+            this.plugin.refreshPresetCommands();
+            this.selectedPresetId = '';
+            this.resetToDefaults();
+            new Notice(`Preset "${removed.name}" deleted.`);
+            this.refocusPresetDropdown = true;
+            this.render();
+        }).catch((e: unknown) => {
+            // Roll back the in-memory removal so the list and disk agree.
+            presets.splice(index, 0, removed);
+            console.error('Failed to delete preset:', e);
+            new Notice(`Could not delete preset "${removed.name}": ${e instanceof Error ? e.message : String(e)}`);
+            this.render();
+        });
     }
 
     private buildFetchCriteriaSection(contentEl: HTMLElement) {
@@ -566,6 +832,100 @@ export class RaindropFetchModal extends Modal {
             .onClick(() => {
                 this.close();
             });
+    }
+
+    onClose() {
+        const { contentEl } = this;
+        contentEl.empty();
+    }
+}
+
+/**
+ * Modal for naming and saving an import preset.
+ */
+export class SavePresetModal extends Modal {
+    plugin: RaindropToObsidian;
+    initialName: string;
+    /**
+     * Handle the entered name. Return `false` (or throw) to reject it and keep
+     * the dialog open so the user can correct their input.
+     */
+    onSubmit: (name: string) => Promise<boolean | void> | boolean | void;
+    title: string;
+    description: string;
+
+    constructor(
+        app: App,
+        plugin: RaindropToObsidian,
+        initialName: string,
+        onSubmit: (name: string) => Promise<boolean | void> | boolean | void,
+        title: string = 'Save import preset',
+        description: string = 'Save the current fetch configuration as a reusable preset. If a preset with this name already exists, it will be updated.'
+    ) {
+        super(app);
+        this.plugin = plugin;
+        this.initialName = initialName;
+        this.onSubmit = onSubmit;
+        this.title = title;
+        this.description = description;
+    }
+
+    onOpen() {
+        const { contentEl } = this;
+        contentEl.empty();
+        contentEl.addClass('make-it-rain-modal');
+
+        contentEl.createEl('h3', { text: this.title, cls: 'make-it-rain-h3' });
+        contentEl.createEl('p', {
+            text: this.description,
+            cls: 'setting-item-description'
+        });
+
+        let nameInput: TextComponent;
+        new Setting(contentEl)
+            .setName('Preset name')
+            .addText((text: TextComponent) => {
+                nameInput = text;
+                text.setValue(this.initialName)
+                    .setPlaceholder('e.g. Reading backlog');
+                text.inputEl.addClass('make-it-rain-full-width');
+            });
+
+        const errorEl = contentEl.createDiv({ cls: 'make-it-rain-error-text' });
+        errorEl.style.display = 'none';
+
+        const showError = (message: string) => {
+            errorEl.textContent = message;
+            errorEl.style.display = '';
+        };
+
+        const buttonsEl = contentEl.createDiv({ cls: 'modal-button-container' });
+        new ButtonComponent(buttonsEl)
+            .setButtonText('Save')
+            .setCta()
+            .onClick(() => {
+                errorEl.style.display = 'none';
+                const name = nameInput.getValue().trim();
+                if (!name) {
+                    showError('Please enter a preset name.');
+                    return;
+                }
+                // The handler rejects a name by returning false (or throwing);
+                // keep the dialog open in that case so the typed name survives.
+                void Promise.resolve(this.onSubmit(name))
+                    .then(accepted => {
+                        if (accepted !== false) this.close();
+                    })
+                    .catch((e: unknown) => {
+                        const message = e instanceof Error ? e.message : String(e);
+                        console.error('Preset name submission failed:', e);
+                        showError(message);
+                    });
+            });
+
+        new ButtonComponent(buttonsEl)
+            .setButtonText('Cancel')
+            .onClick(() => this.close());
     }
 
     onClose() {

@@ -26,7 +26,7 @@ import {
 
 // Import utility functions from consolidated index
 import { DEFAULT_SETTINGS, RaindropToObsidianSettingTab } from './settings';
-import { RaindropFetchModal, QuickImportModal, HighlightsAggregateModal, SafeSyncModal } from './modals';
+import { RaindropFetchModal, QuickImportModal, HighlightsAggregateModal, SafeSyncModal, importPresetToOptions, normalizeImportPresets } from './modals';
 
 import { 
     // File utilities
@@ -97,6 +97,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
     private lastCollectionFetch: number = 0;
     private lastGroupFetch: number = 0;
     private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache
+    private registeredPresetCommandIds: string[] = [];
 
     constructor(app: App, manifest: PluginManifest) {
         super(app, manifest);
@@ -141,6 +142,9 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             }
         });
 
+        // One command-palette entry per saved preset (e.g. "Fetch: Reading backlog")
+        this.refreshPresetCommands();
+
         this.addSettingTab(new RaindropToObsidianSettingTab(this.app, this));
         console.debug('Make It Rain plugin loaded!');
     }
@@ -148,6 +152,32 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
     onunload() {
         this.ribbonIconEl?.remove();
         console.debug('Make It Rain plugin unloaded.');
+    }
+
+    /**
+     * (Re)register one command-palette entry per saved import preset
+     * ("Fetch: {preset name}"). Called on plugin load and whenever presets
+     * are created, updated, or deleted so the palette never goes stale.
+     * Command ids are derived from the preset's stable id, so re-running
+     * this method is idempotent.
+     */
+    refreshPresetCommands(): void {
+        for (const id of this.registeredPresetCommandIds) {
+            this.removeCommand(id);
+        }
+        this.registeredPresetCommandIds = [];
+
+        for (const preset of this.settings.importPresets || []) {
+            const id = `fetch-preset-${preset.id}`;
+            this.addCommand({
+                id,
+                name: `Fetch: ${preset.name}`,
+                callback: () => {
+                    void this.fetchRaindrops(importPresetToOptions(preset));
+                }
+            });
+            this.registeredPresetCommandIds.push(id);
+        }
     }
 
     async loadSettings(): Promise<void> {
@@ -160,6 +190,9 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
             this.settings = {
                 ...this.settings,
                 ...data,
+                // Presets are optional in saved data (pre-2.2.0); default to an
+                // empty list so iteration never touches a non-array.
+                importPresets: normalizeImportPresets(data.importPresets),
                 contentTypeTemplates: {
                     ...this.settings.contentTypeTemplates,
                     ...(data.contentTypeTemplates
