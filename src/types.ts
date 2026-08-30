@@ -55,6 +55,7 @@ export interface MakeItRainSettings {
     contentTypeTemplateToggles: ContentTypeToggles;
     downloadFiles: boolean;
     createFolderNotes: boolean;
+    includeGroupInFolderPath: boolean;
     archiveScraping: boolean;
     namedTemplates: Record<string, string>;
     enableSafeSync: boolean;

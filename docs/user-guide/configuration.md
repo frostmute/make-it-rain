@@ -141,6 +141,10 @@ You can create specific templates for different types of content.
 
 - **API Token Security**: Your API token gives access to your Raindrop.io account. Never share it with others.
 - **Folder Structure**: Choose a default vault location that fits your knowledge management system.
+- **Group Folder Paths**: Keep **Include Raindrop group in folder path**
+  enabled to mirror the Raindrop sidebar as `Group/Collection`. Disable it to
+  restore the pre-v1.10 `Collection`-only layout. This changes future import
+  paths only; `collectionGroup` metadata remains available.
 - **Filename Conflicts**: If you encounter filename conflicts, consider using unique identifiers in your filename template, such as `{{id}}-{{title}}`.
 - **Template Testing**: After creating custom templates, test them with a small batch of raindrops before importing your entire collection.
 

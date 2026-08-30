@@ -16,6 +16,7 @@
 | [Safe sync](safe-sync.md) | Shipped (Issue #9) | Detect remote deletions and reconcile against the local vault with human review |
 | [Per-content-type templates](per-content-type-templates.md) | Shipped | Configure Markdown output per Raindrop content type (link, article, image, video, document, audio, book) |
 | [Folder notes](folder-notes.md) | Shipped | Auto-generate index notes for each collection folder |
+| [Group folder paths](group-folder-paths.md) | Shipped | Choose whether Raindrop Groups add a root folder above the collection hierarchy |
 | [Binary attachment download](binary-attachment-download.md) | Shipped | Download native Raindrop file attachments (PDF, EPUB, image, video, audio) |
 | [Import presets](import-presets.md) | Shipped | Save named bulk-import configurations and re-run them from the modal or command palette |
 

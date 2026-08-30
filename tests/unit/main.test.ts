@@ -24,6 +24,7 @@ describe('RaindropToObsidian', () => {
     it('should initialize with default settings', () => {
         expect(plugin.settings).toBeDefined();
         expect(plugin.settings.fileNameTemplate).toBe('{{title}}');
+        expect(plugin.settings.includeGroupInFolderPath).toBe(true);
     });
 
     describe('onload', () => {
@@ -134,6 +135,7 @@ describe('RaindropToObsidian', () => {
             expect(plugin.settings.apiToken).toBe('test-token');
             expect(plugin.settings.showRibbonIcon).toBe(false);
             expect(plugin.settings.fileNameTemplate).toBe('{{title}}'); // Default preserved
+            expect(plugin.settings.includeGroupInFolderPath).toBe(true); // Added setting defaults on for existing data
             expect(saveSettingsSpy).toHaveBeenCalled();
         });
     });

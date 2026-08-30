@@ -80,6 +80,12 @@ Vault Root/
     └── Note 1.md
 ```
 
+This is controlled by **Settings → Make It Rain → Import & Organization →
+Include Raindrop group in folder path**. It is enabled by default to preserve
+the current layout. Disable it to use the pre-v1.10 Collection-only layout for
+future imports. The `collectionGroup` template variable and frontmatter field
+remain available when Group folders are disabled.
+
 ### Hierarchy Options
 
 - **Flat Structure**: All notes in one folder
