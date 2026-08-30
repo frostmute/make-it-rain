@@ -679,7 +679,7 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 }
             }
 
-            if (groupTitle) {
+            if (groupTitle && this.settings.includeGroupInFolderPath) {
                 pathSegments.unshift(sanitizeFileName(groupTitle));
             }
 

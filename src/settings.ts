@@ -236,6 +236,7 @@ export const DEFAULT_SETTINGS: MakeItRainSettings = {
     },
     downloadFiles: false,
     createFolderNotes: false,
+    includeGroupInFolderPath: true,
     namedTemplates: {
         base: `---
 title: "{{title}}"
@@ -507,6 +508,17 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                 toggle.setValue(this.plugin.settings.createFolderNotes)
                     .onChange(async (value: boolean) => {
                         this.plugin.settings.createFolderNotes = value;
+                        await this.plugin.saveSettings();
+                    });
+            });
+
+        new Setting(orgContent)
+            .setName('Include Raindrop group in folder path')
+            .setDesc('When enabled, imports use Group/Collection folders to mirror the Raindrop sidebar. Disable this to use the pre-v1.10 Collection-only layout. This affects future imports and does not move existing notes. The collectionGroup template variable and frontmatter metadata remain available either way.')
+            .addToggle((toggle: ToggleComponent) => {
+                toggle.setValue(this.plugin.settings.includeGroupInFolderPath)
+                    .onChange(async (value: boolean) => {
+                        this.plugin.settings.includeGroupInFolderPath = value;
                         await this.plugin.saveSettings();
                     });
             });

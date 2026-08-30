@@ -22,7 +22,9 @@ describe('Group Hierarchy Support', () => {
         jest.clearAllMocks();
     });
 
-    it('should prepend Group name to collection path and target folder', async () => {
+    it('should prepend Group name to collection path and target folder by default', async () => {
+        expect(plugin.settings.includeGroupInFolderPath).toBe(true);
+
         // Mock data
         const collections: RaindropCollection[] = [
             { _id: 10, title: 'Parent Collection' },
@@ -104,6 +106,69 @@ describe('Group Hierarchy Support', () => {
         expect(createSpy).toHaveBeenCalledWith(
             expect.stringContaining('MY GROUP/Parent Collection/Child Collection/Test Bookmark.md'),
             expect.stringContaining('collectionPath: "MY GROUP/Parent Collection/Child Collection"')
+        );
+    });
+
+    it('should keep Group metadata without adding a Group folder when disabled', async () => {
+        plugin.settings.includeGroupInFolderPath = false;
+
+        const collections: RaindropCollection[] = [
+            { _id: 10, title: 'Parent Collection' },
+            { _id: 20, title: 'Child Collection', parent: { $id: 10 } }
+        ];
+        const raindrop: RaindropItem = {
+            _id: 123,
+            title: 'Test Bookmark',
+            link: 'https://example.com',
+            type: 'link',
+            collection: { $id: 20, title: 'Child Collection' },
+            created: '2024-01-01T00:00:00Z',
+            lastUpdate: '2024-01-01T00:00:00Z'
+        };
+        const options: ModalFetchOptions = {
+            collections: '20',
+            apiFilterTags: '',
+            includeSubcollections: false,
+            appendTagsToNotes: '',
+            useRaindropTitleForFileName: true,
+            tagMatchType: 'all',
+            filterType: 'all',
+            fetchOnlyNew: false,
+            updateExisting: true,
+            useDefaultTemplate: false,
+            overrideTemplates: false
+        };
+        const collectionIdToNameMap = new Map<number, string>([
+            [10, 'Parent Collection'],
+            [20, 'Child Collection']
+        ]);
+        const collectionToGroupMap = new Map<number, string>([[10, 'MY GROUP']]);
+        const mockNotice = { setMessage: jest.fn(), hide: jest.fn() } as unknown as Notice;
+        const createSpy = jest.spyOn(plugin.app.vault, 'create').mockResolvedValue({} as any);
+
+        await plugin.processRaindrops(
+            [raindrop],
+            'Raindrops',
+            '',
+            mockNotice,
+            options,
+            { result: true, items: collections },
+            collectionIdToNameMap,
+            new Set<string>(),
+            collectionToGroupMap
+        );
+
+        expect(createSpy).toHaveBeenCalledWith(
+            'Raindrops/Parent Collection/Child Collection/Test Bookmark.md',
+            expect.stringContaining('collectionGroup: "MY GROUP"')
+        );
+        expect(createSpy).toHaveBeenCalledWith(
+            expect.any(String),
+            expect.stringContaining('collectionPath: "Parent Collection/Child Collection"')
+        );
+        expect(createSpy).not.toHaveBeenCalledWith(
+            expect.stringContaining('MY GROUP/Parent Collection'),
+            expect.any(String)
         );
     });
 

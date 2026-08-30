@@ -35,6 +35,10 @@ describe('RaindropToObsidianSettingTab', () => {
         expect(container.classList.contains('make-it-rain-settings-container')).toBe(true);
         expect(container.innerHTML).toContain('Connection &amp; Core Setup');
         expect(container.innerHTML).toContain('Import &amp; Organization');
+        expect(container.innerHTML).toContain('Include Raindrop group in folder path');
+        expect(container.innerHTML).toContain('pre-v1.10 Collection-only layout');
+        expect(container.innerHTML).toContain('affects future imports and does not move existing notes');
+        expect(container.innerHTML).toContain('collectionGroup template variable and frontmatter metadata remain available');
         expect(container.innerHTML).toContain('Template Engine');
     });
 
