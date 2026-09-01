@@ -327,10 +327,9 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
     }
 
     /**
-     * Obsidian 1.13+ declarative settings API. This tab renders imperatively
-     * via display() and returns an empty definition list to opt out of
-     * declarative indexing. Override the control-value methods if settings
-     * search indexing is added later.
+     * Obsidian 1.13+ declarative settings API. This tab intentionally returns
+     * no definitions because its richer settings UI is rendered imperatively
+     * by update().
      */
     getSettingDefinitions(): never[] {
         return [];
@@ -380,20 +379,9 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
     }
 
     /**
-     * Obsidian's settings-tab lifecycle entry point.
-     *
-     * Keep the actual renderer in update() so existing refreshes from setting
-     * controls continue to work, while ensuring Obsidian invokes the renderer
-     * when the tab is opened (including Obsidian 1.13+).
-     */
-    display(): void {
-        this.update();
-    }
-
-    /**
-     * Imperative settings renderer shared by display() and in-tab refreshes.
-     * getSettingDefinitions() returns [] because this tab intentionally uses
-     * the richer imperative UI rather than declarative setting indexing.
+     * Obsidian's current settings-tab lifecycle renderer. Obsidian invokes
+     * update() when the tab opens, and controls can call it to refresh the
+     * imperative UI in place.
      */
     update(): void {
         const { containerEl } = this;
@@ -860,7 +848,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                 .addButton((button: ButtonComponent) => {
                     button.setButtonText('Delete')
                         .setIcon('trash')
-                        .setWarning()
+                        .setDestructive()
                         .setTooltip('Delete this preset')
                         .onClick(async () => {
                             const previous = this.plugin.settings.importPresets || [];

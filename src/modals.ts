@@ -171,7 +171,9 @@ export class RaindropFetchModal extends Modal {
 
         presetSetting.addDropdown((dropdown: DropdownComponent) => {
             dropdown.addOption('', '— Default (no preset) —');
-            presets.forEach(preset => dropdown.addOption(preset.id, preset.name));
+            presets.forEach(preset => {
+                dropdown.addOption(preset.id, preset.name);
+            });
             // Re-rendering rebuilds the dropdown, so put focus back on it when
             // the render was triggered by the preset controls themselves.
             if (this.refocusPresetDropdown) {
@@ -891,12 +893,11 @@ export class SavePresetModal extends Modal {
                 text.inputEl.addClass('make-it-rain-full-width');
             });
 
-        const errorEl = contentEl.createDiv({ cls: 'make-it-rain-error-text' });
-        errorEl.style.display = 'none';
+        const errorEl = contentEl.createDiv({ cls: 'make-it-rain-error-text is-hidden' });
 
         const showError = (message: string) => {
             errorEl.textContent = message;
-            errorEl.style.display = '';
+            errorEl.removeClass('is-hidden');
         };
 
         const buttonsEl = contentEl.createDiv({ cls: 'modal-button-container' });
@@ -904,7 +905,7 @@ export class SavePresetModal extends Modal {
             .setButtonText('Save')
             .setCta()
             .onClick(() => {
-                errorEl.style.display = 'none';
+                errorEl.addClass('is-hidden');
                 const name = nameInput.getValue().trim();
                 if (!name) {
                     showError('Please enter a preset name.');
