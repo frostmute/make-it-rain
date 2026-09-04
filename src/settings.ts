@@ -336,6 +336,26 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
     }
 
     /**
+     * Obsidian's imperative rendering entry point for the settings tab.
+     *
+     * In Obsidian 1.13+, the framework calls display() to render the tab
+     * imperatively whenever getSettingDefinitions() returns an empty array.
+     * update() on its own only feeds the declarative path and the search
+     * index — it does not render the container — so removing display()
+     * leaves a blank pane. Keep display() here so the framework has an
+     * entry point and delegates to the same renderer used by refreshes.
+     */
+    // The Obsidian plugin review bot flags display() as deprecated because
+    // type docs favor the declarative getSettingDefinitions() path. In
+    // practice Obsidian 1.13+ still invokes display() to render imperatively
+    // whenever getSettingDefinitions() returns an empty array; suppressing
+    // it would leave the pane blank (see issue #87). Re-evaluate before
+    // removing.
+    display(): void {
+        this.update();
+    }
+
+    /**
      * Build the context object used for previews. Kept here so both the
      * default-template preview and the content-type previews render
      * identically.
@@ -379,9 +399,9 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
     }
 
     /**
-     * Obsidian's current settings-tab lifecycle renderer. Obsidian invokes
-     * update() when the tab opens, and controls can call it to refresh the
-     * imperative UI in place.
+     * Imperative settings renderer shared by display() (the framework's
+     * entry point when getSettingDefinitions() returns []) and manual
+     * in-tab refreshes (e.g. after importing a shared template).
      */
     update(): void {
         const { containerEl } = this;

@@ -53,6 +53,20 @@ describe('RaindropToObsidianSettingTab', () => {
         expect(container.innerHTML).toContain('Connection &amp; Core Setup');
     });
 
+    it('should render the tab when display() is called by the lifecycle', () => {
+        // Obsidian 1.13+ calls display() to render the tab imperatively
+        // whenever getSettingDefinitions() returns an empty array. The
+        // bridge delegates to update(), so the rendered DOM must be the
+        // same shape as a direct update() call (fix for #87).
+        const container = tab.containerEl;
+
+        tab.display();
+
+        expect(container.classList.contains('make-it-rain-settings-container')).toBe(true);
+        expect(container.innerHTML).toContain('Connection &amp; Core Setup');
+        expect(container.innerHTML).toContain('Template Engine');
+    });
+
     it('should verify token when verify button is clicked', async () => {
         const verifySpy = jest.spyOn(tab as any, 'verifyApiToken').mockResolvedValue(undefined);
         tab.update();
