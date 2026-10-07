@@ -10,6 +10,7 @@ function fail(message) {
 }
 
 const packageJson = readJson('package.json');
+const lockJson = readJson('package-lock.json');
 const manifestJson = readJson('manifest.json');
 const versionsJson = readJson('versions.json');
 
@@ -20,6 +21,18 @@ const expectedVersion = argExpected
 
 if (packageJson.version !== manifestJson.version) {
   fail(`package.json version (${packageJson.version}) does not match manifest.json version (${manifestJson.version}).`);
+}
+
+if (lockJson.version !== packageJson.version) {
+  fail(`package-lock.json version (${String(lockJson.version)}) does not match package.json version (${packageJson.version}).`);
+}
+
+// Lockfiles v2/v3 represent the root package twice; both must agree.
+if (lockJson.packages !== undefined || lockJson.lockfileVersion >= 2) {
+  const rootVersion = lockJson.packages?.['']?.version;
+  if (rootVersion !== packageJson.version) {
+    fail(`package-lock.json packages[""].version (${String(rootVersion)}) does not match package.json version (${packageJson.version}).`);
+  }
 }
 
 const mappedMinAppVersion = versionsJson[manifestJson.version];

@@ -28,6 +28,9 @@ jobs:
       - name: Verify release metadata consistency
         run: npm run verify-release
 
+      - name: Test release integrity
+        run: npm run test:release
+
       - name: Scan for secrets
         run: npm run scan-secrets
 
