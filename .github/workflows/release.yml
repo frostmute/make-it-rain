@@ -4,16 +4,8 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'New version number (e.g., 1.0.0)'
+        description: "Release version (e.g., 2.1.5)"
         required: true
-      skip_version_bump:
-        description: 'Skip version bumping (if already done manually)'
-        type: boolean
-        default: false
-      force:
-        description: 'Force overwrite existing release'
-        type: boolean
-        default: false
 
 jobs:
   release:
@@ -25,132 +17,124 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Need full history for tags
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '24'
-          cache: 'npm'
+          node-version: "24"
+          cache: "npm"
 
-      - name: Check current version
-        id: check_version
+      - name: Validate release request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          CURRENT_VERSION=$(node -p "require('./package.json').version")
-          INPUT_VERSION="${{ inputs.version }}"
-          echo "current=$CURRENT_VERSION" >> $GITHUB_OUTPUT
-          echo "input=$INPUT_VERSION" >> $GITHUB_OUTPUT
-          echo "Current version: $CURRENT_VERSION"
-          echo "Input version: $INPUT_VERSION"
-          
-          if [ "$CURRENT_VERSION" = "$INPUT_VERSION" ]; then
-            echo "versions_match=true" >> $GITHUB_OUTPUT
-            echo "✓ Versions already match - will skip version bump"
-          else
-            echo "versions_match=false" >> $GITHUB_OUTPUT
-            echo "✗ Versions differ - will update files"
+          VERSION="${{ inputs.version }}"
+          if ! echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "Invalid version format: $VERSION (expected x.y.z)"
+            exit 1
           fi
 
-      - name: Install dependencies
-        run: npm install
+          if git ls-remote --exit-code --tags origin "refs/tags/$VERSION" >/dev/null 2>&1; then
+            echo "Tag $VERSION already exists. Use a new patch version."
+            exit 1
+          fi
 
-      - name: Run build script
+          if gh release view "$VERSION" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            echo "Release $VERSION already exists. Use a new patch version."
+            exit 1
+          fi
+
+      - name: Set release version metadata
+        run: npm version "${{ inputs.version }}" --no-git-tag-version
+
+      - name: Verify release metadata (pre-build)
+        run: npm run verify-release -- --expected-version="${{ inputs.version }}"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Run lint
+        run: npm run lint
+
+      - name: Build plugin
         run: npm run build
 
-      - name: List files for debugging
-        run: ls -la
+      - name: Verify release metadata (post-build)
+        run: npm run verify-release -- --expected-version="${{ inputs.version }}"
 
-      - name: Update version in files
-        if: steps.check_version.outputs.versions_match == 'false' && inputs.skip_version_bump == false
+      - name: Verify release artifacts
         run: |
-          VERSION=${{ inputs.version }}
-          echo "Updating version to $VERSION"
-          
-          # Update package.json (in root)
-          node -e "
-            const fs = require('fs');
-            const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-            packageJson.version = process.argv[1];
-            fs.writeFileSync('package.json', JSON.stringify(packageJson, null, 2));
-          " $VERSION
+          for file in main.js manifest.json styles.css "release-notes-${{ inputs.version }}.md"; do
+            if [ ! -f "$file" ]; then
+              echo "Missing required file: $file"
+              exit 1
+            fi
+          done
 
-          # Update manifest.json
-          node -e "
-            const fs = require('fs');
-            const manifestJson = JSON.parse(fs.readFileSync('manifest.json', 'utf8'));
-            manifestJson.version = process.argv[1];
-            fs.writeFileSync('manifest.json', JSON.stringify(manifestJson, null, '\t'));
-          " $VERSION
+          node -e '
+            const fs = require("fs");
+            const manifest = JSON.parse(fs.readFileSync("manifest.json", "utf8"));
+            const expected = process.argv[1];
+            if (manifest.id !== "make-it-rain") {
+              throw new Error(`manifest id mismatch: ${manifest.id}`);
+            }
+            if (manifest.version !== expected) {
+              throw new Error(`manifest version mismatch: ${manifest.version} !== ${expected}`);
+            }
+          ' "${{ inputs.version }}"
 
-          # Update versions.json (in root)
-          node -e "
-            const fs = require('fs');
-            const versionsJson = JSON.parse(fs.readFileSync('versions.json', 'utf8'));
-            const manifestJson = JSON.parse(fs.readFileSync('manifest.json', 'utf8'));
-            versionsJson[process.argv[1]] = manifestJson.minAppVersion;
-            fs.writeFileSync('versions.json', JSON.stringify(versionsJson, null, '\t'));
-          " $VERSION
-
-          echo "Version updated successfully."
-
-      - name: Commit version changes
-        if: steps.check_version.outputs.versions_match == 'false' && inputs.skip_version_bump == false
+      - name: Commit release metadata
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git add package.json versions.json manifest.json
-          # Check if there are changes to commit
+          git add package.json package-lock.json manifest.json versions.json
           if git diff --staged --quiet; then
-            echo "No changes to commit - skipping"
+            echo "No version metadata changes to commit."
           else
             git commit -m "chore: release ${{ inputs.version }}"
-            git push origin main
           fi
 
-      - name: Check if tag exists
-        id: check_tag
+      - name: Capture release commit
+        id: release_commit
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Create and verify tag
         run: |
-          TAG_NAME=${{ inputs.version }}
-          if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-            echo "Tag $TAG_NAME already exists"
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-            echo "Tag $TAG_NAME does not exist - will create"
+          VERSION="${{ inputs.version }}"
+          RELEASE_SHA="${{ steps.release_commit.outputs.sha }}"
+          git tag "$VERSION" "$RELEASE_SHA"
+
+          TAG_SHA=$(git rev-list -n 1 "$VERSION")
+          if [ "$TAG_SHA" != "$RELEASE_SHA" ]; then
+            echo "Tag $VERSION points to $TAG_SHA, expected $RELEASE_SHA"
+            exit 1
           fi
 
-      - name: Create Git Tag
-        if: steps.check_tag.outputs.exists == 'false'
-        run: |
-          TAG_NAME=${{ inputs.version }}
-          git tag $TAG_NAME
-          git push origin $TAG_NAME
+          GITHUB_REF_TYPE=tag GITHUB_REF_NAME="$VERSION" npm run verify-release -- --expected-version="$VERSION"
 
-      - name: Check if release exists
-        id: check_release
+      - name: Push release commit and tag
         run: |
-          TAG_NAME=${{ inputs.version }}
-          if gh release view "$TAG_NAME" --repo ${{ github.repository }} >/dev/null 2>&1; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-            echo "Release $TAG_NAME already exists"
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-            echo "Release $TAG_NAME does not exist - will create"
+          git push origin HEAD:main
+          git push origin "${{ inputs.version }}"
+
+      - name: Verify remote tag commit
+        run: |
+          VERSION="${{ inputs.version }}"
+          RELEASE_SHA="${{ steps.release_commit.outputs.sha }}"
+          REMOTE_SHA=$(git ls-remote origin "refs/tags/$VERSION^{}" | awk '{print $1}')
+          if [ -z "$REMOTE_SHA" ]; then
+            REMOTE_SHA=$(git ls-remote origin "refs/tags/$VERSION" | awk '{print $1}')
           fi
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          if [ "$REMOTE_SHA" != "$RELEASE_SHA" ]; then
+            echo "Remote tag $VERSION points to $REMOTE_SHA, expected $RELEASE_SHA"
+            exit 1
+          fi
 
-      - name: Delete existing release (if force enabled)
-        if: steps.check_release.outputs.exists == 'true' && inputs.force == true
-        run: |
-          TAG_NAME=${{ inputs.version }}
-          gh release delete "$TAG_NAME" --repo ${{ github.repository }} --yes
-          echo "Deleted existing release $TAG_NAME"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create GitHub Release
-        id: create_release
+      - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.version }}
@@ -164,12 +148,3 @@ jobs:
             styles.css
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload assets to existing release (if not recreated)
-        if: steps.check_release.outputs.exists == 'true' && inputs.force == false
-        run: |
-          TAG_NAME=${{ inputs.version }}
-          echo "Uploading assets to existing release $TAG_NAME"
-          gh release upload "$TAG_NAME" main.js manifest.json styles.css --repo ${{ github.repository }} --clobber
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

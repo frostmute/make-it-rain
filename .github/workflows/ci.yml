@@ -20,9 +20,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "24"
+          cache: "npm"
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
+
+      - name: Verify release metadata consistency
+        run: npm run verify-release
 
       - name: Scan for secrets
         run: npm run scan-secrets
@@ -52,6 +56,10 @@ jobs:
           fi
           if [ ! -f "manifest.json" ]; then
             echo "Error: manifest.json not found!"
+            exit 1
+          fi
+          if [ ! -f "styles.css" ]; then
+            echo "Error: styles.css not found!"
             exit 1
           fi
           echo "Build artifacts verified successfully."

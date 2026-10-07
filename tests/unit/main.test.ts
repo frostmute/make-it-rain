@@ -152,6 +152,92 @@ describe('RaindropToObsidian', () => {
                 base: expect.any(String)
             }));
         });
+
+        it.each([
+            { label: 'array', value: ['x'] },
+            { label: 'string', value: 'bad' },
+            { label: 'number', value: 42 }
+        ])('should fallback namedTemplates when persisted shape is $label', async ({ value }) => {
+            jest.spyOn(plugin, 'loadData').mockResolvedValue({ namedTemplates: value });
+            jest.spyOn(plugin, 'saveSettings').mockResolvedValue();
+
+            await plugin.loadSettings();
+
+            expect(plugin.settings.namedTemplates).toEqual(expect.objectContaining({
+                base: expect.any(String)
+            }));
+        });
+
+        it('should preserve valid namedTemplates map entries', async () => {
+            jest.spyOn(plugin, 'loadData').mockResolvedValue({
+                namedTemplates: {
+                    custom: '{{title}}',
+                    secondary: 'Hello world'
+                }
+            });
+            jest.spyOn(plugin, 'saveSettings').mockResolvedValue();
+
+            await plugin.loadSettings();
+
+            expect(plugin.settings.namedTemplates.custom).toBe('{{title}}');
+            expect(plugin.settings.namedTemplates.secondary).toBe('Hello world');
+        });
+
+        it('should discard invalid entries in namedTemplates while preserving valid string entries', async () => {
+            jest.spyOn(plugin, 'loadData').mockResolvedValue({
+                namedTemplates: {
+                    custom: '{{title}}',
+                    broken: 12345,
+                    nope: false
+                }
+            });
+            jest.spyOn(plugin, 'saveSettings').mockResolvedValue();
+
+            await plugin.loadSettings();
+
+            expect(plugin.settings.namedTemplates.custom).toBe('{{title}}');
+            expect(plugin.settings.namedTemplates.broken).toBeUndefined();
+            expect(plugin.settings.namedTemplates.nope).toBeUndefined();
+        });
+
+        it('should ignore malformed contentTypeTemplates and contentTypeTemplateToggles shapes', async () => {
+            jest.spyOn(plugin, 'loadData').mockResolvedValue({
+                contentTypeTemplates: 'bad-shape',
+                contentTypeTemplateToggles: ['bad-shape']
+            });
+            jest.spyOn(plugin, 'saveSettings').mockResolvedValue();
+
+            await plugin.loadSettings();
+
+            expect(plugin.settings.contentTypeTemplates.link).toBeDefined();
+            expect(plugin.settings.contentTypeTemplateToggles.link).toBe(true);
+        });
+
+        it('should keep only valid structured entries for content type settings', async () => {
+            jest.spyOn(plugin, 'loadData').mockResolvedValue({
+                contentTypeTemplates: {
+                    document: 'Doc override',
+                    link: '',
+                    video: 'Video override',
+                    audio: 999
+                },
+                contentTypeTemplateToggles: {
+                    document: false,
+                    video: true,
+                    audio: 'bad'
+                }
+            });
+            jest.spyOn(plugin, 'saveSettings').mockResolvedValue();
+
+            await plugin.loadSettings();
+
+            expect(plugin.settings.contentTypeTemplates.doc).toBe('Doc override');
+            expect(plugin.settings.contentTypeTemplates.video).toBe('Video override');
+            expect(plugin.settings.contentTypeTemplates.link).toEqual(expect.any(String));
+            expect(plugin.settings.contentTypeTemplateToggles.doc).toBe(false);
+            expect(plugin.settings.contentTypeTemplateToggles.video).toBe(true);
+            expect(plugin.settings.contentTypeTemplateToggles.audio).toBe(true);
+        });
     });
 
     describe('generateFileName', () => {
