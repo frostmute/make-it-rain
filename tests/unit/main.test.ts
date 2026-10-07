@@ -138,6 +138,20 @@ describe('RaindropToObsidian', () => {
             expect(plugin.settings.includeGroupInFolderPath).toBe(true); // Added setting defaults on for existing data
             expect(saveSettingsSpy).toHaveBeenCalled();
         });
+
+        it('should recover malformed namedTemplates from persisted settings', async () => {
+            const savedData = {
+                namedTemplates: null
+            };
+            jest.spyOn(plugin, 'loadData').mockResolvedValue(savedData);
+            jest.spyOn(plugin, 'saveSettings').mockResolvedValue();
+
+            await plugin.loadSettings();
+
+            expect(plugin.settings.namedTemplates).toEqual(expect.objectContaining({
+                base: expect.any(String)
+            }));
+        });
     });
 
     describe('generateFileName', () => {

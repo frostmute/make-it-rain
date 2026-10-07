@@ -88,6 +88,22 @@ const TAG_INVALID_CHARS_REGEX = /[#?"*<>:|]/g;
  */
 const FILENAME_PLACEHOLDER_REGEX = /{{(title|id|collectionTitle|date)}}/gi;
 
+function normalizeNamedTemplates(
+    value: unknown,
+    fallback: Record<string, string>
+): Record<string, string> {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+        return { ...fallback };
+    }
+
+    return Object.entries(value).reduce((acc, [key, templateValue]) => {
+        if (typeof templateValue === 'string') {
+            acc[key] = templateValue;
+        }
+        return acc;
+    }, {} as Record<string, string>);
+}
+
 export default class RaindropToObsidian extends Plugin implements IRaindropToObsidian {
     settings: MakeItRainSettings;
     private rateLimiter: RateLimiter;
@@ -218,7 +234,8 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                             return acc;
                         }, {} as Record<string, boolean>)
                         : {})
-                }
+                },
+                namedTemplates: normalizeNamedTemplates(data.namedTemplates, this.settings.namedTemplates)
             };
         }
         await this.saveSettings();
