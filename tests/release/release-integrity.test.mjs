@@ -29,7 +29,7 @@ function fixture(t) {
   const dir = mkdtempSync(join(tmpdir(), 'make-it-rain-release-'));
   t.after(() => rmSync(dir, { recursive: true, force: true }));
   mkdirSync(join(dir, 'scripts'));
-  for (const script of ['prepare-release.mjs', 'verify-release.mjs', 'version-bump.mjs']) {
+  for (const script of ['prepare-release.mjs', 'verify-release.mjs', 'version-bump.mjs', 'select-release-source.mjs']) {
     copyFileSync(join(repo, 'scripts', script), join(dir, 'scripts', script));
   }
   writeJson(dir, 'package.json', {
@@ -69,6 +69,100 @@ function fails(result, message) {
 
 test('repository metadata is consistent before any release transition', () => {
   succeeds(run(repo, 'verify-release.mjs'));
+});
+
+function publishedFixture(t) {
+  const dir = fixture(t);
+  function git(args) {
+    const result = spawnSync('git', args, { cwd: dir, encoding: 'utf8' });
+    succeeds(result);
+    return result.stdout.trim();
+  }
+  git(['config', 'user.name', 'Release test']);
+  git(['config', 'user.email', 'release-test@example.invalid']);
+  git(['add', '.']);
+  git(['commit', '--quiet', '-m', 'source']);
+  const source = git(['rev-parse', 'HEAD']);
+  const remote = join(dir, 'remote.git');
+  git(['init', '--bare', '--quiet', remote]);
+  git(['remote', 'add', 'origin', remote]);
+  git(['push', '--quiet', 'origin', 'HEAD:refs/heads/main']);
+  const output = join(dir, 'step-output');
+  const select = () => run(dir, 'select-release-source.mjs', ['2.1.5'], { GITHUB_OUTPUT: output });
+  function publish({ annotated = false } = {}) {
+    succeeds(run(dir, 'prepare-release.mjs', ['2.1.5']));
+    git(['add', 'package.json', 'package-lock.json', 'manifest.json', 'versions.json']);
+    git(['commit', '--quiet', '-m', 'chore: release 2.1.5']);
+    git(annotated ? ['tag', '-a', '2.1.5', '-m', 'release'] : ['tag', '2.1.5']);
+    git(['push', '--atomic', '--quiet', 'origin', 'HEAD:refs/heads/main', 'refs/tags/2.1.5']);
+    return git(['rev-parse', 'HEAD']);
+  }
+  return { dir, git, source, output, select, publish };
+}
+
+test('a new release selects the current source without changing it', (t) => {
+  const { dir, git, source, output, select } = publishedFixture(t);
+  succeeds(select());
+  assert.equal(git(['rev-parse', 'HEAD']), source);
+  assert.equal(readFileSync(output, 'utf8'), 'resume=false\n');
+  assert.equal(readJson(dir, 'package.json').version, '2.1.2');
+});
+
+for (const annotated of [false, true]) {
+  test(`resumes a published ${annotated ? 'annotated' : 'lightweight'} tag after main advances`, (t) => {
+    const { dir, git, output, select, publish } = publishedFixture(t);
+    const release = publish({ annotated });
+    writeFileSync(join(dir, 'later-source.txt'), 'new source after release\n');
+    git(['add', 'later-source.txt']);
+    git(['commit', '--quiet', '-m', 'later source']);
+    git(['push', '--quiet', 'origin', 'HEAD:refs/heads/main']);
+    const main = git(['rev-parse', 'HEAD']);
+    succeeds(select());
+    assert.equal(git(['rev-parse', 'HEAD']), release);
+    assert.equal(readFileSync(output, 'utf8'), 'resume=true\n');
+    succeeds(run(dir, 'verify-release.mjs', ['--expected-version=2.1.5']));
+    // A second retry selects the same immutable source and never rewinds main.
+    succeeds(select());
+    assert.equal(git(['rev-parse', 'HEAD']), release);
+    assert.equal(git(['ls-remote', 'origin', 'refs/heads/main']), main + '\trefs/heads/main');
+  });
+}
+
+test('rejects a same-version tag containing unrelated source changes', (t) => {
+  const { dir, git, select } = publishedFixture(t);
+  succeeds(run(dir, 'prepare-release.mjs', ['2.1.5']));
+  writeFileSync(join(dir, 'unexpected.txt'), 'not a version transition\n');
+  git(['add', 'package.json', 'package-lock.json', 'manifest.json', 'versions.json', 'unexpected.txt']);
+  git(['commit', '--quiet', '-m', 'wrong release']);
+  git(['tag', '2.1.5']);
+  git(['push', '--atomic', '--quiet', 'origin', 'HEAD:refs/heads/main', 'refs/tags/2.1.5']);
+  fails(select(), /select-release-source:/);
+});
+
+test('rejects a tag whose metadata does not match the requested version', (t) => {
+  const { git, select } = publishedFixture(t);
+  git(['commit', '--allow-empty', '--quiet', '-m', 'not a release']);
+  git(['tag', '2.1.5']);
+  git(['push', '--atomic', '--quiet', 'origin', 'HEAD:refs/heads/main', 'refs/tags/2.1.5']);
+  fails(select(), /select-release-source:/);
+});
+
+test('rejects a release tag that was not published to main', (t) => {
+  const { dir, git, select } = publishedFixture(t);
+  succeeds(run(dir, 'prepare-release.mjs', ['2.1.5']));
+  git(['add', 'package.json', 'package-lock.json', 'manifest.json', 'versions.json']);
+  git(['commit', '--quiet', '-m', 'release off main']);
+  git(['tag', '2.1.5']);
+  git(['push', '--quiet', 'origin', 'refs/tags/2.1.5']);
+  fails(select(), /select-release-source:/);
+});
+
+test('remote lookup failures abort instead of starting a new release', (t) => {
+  const { dir, git, select, output } = publishedFixture(t);
+  git(['remote', 'set-url', 'origin', join(dir, 'missing-remote.git')]);
+  fails(select(), /select-release-source:/);
+  assert.equal(readJson(dir, 'package.json').version, '2.1.2');
+  assert.throws(() => readFileSync(output), /ENOENT/);
 });
 
 test('npm version advances all metadata from 2.1.2 to 2.1.5 without creating a tag', (t) => {
