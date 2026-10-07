@@ -28,9 +28,9 @@ describe('RaindropToObsidianSettingTab', () => {
         expect(tab.plugin).toBe(plugin);
     });
 
-    it('should render settings options during the current update lifecycle', () => {
+    it('should render settings options when display() is called', () => {
         const container = tab.containerEl;
-        tab.update();
+        tab.display();
 
         expect(container.classList.contains('make-it-rain-settings-container')).toBe(true);
         expect(container.innerHTML).toContain('Connection &amp; Core Setup');
@@ -42,22 +42,25 @@ describe('RaindropToObsidianSettingTab', () => {
         expect(container.innerHTML).toContain('Template Engine');
     });
 
-    it('should keep update() available for in-tab refreshes', () => {
+    it('should re-render settings when display() is called repeatedly', () => {
         const container = tab.containerEl;
-        tab.update();
+        tab.display();
         container.empty();
 
-        tab.update();
+        tab.display();
 
         expect(container.classList.contains('make-it-rain-settings-container')).toBe(true);
         expect(container.innerHTML).toContain('Connection &amp; Core Setup');
     });
 
-    it('should render the tab when display() is called by the lifecycle', () => {
-        // Obsidian 1.13+ calls display() to render the tab imperatively
-        // whenever getSettingDefinitions() returns an empty array. The
-        // bridge delegates to update(), so the rendered DOM must be the
-        // same shape as a direct update() call (fix for #87).
+    it('should not implement an own getSettingDefinitions() override', () => {
+        expect(Object.prototype.hasOwnProperty.call(
+            RaindropToObsidianSettingTab.prototype,
+            'getSettingDefinitions'
+        )).toBe(false);
+    });
+
+    it('should render the tab through the imperative display() contract', () => {
         const container = tab.containerEl;
 
         tab.display();
@@ -67,9 +70,32 @@ describe('RaindropToObsidianSettingTab', () => {
         expect(container.innerHTML).toContain('Template Engine');
     });
 
+    it('should render settings after loading malformed persisted data', async () => {
+        jest.spyOn(plugin, 'loadData').mockResolvedValue({ namedTemplates: null });
+        jest.spyOn(plugin, 'saveSettings').mockResolvedValue();
+        await plugin.loadSettings();
+
+        const hydratedTab = new RaindropToObsidianSettingTab(mockApp as unknown as App, plugin);
+        expect(() => hydratedTab.display()).not.toThrow();
+        expect(hydratedTab.containerEl.classList.contains('make-it-rain-settings-container')).toBe(true);
+        expect(hydratedTab.containerEl.innerHTML).toContain('Connection &amp; Core Setup');
+        expect(hydratedTab.containerEl.innerHTML).toContain('Template Engine');
+    });
+
+    it('should render settings for legacy minimal persisted data', async () => {
+        jest.spyOn(plugin, 'loadData').mockResolvedValue({ apiToken: 'legacy-token' });
+        jest.spyOn(plugin, 'saveSettings').mockResolvedValue();
+        await plugin.loadSettings();
+
+        const hydratedTab = new RaindropToObsidianSettingTab(mockApp as unknown as App, plugin);
+        hydratedTab.display();
+        expect(hydratedTab.containerEl.classList.contains('make-it-rain-settings-container')).toBe(true);
+        expect(hydratedTab.containerEl.innerHTML).toContain('Connection &amp; Core Setup');
+    });
+
     it('should verify token when verify button is clicked', async () => {
         const verifySpy = jest.spyOn(tab as any, 'verifyApiToken').mockResolvedValue(undefined);
-        tab.update();
+        tab.display();
         
         // Call directly
         await (tab as any).verifyApiToken();

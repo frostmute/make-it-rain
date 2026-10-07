@@ -87,6 +87,78 @@ const TAG_INVALID_CHARS_REGEX = /[#?"*<>:|]/g;
  * Regex for file name template placeholders
  */
 const FILENAME_PLACEHOLDER_REGEX = /{{(title|id|collectionTitle|date)}}/gi;
+const CONTENT_TYPE_TEMPLATE_KEYS = ['link', 'article', 'image', 'video', 'doc', 'audio', 'book'] as const;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function normalizeContentTypeTemplates(
+    value: unknown,
+    fallback: MakeItRainSettings['contentTypeTemplates']
+): MakeItRainSettings['contentTypeTemplates'] {
+    if (!isRecord(value)) {
+        return { ...fallback };
+    }
+
+    const normalized: MakeItRainSettings['contentTypeTemplates'] = { ...fallback };
+    for (const [rawKey, rawValue] of Object.entries(value)) {
+        const key = rawKey === 'document' ? 'doc' : rawKey;
+        if (!CONTENT_TYPE_TEMPLATE_KEYS.includes(key as typeof CONTENT_TYPE_TEMPLATE_KEYS[number])) {
+            continue;
+        }
+        if (typeof rawValue !== 'string') {
+            continue;
+        }
+
+        normalized[key as keyof MakeItRainSettings['contentTypeTemplates']] = rawValue.trim() === ''
+            ? fallback[key as keyof MakeItRainSettings['contentTypeTemplates']]
+            : rawValue;
+    }
+
+    return normalized;
+}
+
+function normalizeContentTypeTemplateToggles(
+    value: unknown,
+    fallback: MakeItRainSettings['contentTypeTemplateToggles']
+): MakeItRainSettings['contentTypeTemplateToggles'] {
+    if (!isRecord(value)) {
+        return { ...fallback };
+    }
+
+    const normalized: MakeItRainSettings['contentTypeTemplateToggles'] = { ...fallback };
+    for (const [rawKey, rawValue] of Object.entries(value)) {
+        const key = rawKey === 'document' ? 'doc' : rawKey;
+        if (!CONTENT_TYPE_TEMPLATE_KEYS.includes(key as typeof CONTENT_TYPE_TEMPLATE_KEYS[number])) {
+            continue;
+        }
+        if (typeof rawValue !== 'boolean') {
+            continue;
+        }
+
+        normalized[key as keyof MakeItRainSettings['contentTypeTemplateToggles']] = rawValue;
+    }
+
+    return normalized;
+}
+
+function normalizeNamedTemplates(
+    value: unknown,
+    fallback: Record<string, string>
+): Record<string, string> {
+    if (!isRecord(value)) {
+        return { ...fallback };
+    }
+
+    const normalized: Record<string, string> = {};
+    return Object.entries(value).reduce((acc, [key, templateValue]) => {
+        if (typeof templateValue === 'string') {
+            acc[key] = templateValue;
+        }
+        return acc;
+    }, normalized);
+}
 
 export default class RaindropToObsidian extends Plugin implements IRaindropToObsidian {
     settings: MakeItRainSettings;
@@ -193,32 +265,15 @@ export default class RaindropToObsidian extends Plugin implements IRaindropToObs
                 // Presets are optional in saved data (pre-2.2.0); default to an
                 // empty list so iteration never touches a non-array.
                 importPresets: normalizeImportPresets(data.importPresets),
-                contentTypeTemplates: {
-                    ...this.settings.contentTypeTemplates,
-                    ...(data.contentTypeTemplates
-                        ? Object.keys(data.contentTypeTemplates).reduce((acc, key) => {
-                            // Map API key to internal property name (document -> doc to avoid global conflicts)
-                            const internalKey = key === 'document' ? 'doc' : key;
-                            const value = data.contentTypeTemplates![key as keyof typeof data.contentTypeTemplates];
-                            acc[internalKey] = value && typeof value === 'string' && value.trim() === ''
-                                ? this.settings.contentTypeTemplates[internalKey as keyof typeof this.settings.contentTypeTemplates]
-                                : value || '';
-                            return acc;
-                        }, {} as Record<string, string>)
-                        : {})
-                },
-                contentTypeTemplateToggles: {
-                    ...this.settings.contentTypeTemplateToggles,
-                    ...(data.contentTypeTemplateToggles
-                        ? Object.keys(data.contentTypeTemplateToggles).reduce((acc, key) => {
-                            // Map API key to internal property name (document -> doc to avoid global conflicts)
-                            const internalKey = key === 'document' ? 'doc' : key;
-                            const value = data.contentTypeTemplateToggles![key as keyof typeof data.contentTypeTemplateToggles];
-                            acc[internalKey] = value;
-                            return acc;
-                        }, {} as Record<string, boolean>)
-                        : {})
-                }
+                contentTypeTemplates: normalizeContentTypeTemplates(
+                    data.contentTypeTemplates,
+                    this.settings.contentTypeTemplates
+                ),
+                contentTypeTemplateToggles: normalizeContentTypeTemplateToggles(
+                    data.contentTypeTemplateToggles,
+                    this.settings.contentTypeTemplateToggles
+                ),
+                namedTemplates: normalizeNamedTemplates(data.namedTemplates, this.settings.namedTemplates)
             };
         }
         await this.saveSettings();

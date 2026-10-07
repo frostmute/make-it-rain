@@ -327,32 +327,10 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
     }
 
     /**
-     * Obsidian 1.13+ declarative settings API. This tab intentionally returns
-     * no definitions because its richer settings UI is rendered imperatively
-     * by update().
-     */
-    getSettingDefinitions(): never[] {
-        return [];
-    }
-
-    /**
      * Obsidian's imperative rendering entry point for the settings tab.
-     *
-     * In Obsidian 1.13+, the framework calls display() to render the tab
-     * imperatively whenever getSettingDefinitions() returns an empty array.
-     * update() on its own only feeds the declarative path and the search
-     * index — it does not render the container — so removing display()
-     * leaves a blank pane. Keep display() here so the framework has an
-     * entry point and delegates to the same renderer used by refreshes.
      */
-    // The Obsidian plugin review bot flags display() as deprecated because
-    // type docs favor the declarative getSettingDefinitions() path. In
-    // practice Obsidian 1.13+ still invokes display() to render imperatively
-    // whenever getSettingDefinitions() returns an empty array; suppressing
-    // it would leave the pane blank (see issue #87). Re-evaluate before
-    // removing.
     display(): void {
-        this.update();
+        this.renderSettings();
     }
 
     /**
@@ -399,11 +377,10 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
     }
 
     /**
-     * Imperative settings renderer shared by display() (the framework's
-     * entry point when getSettingDefinitions() returns []) and manual
-     * in-tab refreshes (e.g. after importing a shared template).
+     * Imperative settings renderer for the tab. All framework and in-tab
+     * refresh paths delegate to this single DOM builder.
      */
-    update(): void {
+    private renderSettings(): void {
         const { containerEl } = this;
         containerEl.empty();
         
@@ -664,7 +641,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
                             }
                             this.plugin.settings.namedTemplates[targetName] = imported.template;
                             await this.plugin.saveSettings();
-                            this.update();
+                            this.renderSettings();
                             new Notice(`Template "${targetName}" imported successfully!`);
                             return true;
                         }).open();
@@ -679,7 +656,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
         });
 
         // Captured by the textarea builder so the Reset button can refresh the
-        // editor in place instead of calling this.update() (which rebuilds every
+        // editor in place instead of calling this.renderSettings() (which rebuilds every
         // section and collapses the user's expanded <details> panels).
         let defaultTextComponent: TextAreaComponent;
         let updateDefaultValidation: (val: string) => void = () => {};
@@ -970,7 +947,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
 
     /**
      * Render one content-type card into the templates section. Extracted
-     * from update() so closures bind to `this` naturally.
+     * from renderSettings() so closures bind to `this` naturally.
      */
     private renderContentTypeCard(
         parent: HTMLElement,
@@ -998,7 +975,7 @@ export class RaindropToObsidianSettingTab extends PluginSettingTab {
         bodyEl.style.display = toggles[typeKey] ? 'block' : 'none';
 
         // Captured by the textarea builder so the Reset button can refresh the
-        // editor in place instead of calling this.update() (which rebuilds every
+        // editor in place instead of calling this.renderSettings() (which rebuilds every
         // section and collapses the user's expanded <details> panels).
         let textComponent: TextAreaComponent;
         let updateValidation: (val: string) => void = () => {};
